@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bookstore
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - springnet
+    deploy:
+      resources:
+        limits:
+          cpus: "0.6"
+          memory: 700M
+
+  app:
+    build: .
+    container_name: Bookstore
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/bookstore"
+      SPRING_DATASOURCE_USERNAME: "appuser"
+      SPRING_DATASOURCE_PASSWORD: "123456"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+      SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.PostgreSQLDialect"
+      SPRING_PROFILES_ACTIVE: "docker"
+      JAVA_OPTS: "-Xms128m -Xmx480m -XX:+UseSerialGC -XX:+UseStringDeduplication -Dserver.tomcat.max-threads=50"
+    ports:
+      - "8080:8080"
+    networks:
+      - springnet
+    deploy:
+      resources:
+        limits:
+          cpus: "0.8"
+          memory: 800M
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - springnet
+
+volumes:
+  postgres_data:
+
+networks:
+  springnet:

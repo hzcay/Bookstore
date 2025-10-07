@@ -1,0 +1,12 @@
+{
+  "urls": [
+    {
+      "url": "/v3/api-docs",
+      "name": "Dynamic API Docs"
+    }
+  ],
+  "dom_id": "#swagger-ui",
+  "deepLinking": true,
+  "presets": ["SwaggerUIBundle.presets.apis", "SwaggerUIStandalonePreset"],
+  "layout": "BaseLayout"
+}

@@ -1,9 +1,11 @@
 # Ứng Dụng Quản Lý Và Bán Sách Trên Nền Web
 
 ## Mô tả dự án
+
 Hệ thống quản lý và bán sách được xây dựng bằng Spring Boot + SQL Server, hỗ trợ quản lý toàn bộ hoạt động kinh doanh của cửa hàng sách.
 
 ## Công nghệ sử dụng
+
 - **Backend**: Spring Boot 3.5.6
 - **Database**: SQL Server
 - **ORM**: Spring Data JPA + Hibernate
@@ -28,11 +30,45 @@ src/main/java/com/example/Bookstore/
 ## Cài đặt và chạy
 
 ### Yêu cầu hệ thống
+
 - Java 17+
 - Maven 3.6+
 - SQL Server 2019+
+- Docker >= 24.x
+- Docker Compose >= 2.x
+
+## Cách chạy
+
+```
+docker compose up -d --build
+```
+
+## Kiểm tra container
+
+```
+docker ps
+```
+
+## Dừng container
+
+```
+docker compose down
+```
+
+## Xem log
+
+```
+docker compose logs -f
+```
+
+## Khởi động lại
+
+```
+docker compose restart
+```
 
 ### Cấu hình Database
+
 1. Tạo database `BookstoreDB` trong SQL Server
 2. Cập nhật thông tin kết nối trong `application.properties`:
    ```properties
@@ -41,6 +77,7 @@ src/main/java/com/example/Bookstore/
    ```
 
 ### Chạy ứng dụng
+
 ```bash
 # Build project
 mvn clean install
@@ -57,16 +94,19 @@ mvn spring-boot:run
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
 Đã cấu hình với springdoc-openapi:
+
 - Dependency: `org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0`
 - Mở quyền trong `SecurityConfig` cho: `/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs/**`
 
 Khắc phục sự cố phổ biến:
+
 - 403 khi truy cập Swagger: đảm bảo `SecurityConfig` đã permitAll các đường dẫn trên.
 - 500 khi load `/v3/api-docs`: chạy `mvn clean install`, dùng springdoc ≥ 2.7.0 (tương thích Spring Boot 3.5.x).
 
 ## API Endpoints
 
 ### Books
+
 - `GET /api/v1/books` - Lấy danh sách sách
 - `GET /api/v1/books/search` - Tìm kiếm sách
 - `GET /api/v1/books/{id}` - Lấy chi tiết sách
@@ -75,6 +115,7 @@ Khắc phục sự cố phổ biến:
 - `DELETE /api/v1/books/{id}` - Xóa sách
 
 ### Orders
+
 - `GET /api/v1/orders` - Lấy danh sách đơn hàng
 - `GET /api/v1/orders/{id}` - Lấy chi tiết đơn hàng
 - `POST /api/v1/orders` - Tạo đơn hàng mới
@@ -83,6 +124,7 @@ Khắc phục sự cố phổ biến:
 - `POST /api/v1/orders/{id}/cancel` - Hủy đơn hàng
 
 ### Customers
+
 - `GET /api/v1/customers` - Lấy danh sách khách hàng
 - `GET /api/v1/customers/{id}` - Lấy chi tiết khách hàng
 - `POST /api/v1/customers` - Tạo khách hàng mới
@@ -90,6 +132,7 @@ Khắc phục sự cố phổ biến:
 - `DELETE /api/v1/customers/{id}` - Xóa khách hàng
 
 ### Reports
+
 - `GET /api/v1/reports/sales` - Báo cáo doanh thu
 - `GET /api/v1/reports/inventory` - Báo cáo tồn kho
 - `GET /api/v1/reports/suppliers-debt` - Báo cáo công nợ nhà cung cấp
@@ -97,28 +140,33 @@ Khắc phục sự cố phổ biến:
 ## Các tính năng chính
 
 ### Quản lý sách
+
 - Thêm, sửa, xóa thông tin sách
 - Tìm kiếm sách theo nhiều tiêu chí
 - Quản lý tồn kho
 - Cảnh báo sách sắp hết hàng
 
 ### Quản lý đơn hàng
+
 - Tạo đơn hàng online và tại quầy
 - Theo dõi trạng thái đơn hàng
 - Tính toán chiết khấu và phí giao hàng
 - Quản lý thanh toán
 
 ### Quản lý khách hàng
+
 - Lưu trữ thông tin khách hàng
 - Tích lũy điểm thưởng
 - Lịch sử mua hàng
 
 ### Báo cáo
+
 - Báo cáo doanh thu theo thời gian
 - Báo cáo tồn kho
 - Báo cáo công nợ nhà cung cấp
 
 ## Phân quyền người dùng
+
 - **Khách hàng**: Xem sách, đặt hàng, theo dõi đơn hàng
 - **Nhân viên**: Bán hàng, quản lý đơn hàng, nhập sách
 - **Quản lý kho**: Quản lý tồn kho, nhà cung cấp
@@ -126,11 +174,14 @@ Khắc phục sự cố phổ biến:
 - **Chủ cửa hàng**: Toàn quyền quản trị
 
 ## Database Schema
+
 Hệ thống sử dụng 12 bảng chính:
+
 - Books, Categories, Authors, Publishers
 - Customers, Employees, Suppliers
 - Orders, OrderItems, Inventory
 - Shipments, Promotions
 
 ## Liên hệ
+
 Dự án được phát triển cho mục đích học tập và nghiên cứu.
