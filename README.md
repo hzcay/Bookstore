@@ -67,25 +67,6 @@ docker compose logs -f
 docker compose restart
 ```
 
-### Cấu hình Database
-
-1. Tạo database `BookstoreDB` trong SQL Server
-2. Cập nhật thông tin kết nối trong `application.properties`:
-   ```properties
-   spring.datasource.username=sa
-   spring.datasource.password=your_password
-   ```
-
-### Chạy ứng dụng
-
-```bash
-# Build project
-mvn clean install
-
-# Chạy ứng dụng
-mvn spring-boot:run
-```
-
 Ứng dụng sẽ chạy tại: `http://localhost:8080`
 
 ## API Docs (Swagger / OpenAPI)
