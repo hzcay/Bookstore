@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 public class Employee {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "employeeID")
     private String employeeId;
     
@@ -27,6 +28,9 @@ public class Employee {
     
     @Column(name = "email")
     private String email;
+
+    @Column(name = "password")
+    private String password;
     
     @Column(name = "status")
     private Integer status = 1;

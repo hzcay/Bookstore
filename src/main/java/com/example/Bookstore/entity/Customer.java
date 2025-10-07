@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 public class Customer {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "customerID")
     private String customerId;
     
@@ -24,7 +25,10 @@ public class Customer {
     
     @Column(name = "email", unique = true)
     private String email;
-    
+
+    @Column(name = "password")
+    private String password;
+
     @Column(name = "address")
     private String address;
     

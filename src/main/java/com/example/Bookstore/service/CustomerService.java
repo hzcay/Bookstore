@@ -26,4 +26,6 @@ public interface CustomerService {
     void updateCustomerPoints(String customerId, Integer points);
     
     List<CustomerDTO> getActiveCustomers();
+
+    void activateCustomerByEmail(String email);
 }

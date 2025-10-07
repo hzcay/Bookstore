@@ -132,7 +132,7 @@ public class BookServiceImpl implements BookService {
     
     private Book convertToEntity(BookDTO dto) {
         Book book = new Book();
-        book.setBookId(dto.getBookId());
+        // Không set bookId - để JPA tự sinh UUID
         book.setTitle(dto.getTitle());
         book.setImportPrice(dto.getImportPrice());
         book.setSalePrice(dto.getSalePrice());

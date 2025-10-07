@@ -9,10 +9,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class CustomerDTO {
     
-    private String customerId;
+    private String customerId; 
     private String name;
     private String phone;
     private String email;
+    private String password;
     private String address;
     private Integer points;
     private Integer status;

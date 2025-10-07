@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.Bookstore.service.AuthService;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,9 @@ public class CustomerController {
     
     @Autowired
     private CustomerService customerService;
+    
+    @Autowired
+    private AuthService authService;
     
     @GetMapping
     public ResponseEntity<Page<CustomerDTO>> getAllCustomers(
@@ -74,6 +78,7 @@ public class CustomerController {
             customerService.deleteCustomer(id);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
+            System.out.println("Delete error: " + e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -109,6 +114,50 @@ public class CustomerController {
         return ResponseEntity.ok(customers);
     }
     
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            Optional<CustomerDTO> existingCustomer = customerService.getCustomerByEmail(request.getEmail());
+            if (existingCustomer.isPresent() && existingCustomer.get().getStatus() == 1) {
+                return ResponseEntity.badRequest().body("Email đã được sử dụng");
+            }
+            
+            CustomerDTO customerDTO = new CustomerDTO();
+            customerDTO.setName(request.getName());
+            customerDTO.setEmail(request.getEmail());
+            customerDTO.setPhone(request.getPhone());
+            customerDTO.setAddress(request.getAddress());
+            customerDTO.setPassword(request.getPassword());
+            customerDTO.setPoints(0);
+            customerDTO.setStatus(0);
+            
+            CustomerDTO createdCustomer = customerService.createCustomer(customerDTO);
+
+            authService.sendOTP(request.getEmail());
+            
+            return ResponseEntity.ok("Đăng ký thành công. Vui lòng kiểm tra email để xác thực OTP.");
+            
+        } catch (Exception e) {
+            System.out.println("Register error details: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Lỗi đăng ký: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOTP(@RequestBody VerifyOTPRequest request) {
+        try {
+            if (authService.verifyOTP(request.getEmail(), request.getOtp())) {
+                customerService.activateCustomerByEmail(request.getEmail());
+                return ResponseEntity.ok("Tài khoản đã được xác thực thành công!");
+            }
+            return ResponseEntity.badRequest().body("Mã OTP không hợp lệ hoặc đã hết hạn");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi xác thực: " + e.getMessage());
+        }
+    }
+
     public static class PointsUpdateRequest {
         private Integer points;
         
@@ -119,5 +168,39 @@ public class CustomerController {
         public void setPoints(Integer points) {
             this.points = points;
         }
+    }
+    
+    public static class RegisterRequest {
+        private String name;
+        private String email;
+        private String phone;
+        private String address;
+        private String password;
+        
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
+        
+        public String getAddress() { return address; }
+        public void setAddress(String address) { this.address = address; }
+
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+    }
+    
+    public static class VerifyOTPRequest {
+        private String email;
+        private String otp;
+        
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        
+        public String getOtp() { return otp; }
+        public void setOtp(String otp) { this.otp = otp; }
     }
 }

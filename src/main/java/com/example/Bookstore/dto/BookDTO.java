@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class BookDTO {
     
-    private String bookId;
+    private String bookId; 
     private String title;
     private String categoryId;
     private String categoryName;

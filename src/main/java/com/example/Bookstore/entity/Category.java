@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 public class Category {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "categoryID")
     private String categoryId;
     

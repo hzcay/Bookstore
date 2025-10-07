@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 public class Publisher {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "publisherID")
     private String publisherId;
     

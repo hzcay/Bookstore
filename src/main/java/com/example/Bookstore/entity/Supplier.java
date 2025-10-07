@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 public class Supplier {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "supplierID")
     private String supplierId;
     

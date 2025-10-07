@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class Shipment {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "shipmentID")
     private String shipmentId;
     

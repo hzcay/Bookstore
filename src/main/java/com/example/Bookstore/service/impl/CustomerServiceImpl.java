@@ -4,6 +4,7 @@ import com.example.Bookstore.dto.CustomerDTO;
 import com.example.Bookstore.entity.Customer;
 import com.example.Bookstore.repository.CustomerRepository;
 import com.example.Bookstore.service.CustomerService;
+import com.example.Bookstore.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Autowired
     private CustomerRepository customerRepository;
+    
+    @Autowired
+    private AuthService authService;
 
     @Override
     @Transactional(readOnly = true)
@@ -38,8 +42,26 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerDTO createCustomer(CustomerDTO customerDTO) {
+        Optional<Customer> existingCustomer = customerRepository.findByEmail(customerDTO.getEmail());
+        
+        if (existingCustomer.isPresent()) {
+            Customer c = existingCustomer.get();
+            if (c.getStatus() == 0) {
+                c.setStatus(0);
+                c.setName(customerDTO.getName());
+                c.setPhone(customerDTO.getPhone());
+                c.setAddress(customerDTO.getAddress());
+                c.setPoints(customerDTO.getPoints());
+                c = customerRepository.save(c);
+                
+                return toDTO(c);
+            } else {
+                throw new RuntimeException("Customer already exists");
+            }
+        }
+        
         Customer c = toEntity(customerDTO);
-        c.setStatus(1);
+        c.setStatus(0);
         c = customerRepository.save(c);
         return toDTO(c);
     }
@@ -75,7 +97,11 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public Optional<CustomerDTO> getCustomerByEmail(String email) {
-        return customerRepository.findByEmail(email).map(this::toDTO);
+        Optional<Customer> customer = customerRepository.findByEmail(email);
+        if (customer.isPresent() && customer.get().getStatus() == 1) {
+            return Optional.of(toDTO(customer.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -92,6 +118,18 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findByStatus(1).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    @Override
+    public void activateCustomerByEmail(String email) {
+        Optional<Customer> customer = customerRepository.findByEmail(email);
+        if (customer.isPresent()) {
+            Customer c = customer.get();
+            if (c.getStatus() != 1) {
+                c.setStatus(1);
+                customerRepository.save(c);
+            }
+        }
+    }
+
     private CustomerDTO toDTO(Customer c) {
         CustomerDTO dto = new CustomerDTO();
         dto.setCustomerId(c.getCustomerId());
@@ -106,7 +144,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     private Customer toEntity(CustomerDTO dto) {
         Customer c = new Customer();
-        c.setCustomerId(dto.getCustomerId());
+        // Không set customerId - để JPA tự sinh UUID
         c.setName(dto.getName());
         c.setPhone(dto.getPhone());
         c.setEmail(dto.getEmail());

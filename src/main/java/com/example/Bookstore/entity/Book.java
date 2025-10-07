@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class Book {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "bookID")
     private String bookId;
     
