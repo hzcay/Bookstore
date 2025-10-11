@@ -19,6 +19,9 @@ public interface SupplierRepository extends JpaRepository<Supplier, String> {
            "LOWER(s.phone) LIKE LOWER(CONCAT('%', :q, '%')))")
     Page<Supplier> searchSuppliers(@Param("q") String q, Pageable pageable);
     
+    Page<Supplier> findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCase(
+        String name, String phone, Pageable pageable);
+    
     List<Supplier> findByStatus(Integer status);
     
     Optional<Supplier> findBySupplierIdAndStatus(String supplierId, Integer status);

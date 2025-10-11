@@ -31,6 +31,10 @@ public class ReportDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class InventoryReport extends ReportDTO {
+        private Integer totalBooks;
+        private Integer totalQuantity;
+        private Double totalValue;
+        private Integer lowStockCount;
         private Map<String, Integer> stockByCategory;
         private Map<String, Integer> stockByAuthor;
         private Map<String, Integer> stockByPublisher;
@@ -42,5 +46,6 @@ public class ReportDTO {
     public static class SupplierDebtReport extends ReportDTO {
         private Double totalDebt;
         private Map<String, Double> debtBySupplier;
+        private java.util.List<SupplierDTO> suppliers;
     }
 }

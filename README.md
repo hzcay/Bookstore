@@ -84,16 +84,74 @@ Khắc phục sự cố phổ biến:
 - 403 khi truy cập Swagger: đảm bảo `SecurityConfig` đã permitAll các đường dẫn trên.
 - 500 khi load `/v3/api-docs`: chạy `mvn clean install`, dùng springdoc ≥ 2.7.0 (tương thích Spring Boot 3.5.x).
 
+## Giao diện Admin (Thymeleaf)
+
+Truy cập giao diện quản trị tại: `http://localhost:8080/admin/dashboard`
+
+### Công nghệ giao diện
+
+- **Thymeleaf**: Template engine server-side rendering
+- **Bootstrap 5**: CSS framework
+- **Bootstrap Icons**: Icon library
+- **Spring MVC**: Xử lý form và routing
+
+### Các trang quản lý
+
+- **Dashboard** (`/admin/dashboard`): Tổng quan hệ thống với thống kê nhanh
+  - Doanh thu tháng hiện tại
+  - Số đơn hàng
+  - Tổng khách hàng
+  - Cảnh báo sách tồn kho thấp
+  - Danh sách nhà cung cấp có công nợ
+
+- **Quản lý Sách** (`/admin/books`): 
+  - Danh sách sách với phân trang
+  - Thêm/Sửa/Xóa sách
+  - Tìm kiếm sách
+  - Form validation
+
+- **Quản lý Khách hàng** (`/admin/customers`): 
+  - CRUD khách hàng
+  - Quản lý điểm tích lũy
+  - Quản lý trạng thái xác thực
+
+- **Quản lý NCC** (`/admin/suppliers`): 
+  - CRUD nhà cung cấp
+  - Theo dõi công nợ
+  - Cập nhật công nợ
+
+- **Quản lý Nhân viên** (`/admin/employees`): 
+  - CRUD nhân viên
+  - Phân quyền theo vai trò (ADMIN, MANAGER, CASHIER, WAREHOUSE, SHIPPER)
+  - Quản lý trạng thái
+
+- **Báo cáo Thống kê** (`/admin/reports`): 
+  - Tổng doanh thu theo khoảng thời gian
+  - Số đơn hàng
+  - Giá trị trung bình đơn hàng
+  - Báo cáo tồn kho
+  - Báo cáo công nợ nhà cung cấp
+
+### Ưu điểm của Thymeleaf
+
+- ✅ **Server-side rendering**: Logic xử lý tập trung ở backend
+- ✅ **Bảo mật**: Không expose API endpoints cho client
+- ✅ **SEO-friendly**: HTML được render sẵn
+- ✅ **Tích hợp tốt với Spring**: Dễ dàng binding form, validation
+- ✅ **Không cần JavaScript framework**: Đơn giản hơn SPA
+- ✅ **Session management**: Quản lý phiên đăng nhập dễ dàng
+
 ## API Endpoints
 
 ### Books
 
-- `GET /api/v1/books` - Lấy danh sách sách
+- `GET /api/v1/books` - Lấy danh sách sách (có phân trang)
 - `GET /api/v1/books/search` - Tìm kiếm sách
 - `GET /api/v1/books/{id}` - Lấy chi tiết sách
 - `POST /api/v1/books` - Tạo sách mới
 - `PUT /api/v1/books/{id}` - Cập nhật sách
 - `DELETE /api/v1/books/{id}` - Xóa sách
+- `GET /api/v1/books/low-stock` - Lấy sách tồn kho thấp
 
 ### Orders
 
@@ -111,12 +169,35 @@ Khắc phục sự cố phổ biến:
 - `POST /api/v1/customers` - Tạo khách hàng mới
 - `PUT /api/v1/customers/{id}` - Cập nhật khách hàng
 - `DELETE /api/v1/customers/{id}` - Xóa khách hàng
+- `POST /api/v1/customers/register` - Đăng ký khách hàng
+- `POST /api/v1/customers/verify-otp` - Xác thực OTP
+
+### Employees
+
+- `GET /api/v1/employees` - Lấy danh sách nhân viên
+- `GET /api/v1/employees/{id}` - Lấy chi tiết nhân viên
+- `POST /api/v1/employees` - Tạo nhân viên mới
+- `PUT /api/v1/employees/{id}` - Cập nhật nhân viên
+- `DELETE /api/v1/employees/{id}` - Xóa nhân viên
+- `GET /api/v1/employees/active` - Lấy nhân viên đang hoạt động
+
+### Suppliers
+
+- `GET /api/v1/suppliers` - Lấy danh sách nhà cung cấp
+- `GET /api/v1/suppliers/{id}` - Lấy chi tiết nhà cung cấp
+- `POST /api/v1/suppliers` - Tạo nhà cung cấp mới
+- `PUT /api/v1/suppliers/{id}` - Cập nhật nhà cung cấp
+- `DELETE /api/v1/suppliers/{id}` - Xóa nhà cung cấp
+- `PUT /api/v1/suppliers/{id}/debt` - Cập nhật công nợ
 
 ### Reports
 
 - `GET /api/v1/reports/sales` - Báo cáo doanh thu
 - `GET /api/v1/reports/inventory` - Báo cáo tồn kho
 - `GET /api/v1/reports/suppliers-debt` - Báo cáo công nợ nhà cung cấp
+- `GET /api/v1/reports/revenue` - Tính tổng doanh thu
+- `GET /api/v1/reports/orders-count` - Đếm số đơn hàng
+- `GET /api/v1/reports/average-order-value` - Giá trị trung bình đơn hàng
 
 ## Các tính năng chính
 

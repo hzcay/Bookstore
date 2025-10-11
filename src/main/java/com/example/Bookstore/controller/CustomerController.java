@@ -56,9 +56,19 @@ public class CustomerController {
     }
     
     @PostMapping
-    public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO customerDTO) {
-        CustomerDTO createdCustomer = customerService.createCustomer(customerDTO);
-        return ResponseEntity.ok(createdCustomer);
+    public ResponseEntity<?> createCustomer(@RequestBody CustomerDTO customerDTO) {
+        try {
+            customerDTO.setStatus(0);
+            CustomerDTO createdCustomer = customerService.createCustomer(customerDTO);
+            
+            if (createdCustomer.getEmail() != null && !createdCustomer.getEmail().isEmpty()) {
+                authService.sendOTP(createdCustomer.getEmail());
+            }
+            
+            return ResponseEntity.ok(createdCustomer);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi tạo khách hàng: " + e.getMessage());
+        }
     }
     
     @PutMapping("/{id}")
@@ -150,11 +160,48 @@ public class CustomerController {
         try {
             if (authService.verifyOTP(request.getEmail(), request.getOtp())) {
                 customerService.activateCustomerByEmail(request.getEmail());
-                return ResponseEntity.ok("Tài khoản đã được xác thực thành công!");
+                return ResponseEntity.ok("Đã xác thực thành công!");
             }
-            return ResponseEntity.badRequest().body("Mã OTP không hợp lệ hoặc đã hết hạn");
+            return ResponseEntity.badRequest().body("OTP không đúng");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Lỗi xác thực: " + e.getMessage());
+            return ResponseEntity.badRequest().body("OTP không đúng");
+        }
+    }
+
+    @PostMapping("/{id}/resend-otp")
+    public ResponseEntity<?> resendOTP(@PathVariable String id) {
+        try {
+            Optional<CustomerDTO> customer = customerService.getCustomerById(id);
+            if (customer.isEmpty()) {
+                return ResponseEntity.badRequest().body("OTP không đúng");
+            }
+            
+            if (customer.get().getEmail() == null || customer.get().getEmail().isEmpty()) {
+                return ResponseEntity.badRequest().body("OTP không đúng");
+            }
+            
+            authService.sendOTP(customer.get().getEmail());
+            return ResponseEntity.ok("Đã gửi mã OTP qua email");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("OTP không đúng");
+        }
+    }
+
+    @PostMapping("/{id}/verify-activation")
+    public ResponseEntity<?> verifyActivation(@PathVariable String id, @RequestBody VerifyOTPRequest request) {
+        try {
+            Optional<CustomerDTO> customer = customerService.getCustomerById(id);
+            if (customer.isEmpty()) {
+                return ResponseEntity.badRequest().body("OTP không đúng");
+            }
+            
+            if (authService.verifyOTP(customer.get().getEmail(), request.getOtp())) {
+                customerService.activateCustomerByEmail(customer.get().getEmail());
+                return ResponseEntity.ok("Đã xác thực thành công!");
+            }
+            return ResponseEntity.badRequest().body("OTP không đúng");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("OTP không đúng");
         }
     }
 

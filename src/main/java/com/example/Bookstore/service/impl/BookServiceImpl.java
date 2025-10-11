@@ -2,7 +2,13 @@ package com.example.Bookstore.service.impl;
 
 import com.example.Bookstore.dto.BookDTO;
 import com.example.Bookstore.entity.Book;
+import com.example.Bookstore.entity.Category;
+import com.example.Bookstore.entity.Author;
+import com.example.Bookstore.entity.Publisher;
 import com.example.Bookstore.repository.BookRepository;
+import com.example.Bookstore.repository.CategoryRepository;
+import com.example.Bookstore.repository.AuthorRepository;
+import com.example.Bookstore.repository.PublisherRepository;
 import com.example.Bookstore.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,6 +26,15 @@ public class BookServiceImpl implements BookService {
     
     @Autowired
     private BookRepository bookRepository;
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private AuthorRepository authorRepository;
+    
+    @Autowired
+    private PublisherRepository publisherRepository;
     
     @Override
     @Transactional(readOnly = true)
@@ -47,7 +62,28 @@ public class BookServiceImpl implements BookService {
     
     @Override
     public BookDTO createBook(BookDTO bookDTO) {
-        Book book = convertToEntity(bookDTO);
+        Book book = new Book();
+        book.setTitle(bookDTO.getTitle());
+        book.setImportPrice(bookDTO.getImportPrice());
+        book.setSalePrice(bookDTO.getSalePrice());
+        book.setQuantity(bookDTO.getQuantity() != null ? bookDTO.getQuantity() : 0);
+        book.setStatus(1);
+        
+        if (bookDTO.getCategoryId() != null && !bookDTO.getCategoryId().isEmpty()) {
+            Category category = categoryRepository.findById(bookDTO.getCategoryId()).orElse(null);
+            book.setCategory(category);
+        }
+        
+        if (bookDTO.getAuthorId() != null && !bookDTO.getAuthorId().isEmpty()) {
+            Author author = authorRepository.findById(bookDTO.getAuthorId()).orElse(null);
+            book.setAuthor(author);
+        }
+        
+        if (bookDTO.getPublisherId() != null && !bookDTO.getPublisherId().isEmpty()) {
+            Publisher publisher = publisherRepository.findById(bookDTO.getPublisherId()).orElse(null);
+            book.setPublisher(publisher);
+        }
+        
         book = bookRepository.save(book);
         return convertToDTO(book);
     }
@@ -147,5 +183,26 @@ public class BookServiceImpl implements BookService {
         if (dto.getSalePrice() != null) book.setSalePrice(dto.getSalePrice());
         if (dto.getQuantity() != null) book.setQuantity(dto.getQuantity());
         if (dto.getStatus() != null) book.setStatus(dto.getStatus());
+        
+        if (dto.getCategoryId() != null && !dto.getCategoryId().isEmpty()) {
+            Category category = categoryRepository.findById(dto.getCategoryId()).orElse(null);
+            book.setCategory(category);
+        } else {
+            book.setCategory(null);
+        }
+        
+        if (dto.getAuthorId() != null && !dto.getAuthorId().isEmpty()) {
+            Author author = authorRepository.findById(dto.getAuthorId()).orElse(null);
+            book.setAuthor(author);
+        } else {
+            book.setAuthor(null);
+        }
+        
+        if (dto.getPublisherId() != null && !dto.getPublisherId().isEmpty()) {
+            Publisher publisher = publisherRepository.findById(dto.getPublisherId()).orElse(null);
+            book.setPublisher(publisher);
+        } else {
+            book.setPublisher(null);
+        }
     }
 }

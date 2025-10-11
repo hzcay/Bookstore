@@ -1,6 +1,8 @@
 package com.example.Bookstore.repository;
 
 import com.example.Bookstore.entity.Employee;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +21,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
     Optional<Employee> findByEmployeeIdAndStatus(String employeeId, Integer status);
     
     Optional<Employee> findByEmail(String email);
+    
+    Page<Employee> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+        String name, String email, Pageable pageable);
     
     @Query("SELECT e FROM Employee e WHERE e.role = 'SHIPPER' AND e.status = 1")
     List<Employee> findActiveShippers();

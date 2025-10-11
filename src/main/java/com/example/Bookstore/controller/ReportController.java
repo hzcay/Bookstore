@@ -5,10 +5,13 @@ import com.example.Bookstore.dto.SalesReportDTO;
 import com.example.Bookstore.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/v1/reports")
@@ -72,5 +75,47 @@ public class ReportController {
         
         Double averageValue = reportService.calculateAverageOrderValue(fromDate, toDate);
         return ResponseEntity.ok(averageValue);
+    }
+    
+    @GetMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportReportToPDF(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+            @RequestParam(defaultValue = "day") String granularity) {
+        
+        try {
+            byte[] pdfBytes = reportService.exportReportToPDF(fromDate, toDate, granularity);
+            
+            String filename = "baocao_" + fromDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + 
+                            "_" + toDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".pdf";
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/export/excel")
+    public ResponseEntity<byte[]> exportReportToExcel(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+            @RequestParam(defaultValue = "day") String granularity) {
+        
+        try {
+            byte[] excelBytes = reportService.exportReportToExcel(fromDate, toDate, granularity);
+            
+            String filename = "baocao_" + fromDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + 
+                            "_" + toDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(excelBytes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

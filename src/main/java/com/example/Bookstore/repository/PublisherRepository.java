@@ -1,6 +1,8 @@
 package com.example.Bookstore.repository;
 
 import com.example.Bookstore.entity.Publisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +17,6 @@ public interface PublisherRepository extends JpaRepository<Publisher, String> {
     Optional<Publisher> findByPublisherIdAndStatus(String publisherId, Integer status);
     
     boolean existsByNameAndStatus(String name, Integer status);
+    
+    Page<Publisher> findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCase(String name, String phone, Pageable pageable);
 }

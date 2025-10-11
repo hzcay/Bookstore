@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::content})}">
+<head>
+    <title th:text="${isEdit ? 'Chỉnh sửa KH' : 'Thêm KH'}">Form KH</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div class="row">
+            <div class="col-lg-6 offset-lg-3">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary" 
+                            th:text="${isEdit ? 'Chỉnh sửa Khách hàng' : 'Thêm Khách hàng Mới'}">Form KH</h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/customers/save}" th:object="${customer}" method="post">
+                            <input type="hidden" th:field="*{customerId}">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{name}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" th:field="*{email}" required>
+                            </div>
+                            
+                            <div class="mb-3" th:if="${!isEdit}">
+                                <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" th:field="*{password}" 
+                                       th:required="${!isEdit}">
+                            </div>
+                            
+                            <div class="mb-3" th:if="${isEdit}">
+                                <label class="form-label">Mật khẩu mới</label>
+                                <input type="password" class="form-control" th:field="*{password}">
+                                <small class="text-muted">Để trống nếu không muốn thay đổi</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" th:field="*{phone}">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Địa chỉ</label>
+                                <textarea class="form-control" th:field="*{address}" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Điểm tích lũy</label>
+                                <input type="number" class="form-control" th:field="*{points}">
+                            </div>
+                            
+                            <div class="mb-3" th:if="${isEdit}">
+                                <label class="form-label">Trạng thái</label>
+                                <select class="form-select" th:field="*{status}">
+                                    <option value="1">Hoạt động</option>
+                                    <option value="0">Chưa xác thực</option>
+                                </select>
+                            </div>
+                            
+                            <div class="alert alert-info" th:if="${!isEdit}">
+                                <i class="bi bi-info-circle"></i> Sau khi thêm mới, mã OTP sẽ được gửi qua email. Bạn cần xác thực để kích hoạt tài khoản.
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/admin/customers}" class="btn btn-secondary">Hủy</a>
+                                <button type="submit" class="btn btn-primary">Lưu</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::content})}">
+<head>
+    <title>Quản lý Sách</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Quản lý Sách</h1>
+            <a th:href="@{/admin/books/new}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm Sách
+            </a>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h6 class="m-0 font-weight-bold text-primary">Danh sách Sách</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <form th:action="@{/admin/books}" method="get" class="d-flex">
+                            <input type="text" name="search" th:value="${search}" 
+                                   class="form-control me-2" placeholder="Tìm kiếm sách...">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tên sách</th>
+                                <th>Tác giả</th>
+                                <th>Thể loại</th>
+                                <th>Giá bán</th>
+                                <th>Tồn kho</th>
+                                <th>NXB</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${books.empty}">
+                                <td colspan="7" class="text-center">Không có dữ liệu</td>
+                            </tr>
+                            <tr th:each="book : ${books.content}">
+                                <td th:text="${book.title}">Tên sách</td>
+                                <td th:text="${book.authorName} ?: 'N/A'">Tác giả</td>
+                                <td th:text="${book.categoryName} ?: 'N/A'">Thể loại</td>
+                                <td>
+                                    <span th:if="${book.salePrice != null}" 
+                                          th:text="${#numbers.formatDecimal(book.salePrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
+                                    <span th:if="${book.salePrice == null}">N/A</span>
+                                </td>
+                                <td>
+                                    <span th:class="${book.quantity < 10 ? 'badge bg-warning' : 'badge bg-success'}"
+                                          th:text="${book.quantity}">0</span>
+                                </td>
+                                <td th:text="${book.publisherName} ?: 'N/A'">NXB</td>
+                                <td>
+                                    <a th:href="@{/admin/books/edit/{id}(id=${book.bookId})}" 
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a th:href="@{/admin/books/delete/{id}(id=${book.bookId})}" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Bạn có chắc chắn muốn xóa?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav th:if="${books.totalPages > 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${books.first ? 'disabled' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/books(page=${currentPage - 1}, search=${search})}">
+                                Trước
+                            </a>
+                        </li>
+                        
+                        <li th:each="i : ${#numbers.sequence(0, books.totalPages - 1)}"
+                            th:if="${i < 3 or i > books.totalPages - 3 or (i >= currentPage - 1 and i <= currentPage + 1)}"
+                            class="page-item" 
+                            th:classappend="${i == currentPage ? 'active' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/books(page=${i}, search=${search})}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+                        
+                        <li class="page-item" th:classappend="${books.last ? 'disabled' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/books(page=${currentPage + 1}, search=${search})}">
+                                Sau
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

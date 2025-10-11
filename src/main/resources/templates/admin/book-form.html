@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::content})}">
+<head>
+    <title th:text="${isEdit ? 'Chỉnh sửa Sách' : 'Thêm Sách'}">Form Sách</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary" 
+                            th:text="${isEdit ? 'Chỉnh sửa Sách' : 'Thêm Sách Mới'}">
+                            Form Sách
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/books/save}" th:object="${book}" method="post">
+                            <input type="hidden" th:field="*{bookId}">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Tên sách <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{title}" required>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Thể loại</label>
+                                    <select class="form-select" th:field="*{categoryId}">
+                                        <option value="">-- Chọn thể loại --</option>
+                                        <option th:each="category : ${categories}" 
+                                                th:value="${category.categoryId}" 
+                                                th:text="${category.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tác giả</label>
+                                    <select class="form-select" th:field="*{authorId}">
+                                        <option value="">-- Chọn tác giả --</option>
+                                        <option th:each="author : ${authors}" 
+                                                th:value="${author.authorId}" 
+                                                th:text="${author.name}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Nhà xuất bản</label>
+                                <select class="form-select" th:field="*{publisherId}">
+                                    <option value="">-- Chọn nhà xuất bản --</option>
+                                    <option th:each="publisher : ${publishers}" 
+                                            th:value="${publisher.publisherId}" 
+                                            th:text="${publisher.name}"></option>
+                                </select>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Giá nhập</label>
+                                    <input type="number" class="form-control" th:field="*{importPrice}" 
+                                           step="1000" min="0">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Giá bán <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" th:field="*{salePrice}" 
+                                           step="1000" min="0" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Số lượng</label>
+                                    <input type="number" class="form-control" th:field="*{quantity}" 
+                                           min="0" value="0">
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/admin/books}" class="btn btn-secondary">Hủy</a>
+                                <button type="submit" class="btn btn-primary">Lưu</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

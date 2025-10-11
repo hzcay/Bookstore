@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content})}">
+    <div th:fragment="content">
+        <h1 class="mb-4">Dashboard</h1>
+        
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Doanh thu (Tháng)
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                     th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                    0 đ
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-currency-dollar fa-2x text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Đơn hàng (Tháng)
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${monthlyOrders}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-cart fa-2x text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Tổng Khách hàng
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalCustomers}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-people fa-2x text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Sách tồn kho thấp
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${lowStockCount}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-exclamation-triangle fa-2x text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Sách tồn kho thấp</h6>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(lowStockBooks)}" class="text-muted">
+                            Không có sách tồn kho thấp
+                        </div>
+                        <div th:unless="${#lists.isEmpty(lowStockBooks)}" class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tên sách</th>
+                                        <th>Số lượng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="book : ${lowStockBooks}">
+                                        <td th:text="${book.title}">Tên sách</td>
+                                        <td>
+                                            <span class="badge bg-warning" th:text="${book.stockQuantity}">0</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <a th:href="@{/admin/books}" class="btn btn-sm btn-primary">Xem tất cả</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Nhà cung cấp có công nợ</h6>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(debtSuppliers)}" class="text-muted">
+                            Không có nhà cung cấp nào có công nợ
+                        </div>
+                        <div th:unless="${#lists.isEmpty(debtSuppliers)}" class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tên NCC</th>
+                                        <th>Công nợ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="supplier : ${debtSuppliers}">
+                                        <td th:text="${supplier.name}">Tên NCC</td>
+                                        <td>
+                                            <span class="badge bg-danger" 
+                                                  th:text="${#numbers.formatDecimal(supplier.debt, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                                0 đ
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <a th:href="@{/admin/suppliers}" class="btn btn-sm btn-primary">Xem tất cả</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+</html>
+

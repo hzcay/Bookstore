@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::content})}">
+<head>
+    <title>Quản lý Nhà cung cấp</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Quản lý Nhà cung cấp</h1>
+            <a th:href="@{/admin/suppliers/new}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm NCC
+            </a>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h6 class="m-0 font-weight-bold text-primary">Danh sách NCC</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <form th:action="@{/admin/suppliers}" method="get" class="d-flex">
+                            <input type="text" name="search" th:value="${search}" 
+                                   class="form-control me-2" placeholder="Tìm kiếm...">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tên NCC</th>
+                                <th>SĐT</th>
+                                <th>Địa chỉ</th>
+                                <th>Công nợ</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${suppliers.empty}">
+                                <td colspan="6" class="text-center">Không có dữ liệu</td>
+                            </tr>
+                            <tr th:each="supplier : ${suppliers.content}">
+                                <td th:text="${supplier.name}">Tên</td>
+                                <td th:text="${supplier.phone} ?: 'N/A'">SĐT</td>
+                                <td th:text="${supplier.address} ?: 'N/A'">Địa chỉ</td>
+                                <td>
+                                    <span th:class="${supplier.debt > 0 ? 'badge bg-danger' : 'badge bg-success'}"
+                                          th:text="${#numbers.formatDecimal(supplier.debt, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                        0 đ
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:class="${supplier.status == 1 ? 'badge bg-success' : 'badge bg-secondary'}"
+                                          th:text="${supplier.status == 1 ? 'Hoạt động' : 'Ngừng'}">Trạng thái</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/admin/suppliers/edit/{id}(id=${supplier.supplierId})}" 
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a th:href="@{/admin/suppliers/delete/{id}(id=${supplier.supplierId})}" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Bạn có chắc chắn muốn xóa?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav th:if="${suppliers.totalPages > 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${suppliers.first ? 'disabled' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/suppliers(page=${currentPage - 1}, search=${search})}">Trước</a>
+                        </li>
+                        
+                        <li th:each="i : ${#numbers.sequence(0, suppliers.totalPages - 1)}"
+                            th:if="${i < 3 or i > suppliers.totalPages - 3 or (i >= currentPage - 1 and i <= currentPage + 1)}"
+                            class="page-item" 
+                            th:classappend="${i == currentPage ? 'active' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/suppliers(page=${i}, search=${search})}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+                        
+                        <li class="page-item" th:classappend="${suppliers.last ? 'disabled' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/suppliers(page=${currentPage + 1}, search=${search})}">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

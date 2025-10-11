@@ -17,4 +17,8 @@ public interface ReportService {
     Long countTotalOrders(LocalDateTime fromDate, LocalDateTime toDate);
     
     Double calculateAverageOrderValue(LocalDateTime fromDate, LocalDateTime toDate);
+    
+    byte[] exportReportToPDF(LocalDateTime fromDate, LocalDateTime toDate, String granularity) throws IOException;
+    
+    byte[] exportReportToExcel(LocalDateTime fromDate, LocalDateTime toDate, String granularity) throws IOException;
 }

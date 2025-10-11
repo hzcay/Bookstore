@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::content})}">
+<head>
+    <title>Quản lý Khách hàng</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Quản lý Khách hàng</h1>
+            <a th:href="@{/admin/customers/new}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm Khách hàng
+            </a>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h6 class="m-0 font-weight-bold text-primary">Danh sách Khách hàng</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <form th:action="@{/admin/customers}" method="get" class="d-flex">
+                            <input type="text" name="search" th:value="${search}" 
+                                   class="form-control me-2" placeholder="Tìm kiếm...">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tên KH</th>
+                                <th>Email</th>
+                                <th>SĐT</th>
+                                <th>Địa chỉ</th>
+                                <th>Điểm</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${customers.empty}">
+                                <td colspan="7" class="text-center">Không có dữ liệu</td>
+                            </tr>
+                            <tr th:each="customer : ${customers.content}">
+                                <td th:text="${customer.name}">Tên</td>
+                                <td th:text="${customer.email}">Email</td>
+                                <td th:text="${customer.phone} ?: 'N/A'">SĐT</td>
+                                <td th:text="${customer.address} ?: 'N/A'">Địa chỉ</td>
+                                <td><span class="badge bg-info" th:text="${customer.points}">0</span></td>
+                                <td>
+                                    <span th:class="${customer.status == 1 ? 'badge bg-success' : 'badge bg-secondary'}"
+                                          th:text="${customer.status == 1 ? 'Hoạt động' : 'Chưa xác thực'}">
+                                        Trạng thái
+                                    </span>
+                                </td>
+                                <td class="text-nowrap">
+                                    <button th:if="${customer.status == 0}" 
+                                            type="button"
+                                            class="btn btn-sm btn-success me-1"
+                                            th:attr="data-customer-id=${customer.customerId}, data-email=${customer.email}"
+                                            onclick="showVerifyModal(this.getAttribute('data-customer-id'), this.getAttribute('data-email'))">
+                                        <i class="bi bi-check-circle"></i> Xác thực
+                                    </button>
+                                    <a th:href="@{/admin/customers/edit/{id}(id=${customer.customerId})}" 
+                                       class="btn btn-sm btn-warning me-1">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a th:href="@{/admin/customers/delete/{id}(id=${customer.customerId})}" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Bạn có chắc chắn muốn xóa?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav th:if="${customers.totalPages > 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${customers.first ? 'disabled' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/customers(page=${currentPage - 1}, search=${search})}">Trước</a>
+                        </li>
+                        
+                        <li th:each="i : ${#numbers.sequence(0, customers.totalPages - 1)}"
+                            th:if="${i < 3 or i > customers.totalPages - 3 or (i >= currentPage - 1 and i <= currentPage + 1)}"
+                            class="page-item" 
+                            th:classappend="${i == currentPage ? 'active' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/customers(page=${i}, search=${search})}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+                        
+                        <li class="page-item" th:classappend="${customers.last ? 'disabled' : ''}">
+                            <a class="page-link" 
+                               th:href="@{/admin/customers(page=${currentPage + 1}, search=${search})}">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <div class="modal fade" id="verifyModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Xác thực OTP</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Mã OTP đã được gửi đến email: <strong id="verifyEmail"></strong></p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-clock"></i> Mã OTP có hiệu lực trong: <strong id="countdown">5:00</strong>
+                        </div>
+                        <div class="mb-3">
+                            <label for="otpInput" class="form-label">Nhập mã OTP</label>
+                            <input type="text" class="form-control" id="otpInput" maxlength="6" placeholder="000000">
+                        </div>
+                        <div id="verifyError" class="alert alert-danger d-none"></div>
+                        <div id="verifySuccess" class="alert alert-success d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="resendOtpBtn">Gửi lại OTP</button>
+                        <button type="button" class="btn btn-primary" id="verifyOtpBtn">Xác thực</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let currentCustomerId = null;
+            let currentEmail = null;
+            let countdownInterval = null;
+            let timeLeft = 300;
+            
+            function showVerifyModal(customerId, email) {
+                currentCustomerId = customerId;
+                currentEmail = email;
+                document.getElementById('verifyEmail').textContent = email;
+                document.getElementById('otpInput').value = '';
+                document.getElementById('otpInput').disabled = false;
+                document.getElementById('verifyOtpBtn').disabled = false;
+                document.getElementById('verifyError').classList.add('d-none');
+                document.getElementById('verifySuccess').classList.add('d-none');
+                
+                var modal = new bootstrap.Modal(document.getElementById('verifyModal'));
+                modal.show();
+            }
+            
+            function startCountdown() {
+                timeLeft = 300;
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+                
+                updateCountdownDisplay();
+                
+                countdownInterval = setInterval(function() {
+                    timeLeft--;
+                    updateCountdownDisplay();
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        document.getElementById('otpInput').disabled = true;
+                        document.getElementById('verifyOtpBtn').disabled = true;
+                        showError('Mã OTP đã hết hạn. Vui lòng nhấn "Gửi lại OTP"');
+                    }
+                }, 1000);
+            }
+            
+            function updateCountdownDisplay() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('countdown').textContent = 
+                    minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            }
+            
+            document.getElementById('verifyOtpBtn').addEventListener('click', function() {
+                const otp = document.getElementById('otpInput').value;
+                
+                if (!otp || otp.length !== 6) {
+                    showError('Vui lòng nhập mã OTP 6 số');
+                    return;
+                }
+                
+                fetch('/api/v1/customers/' + currentCustomerId + '/verify-activation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ otp: otp })
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data === 'Đã xác thực thành công!') {
+                        showSuccess(data);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showError(data);
+                    }
+                })
+                .catch(error => {
+                    showError('Có lỗi xảy ra: ' + error.message);
+                });
+            });
+            
+            document.getElementById('resendOtpBtn').addEventListener('click', function() {
+                fetch('/api/v1/customers/' + currentCustomerId + '/resend-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('otpInput').disabled = false;
+                    document.getElementById('verifyOtpBtn').disabled = false;
+                    document.getElementById('otpInput').value = '';
+                    showSuccess('Đã gửi lại mã OTP qua email');
+                    startCountdown();
+                })
+                .catch(error => {
+                    showError('Có lỗi xảy ra: ' + error.message);
+                });
+            });
+            
+            document.getElementById('verifyModal').addEventListener('hidden.bs.modal', function() {
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+            });
+            
+            function showError(message) {
+                const errorDiv = document.getElementById('verifyError');
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('d-none');
+                document.getElementById('verifySuccess').classList.add('d-none');
+            }
+            
+            function showSuccess(message) {
+                const successDiv = document.getElementById('verifySuccess');
+                successDiv.textContent = message;
+                successDiv.classList.remove('d-none');
+                document.getElementById('verifyError').classList.add('d-none');
+            }
+        </script>
+    </div>
+</body>
+</html>

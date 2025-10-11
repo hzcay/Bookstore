@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, String> {
     
-    @Query("SELECT c FROM Customer c WHERE c.status = 1 AND " +
+    @Query("SELECT c FROM Customer c WHERE " +
            "(:q IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
            "LOWER(c.phone) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
            "LOWER(c.email) LIKE LOWER(CONCAT('%', :q, '%')))")
