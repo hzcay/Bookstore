@@ -2,6 +2,7 @@ package com.example.Bookstore.service;
 
 import com.example.Bookstore.dto.ReportDTO;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 public interface ReportService {
