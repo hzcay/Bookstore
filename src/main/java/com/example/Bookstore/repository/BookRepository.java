@@ -14,10 +14,10 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<Book, String> {
     
-    @Query("SELECT b FROM Book b WHERE b.status = 1")
+    @Query("SELECT b FROM Book b")
     Page<Book> findAllActive(Pageable pageable);
     
-    @Query("SELECT b FROM Book b WHERE b.status = 1 AND " +
+    @Query("SELECT b FROM Book b WHERE " +
            "(:title IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :title, '%'))) AND " +
            "(:categoryId IS NULL OR b.category.categoryId = :categoryId) AND " +
            "(:authorId IS NULL OR b.author.authorId = :authorId) AND " +

@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface OrderService {
     
-    Page<OrderDTO> getAllOrders(String customerId, Order.OrderStatus status, 
+    Page<OrderDTO> getAllOrders(String customerId, Integer status, 
                                Integer paymentStatus, LocalDateTime dateFrom, 
                                LocalDateTime dateTo, Pageable pageable);
     

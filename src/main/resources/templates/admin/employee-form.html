@@ -36,7 +36,6 @@
                                 <select class="form-select" th:field="*{role}" required>
                                     <option value="">-- Chọn vai trò --</option>
                                     <option value="ADMIN">Quản trị viên</option>
-                                    <option value="MANAGER">Quản lý</option>
                                     <option value="CASHIER">Thu ngân</option>
                                     <option value="WAREHOUSE">Kho</option>
                                     <option value="SHIPPER">Giao hàng</option>
@@ -55,13 +54,6 @@
                                 <small class="text-muted">Để trống nếu không muốn thay đổi</small>
                             </div>
                             
-                            <div class="mb-3" th:if="${isEdit}">
-                                <label class="form-label">Trạng thái</label>
-                                <select class="form-select" th:field="*{status}">
-                                    <option value="1">Hoạt động</option>
-                                    <option value="0">Chưa xác thực</option>
-                                </select>
-                            </div>
                             
                             <div class="alert alert-info" th:if="${!isEdit}">
                                 <i class="bi bi-info-circle"></i> Sau khi thêm mới, mã OTP sẽ được gửi qua email. Bạn cần xác thực để kích hoạt tài khoản.

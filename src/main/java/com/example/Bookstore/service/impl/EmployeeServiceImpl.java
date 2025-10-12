@@ -59,7 +59,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isEmpty()) {
             employee.setPassword(employeeDTO.getPassword());
         }
-        employee.setStatus(employeeDTO.getStatus());
+        // Không cho phép thay đổi trạng thái khi update - chỉ có thể thay đổi qua xác thực OTP
         
         Employee updatedEmployee = employeeRepository.save(employee);
         return convertToDTO(updatedEmployee);
@@ -67,7 +67,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void deleteEmployee(String id) {
-        employeeRepository.deleteById(id);
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        employee.setStatus(0);
+        employeeRepository.save(employee);
     }
 
     @Override
@@ -113,7 +116,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPhone(dto.getPhone());
         employee.setEmail(dto.getEmail());
         employee.setPassword(dto.getPassword());
-        employee.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+        employee.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
         return employee;
     }
 }

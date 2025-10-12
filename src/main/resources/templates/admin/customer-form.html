@@ -53,14 +53,6 @@
                                 <input type="number" class="form-control" th:field="*{points}">
                             </div>
                             
-                            <div class="mb-3" th:if="${isEdit}">
-                                <label class="form-label">Trạng thái</label>
-                                <select class="form-select" th:field="*{status}">
-                                    <option value="1">Hoạt động</option>
-                                    <option value="0">Chưa xác thực</option>
-                                </select>
-                            </div>
-                            
                             <div class="alert alert-info" th:if="${!isEdit}">
                                 <i class="bi bi-info-circle"></i> Sau khi thêm mới, mã OTP sẽ được gửi qua email. Bạn cần xác thực để kích hoạt tài khoản.
                             </div>

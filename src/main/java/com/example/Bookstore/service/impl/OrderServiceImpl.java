@@ -25,7 +25,7 @@ public class OrderServiceImpl implements OrderService {
     
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderDTO> getAllOrders(String customerId, Order.OrderStatus status, 
+    public Page<OrderDTO> getAllOrders(String customerId, Integer status, 
                                        Integer paymentStatus, LocalDateTime dateFrom, 
                                        LocalDateTime dateTo, Pageable pageable) {
         return orderRepository.searchOrders(customerId, status, paymentStatus, 
@@ -62,8 +62,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         
-        if (order.getStatus() == Order.OrderStatus.PENDING) {
-            order.setStatus(Order.OrderStatus.PROCESSING);
+        if (order.getStatus() == 0) {
+            order.setStatus(1);
             orderRepository.save(order);
         } else {
             throw new RuntimeException("Order cannot be confirmed in current status");
@@ -75,9 +75,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         
-        if (order.getStatus() == Order.OrderStatus.PENDING || 
-            order.getStatus() == Order.OrderStatus.PROCESSING) {
-            order.setStatus(Order.OrderStatus.CANCELED);
+        if (order.getStatus() == 0) {
+            order.setStatus(0);
             orderRepository.save(order);
         } else {
             throw new RuntimeException("Order cannot be canceled in current status");
@@ -98,7 +97,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         
-        if (order.getStatus() == Order.OrderStatus.PENDING) {
+        if (order.getStatus() != 0) {
             throw new RuntimeException("Cannot modify order items after confirmation");
         }
         
@@ -110,7 +109,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         
-        if (order.getStatus() != Order.OrderStatus.PENDING) {
+        if (order.getStatus() != 0) {
             throw new RuntimeException("Cannot modify order items after confirmation");
         }
     }
@@ -126,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public List<OrderDTO> getOrdersByCustomer(String customerId) {
-        return orderRepository.findByCustomerCustomerIdAndStatus(customerId, Order.OrderStatus.DELIVERED)
+        return orderRepository.findByCustomerCustomerIdAndStatus(customerId, 1)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -191,7 +190,7 @@ public class OrderServiceImpl implements OrderService {
         order.setShippingFee(dto.getShippingFee());
         order.setPaymentMethod(dto.getPaymentMethod());
         order.setPaymentStatus(dto.getPaymentStatus());
-        order.setStatus(dto.getStatus() != null ? dto.getStatus() : Order.OrderStatus.PENDING);
+        order.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
         order.setShippingAddress(dto.getShippingAddress());
         return order;
     }

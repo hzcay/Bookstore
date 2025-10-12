@@ -41,11 +41,11 @@ public class OrderController {
                 Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        Order.OrderStatus orderStatus = null;
+        Integer orderStatus = null;
         if (status != null) {
             try {
-                orderStatus = Order.OrderStatus.valueOf(status.toUpperCase());
-            } catch (IllegalArgumentException e) {
+                orderStatus = Integer.parseInt(status);
+            } catch (NumberFormatException e) {
                 return ResponseEntity.badRequest().build();
             }
         }

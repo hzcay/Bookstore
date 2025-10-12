@@ -39,7 +39,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public Page<BookDTO> getAllBooks(Pageable pageable) {
-        return bookRepository.findAllActive(pageable)
+        return bookRepository.findAll(pageable)
                 .map(this::convertToDTO);
     }
     
@@ -56,7 +56,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public Optional<BookDTO> getBookById(String bookId) {
-        return bookRepository.findByBookIdAndStatus(bookId, 1)
+        return bookRepository.findById(bookId)
                 .map(this::convertToDTO);
     }
     
@@ -90,7 +90,7 @@ public class BookServiceImpl implements BookService {
     
     @Override
     public BookDTO updateBook(String bookId, BookDTO bookDTO) {
-        Book existingBook = bookRepository.findByBookIdAndStatus(bookId, 1)
+        Book existingBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
         
         updateEntityFromDTO(existingBook, bookDTO);

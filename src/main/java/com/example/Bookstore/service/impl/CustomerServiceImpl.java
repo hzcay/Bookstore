@@ -74,7 +74,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
         if (customerDTO.getAddress() != null) c.setAddress(customerDTO.getAddress());
         if (customerDTO.getPoints() != null) c.setPoints(customerDTO.getPoints());
-        if (customerDTO.getStatus() != null) c.setStatus(customerDTO.getStatus());
+        // Không cho phép thay đổi trạng thái khi update - chỉ có thể thay đổi qua xác thực OTP
         c = customerRepository.save(c);
         return toDTO(c);
     }
