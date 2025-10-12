@@ -39,13 +39,14 @@
                                 <th>Thể loại</th>
                                 <th>Giá bán</th>
                                 <th>Tồn kho</th>
+                                <th>Trạng thái</th>
                                 <th>NXB</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:if="${books.empty}">
-                                <td colspan="7" class="text-center">Không có dữ liệu</td>
+                                <td colspan="8" class="text-center">Không có dữ liệu</td>
                             </tr>
                             <tr th:each="book : ${books.content}">
                                 <td th:text="${book.title}">Tên sách</td>
@@ -59,6 +60,10 @@
                                 <td>
                                     <span th:class="${book.quantity < 10 ? 'badge bg-warning' : 'badge bg-success'}"
                                           th:text="${book.quantity}">0</span>
+                                </td>
+                                <td>
+                                    <span th:if="${book.status == 1}" class="badge bg-success">Hoạt động</span>
+                                    <span th:if="${book.status == 0}" class="badge bg-secondary">Ngừng bán</span>
                                 </td>
                                 <td th:text="${book.publisherName} ?: 'N/A'">NXB</td>
                                 <td>

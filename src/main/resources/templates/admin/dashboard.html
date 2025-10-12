@@ -8,6 +8,10 @@
     <div th:fragment="content">
         <h1 class="mb-4">Dashboard</h1>
         
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+        </div>
+        
         <div class="row mb-4">
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
@@ -15,11 +19,10 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Doanh thu (Tháng)
+                                    Doanh thu tháng này
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800" 
-                                     th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                    0 đ
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <span th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'COMMA', 0, 'POINT')}">0</span> VNĐ
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -36,7 +39,7 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                    Đơn hàng (Tháng)
+                                    Đơn hàng tháng này
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${monthlyOrders}">0</div>
                             </div>
@@ -54,7 +57,7 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                    Tổng Khách hàng
+                                    Tổng khách hàng
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalCustomers}">0</div>
                             </div>
@@ -72,7 +75,7 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                    Sách tồn kho thấp
+                                    Sách sắp hết hàng
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${lowStockCount}">0</div>
                             </div>
@@ -89,11 +92,11 @@
             <div class="col-md-6 mb-4">
                 <div class="card shadow">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Sách tồn kho thấp</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Sách sắp hết hàng</h6>
                     </div>
                     <div class="card-body">
                         <div th:if="${#lists.isEmpty(lowStockBooks)}" class="text-muted">
-                            Không có sách tồn kho thấp
+                            <i class="bi bi-check-circle text-success"></i> Tất cả sách đều có đủ hàng
                         </div>
                         <div th:unless="${#lists.isEmpty(lowStockBooks)}" class="table-responsive">
                             <table class="table table-sm">
@@ -107,7 +110,7 @@
                                     <tr th:each="book : ${lowStockBooks}">
                                         <td th:text="${book.title}">Tên sách</td>
                                         <td>
-                                            <span class="badge bg-warning" th:text="${book.stockQuantity}">0</span>
+                                            <span class="badge bg-warning" th:text="${book.quantity}">0</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -125,7 +128,7 @@
                     </div>
                     <div class="card-body">
                         <div th:if="${#lists.isEmpty(debtSuppliers)}" class="text-muted">
-                            Không có nhà cung cấp nào có công nợ
+                            <i class="bi bi-check-circle text-success"></i> Không có công nợ với nhà cung cấp
                         </div>
                         <div th:unless="${#lists.isEmpty(debtSuppliers)}" class="table-responsive">
                             <table class="table table-sm">
@@ -139,9 +142,8 @@
                                     <tr th:each="supplier : ${debtSuppliers}">
                                         <td th:text="${supplier.name}">Tên NCC</td>
                                         <td>
-                                            <span class="badge bg-danger" 
-                                                  th:text="${#numbers.formatDecimal(supplier.debt, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                                0 đ
+                                            <span class="badge bg-danger">
+                                                <span th:text="${#numbers.formatDecimal(supplier.debt, 0, 'COMMA', 0, 'POINT')}">0</span> VNĐ
                                             </span>
                                         </td>
                                     </tr>

@@ -23,7 +23,7 @@ public class OrderDTO {
     private Integer paymentStatus;
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
-    private Order.OrderStatus status;
+    private Integer status;
     private String shippingAddress;
     private List<OrderItemDTO> orderItems;
 }

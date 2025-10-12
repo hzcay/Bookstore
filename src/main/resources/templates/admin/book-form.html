@@ -55,20 +55,27 @@
                             </div>
                             
                             <div class="row">
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label">Giá nhập</label>
                                     <input type="number" class="form-control" th:field="*{importPrice}" 
                                            step="1000" min="0">
                                 </div>
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label">Giá bán <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" th:field="*{salePrice}" 
                                            step="1000" min="0" required>
                                 </div>
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label">Số lượng</label>
                                     <input type="number" class="form-control" th:field="*{quantity}" 
                                            min="0" value="0">
+                                </div>
+                                <div class="col-md-3 mb-3" th:if="${isEdit}">
+                                    <label class="form-label">Trạng thái</label>
+                                    <select class="form-select" th:field="*{status}">
+                                        <option value="1">Hoạt động</option>
+                                        <option value="0">Ngừng bán</option>
+                                    </select>
                                 </div>
                             </div>
                             

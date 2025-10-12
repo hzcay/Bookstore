@@ -52,11 +52,11 @@ public class AdminController {
         model.addAttribute("activePage", "dashboard");
         try {
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime firstDay = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-            LocalDateTime lastDay = now.withHour(23).withMinute(59).withSecond(59);
+            LocalDateTime firstDayOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime lastDayOfMonth = now.withDayOfMonth(now.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59);
             
-            Double monthlyRevenue = reportService.calculateTotalRevenue(firstDay, lastDay);
-            Long monthlyOrders = reportService.countTotalOrders(firstDay, lastDay);
+            Double monthlyRevenue = reportService.calculateTotalRevenue(firstDayOfMonth, lastDayOfMonth);
+            Long monthlyOrders = reportService.countTotalOrders(firstDayOfMonth, lastDayOfMonth);
             
             Page<CustomerDTO> customerPage = customerService.getAllCustomers(null, PageRequest.of(0, 1));
             Long totalCustomers = customerPage.getTotalElements();
@@ -64,15 +64,16 @@ public class AdminController {
             List<BookDTO> lowStockBooks = bookService.getLowStockBooks(10);
             
             model.addAttribute("monthlyRevenue", monthlyRevenue != null ? monthlyRevenue : 0.0);
-            model.addAttribute("monthlyOrders", monthlyOrders);
+            model.addAttribute("monthlyOrders", monthlyOrders != null ? monthlyOrders : 0L);
             model.addAttribute("totalCustomers", totalCustomers);
-            model.addAttribute("lowStockCount", lowStockBooks.size());
-            model.addAttribute("lowStockBooks", lowStockBooks.subList(0, Math.min(5, lowStockBooks.size())));
+            model.addAttribute("lowStockCount", lowStockBooks != null ? lowStockBooks.size() : 0);
+            model.addAttribute("lowStockBooks", lowStockBooks != null && !lowStockBooks.isEmpty() ? 
+                lowStockBooks.subList(0, Math.min(5, lowStockBooks.size())) : List.of());
             
             try {
                 ReportDTO.SupplierDebtReport debtReport = reportService.generateSupplierDebtReport();
                 model.addAttribute("debtSuppliers", 
-                    debtReport.getSuppliers() != null ? 
+                    debtReport != null && debtReport.getSuppliers() != null && !debtReport.getSuppliers().isEmpty() ? 
                     debtReport.getSuppliers().subList(0, Math.min(5, debtReport.getSuppliers().size())) : 
                     List.of());
             } catch (Exception e) {
@@ -81,6 +82,12 @@ public class AdminController {
             
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi tải dữ liệu dashboard: " + e.getMessage());
+            model.addAttribute("monthlyRevenue", 0.0);
+            model.addAttribute("monthlyOrders", 0L);
+            model.addAttribute("totalCustomers", 0L);
+            model.addAttribute("lowStockCount", 0);
+            model.addAttribute("lowStockBooks", List.of());
+            model.addAttribute("debtSuppliers", List.of());
         }
         
         return "admin/dashboard";
