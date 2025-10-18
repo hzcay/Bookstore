@@ -49,6 +49,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         return templateEngine.process("NhanVienBanHang/invoice-template", context);
     }
     
+    @Override
+    public byte[] generatePDFFromHTML(String html) throws Exception {
+        return convertHTMLToPDF(html);
+    }
+    
     private byte[] convertHTMLToPDF(String html) throws Exception {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         

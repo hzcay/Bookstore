@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{NhanVienBanHang/Layout :: head('Báo cáo doanh thu - Bookstore')}"></head>
+<body>
+    <!-- Mobile Toggle -->
+    <div th:replace="~{NhanVienBanHang/Layout :: mobile-toggle}"></div>
+    
+    <!-- Sidebar -->
+    <nav th:replace="~{NhanVienBanHang/Layout :: sidebar('reports')}"></nav>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1><i class="bi bi-graph-up"></i> Báo cáo doanh thu</h1>
+        </div>
+        
+        <div class="container-fluid">
+            <!-- Error message -->
+            <div th:if="${error}" class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${error}"></span>
+                </div>
+                
+                <!-- Date Filter Form -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" th:action="@{/NhanVienBanHang/reports}" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="fromDate" class="form-label">Từ ngày:</label>
+                                <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                                       th:value="${fromDate}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="toDate" class="form-label">Đến ngày:</label>
+                                <input type="date" class="form-control" id="toDate" name="toDate" 
+                                       th:value="${toDate}">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="bi bi-search"></i> Lọc
+                                </button>
+                                <button type="button" class="btn btn-secondary me-2" onclick="filterToday()">
+                                    Hôm nay
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="filterThisMonth()">
+                                    Tháng này
+                                </button>
+                            </div>
+                            <div class="col-md-12 d-flex justify-content-end">
+                                <button type="button" class="btn btn-success" onclick="exportPDF()">
+                                    <i class="bi bi-file-earmark-pdf"></i> Xuất PDF
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Statistics Cards -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-box-seam"></i> Tổng đơn đã giao</h5>
+                                <h2 class="card-text" th:text="${totalOrders} + ' đơn'">0 đơn</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card text-white bg-primary mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-cash-stack"></i> Tổng doanh thu</h5>
+                                <h2 class="card-text" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Period Info -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Thông tin kỳ báo cáo</h5>
+                        <p class="mb-0">
+                            <strong>Từ:</strong> <span th:text="${fromDate}"></span>
+                            <strong class="ms-3">Đến:</strong> <span th:text="${toDate}"></span>
+                        </p>
+                        <p class="text-muted mb-0">
+                            <small><i class="bi bi-info-circle"></i> Chỉ tính các đơn hàng ở trạng thái DELIVERED (Đã giao)</small>
+                        </p>
+                    </div>
+                </div>
+        </div>
+        
+        <script>
+            function filterToday() {
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('fromDate').value = today;
+                    document.getElementById('toDate').value = today;
+                    document.querySelector('form').submit();
+                }
+                
+                function filterThisMonth() {
+                    const now = new Date();
+                    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+                    document.getElementById('fromDate').value = firstDay;
+                    document.getElementById('toDate').value = lastDay;
+                    document.querySelector('form').submit();
+                }
+                
+                function exportPDF() {
+                    const fromDate = document.getElementById('fromDate').value;
+                    const toDate = document.getElementById('toDate').value;
+                    
+                    if (!fromDate || !toDate) {
+                        alert('Vui lòng chọn khoảng thời gian để xuất báo cáo');
+                        return;
+                    }
+                    
+                    // Tạo URL với params
+                    const url = `/NhanVienBanHang/reports/pdf?fromDate=${fromDate}&toDate=${toDate}`;
+                    
+                    // Mở link download
+                    window.location.href = url;
+                }
+        </script>
+    </div>
+    
+    <!-- Scripts -->
+    <div th:replace="~{NhanVienBanHang/Layout :: scripts}"></div>
+</body>
+</html>

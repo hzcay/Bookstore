@@ -12,6 +12,8 @@ import com.example.Bookstore.repository.EmployeeRepository;
 import com.example.Bookstore.service.OrderService;
 import com.example.Bookstore.service.ShipmentService;
 import com.example.Bookstore.service.InvoiceService;
+import com.example.Bookstore.service.ReportService;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.List;
@@ -47,6 +50,12 @@ public class NhanVienBanHangController {
     
     @Autowired
     private InvoiceService invoiceService;
+    
+    @Autowired
+    private ReportService reportService;
+    
+    @Autowired
+    private SpringTemplateEngine templateEngine;
 
     // Helper method: Kiểm tra quyền cashier
     private void checkCashierAccess(HttpSession session) {
@@ -626,19 +635,14 @@ public class NhanVienBanHangController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
         }
-    }
-    
-    /**
-     * Download Invoice PDF
-     */
+    } 
+
     @GetMapping("/orders/{orderId}/invoice-pdf")
     @Transactional
     public ResponseEntity<byte[]> downloadInvoicePDF(@PathVariable String orderId) {
         try {
-            // Get order with details
             Order order = orderService.getOrderById(orderId)
                 .map(dto -> {
-                    // Convert DTO to Entity for PDF generation
                     Order entity = new Order();
                     entity.setOrderId(dto.getOrderId());
                     entity.setTotal(dto.getTotal());
@@ -648,7 +652,6 @@ public class NhanVienBanHangController {
                     entity.setCreateAt(dto.getCreateAt());
                     entity.setStatus(dto.getStatus());
                     
-                    // Set customer
                     if (dto.getCustomerId() != null) {
                         com.example.Bookstore.entity.Customer customer = new com.example.Bookstore.entity.Customer();
                         customer.setName(dto.getCustomerName());
@@ -656,7 +659,6 @@ public class NhanVienBanHangController {
                         entity.setCustomer(customer);
                     }
                     
-                    // Set order items
                     if (dto.getOrderItems() != null) {
                         java.util.List<com.example.Bookstore.entity.OrderItem> items = dto.getOrderItems().stream()
                             .map(itemDto -> {
@@ -664,7 +666,6 @@ public class NhanVienBanHangController {
                                 item.setQuantity(itemDto.getQuantity());
                                 item.setPrice(itemDto.getPrice());
                                 
-                                // Set book
                                 com.example.Bookstore.entity.Book book = new com.example.Bookstore.entity.Book();
                                 book.setTitle(itemDto.getBookTitle());
                                 item.setBook(book);
@@ -709,5 +710,105 @@ public class NhanVienBanHangController {
         dto.setPoints(customer.getPoints());
         dto.setStatus(customer.getStatus());
         return dto;
+    }
+    
+    /**
+     * Báo cáo doanh thu - chỉ tính đơn DELIVERED
+     */
+    @GetMapping("/reports")
+    public String viewReports(@RequestParam(required = false) String fromDate,
+                             @RequestParam(required = false) String toDate,
+                             Model model,
+                             HttpSession session) {
+        // Kiểm tra quyền cashier
+        checkCashierAccess(session);
+        
+        try {
+            // Mặc định: báo cáo hôm nay
+            java.time.LocalDateTime startDate;
+            java.time.LocalDateTime endDate;
+            
+            if (fromDate != null && !fromDate.trim().isEmpty() && 
+                toDate != null && !toDate.trim().isEmpty()) {
+                // Parse từ input
+                startDate = java.time.LocalDate.parse(fromDate).atStartOfDay();
+                endDate = java.time.LocalDate.parse(toDate).atTime(23, 59, 59);
+            } else {
+                // Mặc định: hôm nay
+                startDate = java.time.LocalDate.now().atStartOfDay();
+                endDate = java.time.LocalDateTime.now();
+                fromDate = java.time.LocalDate.now().toString();
+                toDate = java.time.LocalDate.now().toString();
+            }
+            
+            // Lấy số liệu từ ReportService
+            Long totalOrders = reportService.countTotalOrders(startDate, endDate);
+            Double totalRevenue = reportService.calculateTotalRevenue(startDate, endDate);
+            
+            // Đưa vào model
+            model.addAttribute("totalOrders", totalOrders != null ? totalOrders : 0);
+            model.addAttribute("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
+            model.addAttribute("fromDate", fromDate);
+            model.addAttribute("toDate", toDate);
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("totalOrders", 0);
+            model.addAttribute("totalRevenue", 0.0);
+            model.addAttribute("fromDate", java.time.LocalDate.now().toString());
+            model.addAttribute("toDate", java.time.LocalDate.now().toString());
+        }
+        
+        return "NhanVienBanHang/Reports";
+    }
+    
+    /**
+     * Xuất báo cáo PDF
+     */
+    @GetMapping("/reports/pdf")
+    public ResponseEntity<byte[]> exportReportPDF(@RequestParam String fromDate,
+                                               @RequestParam String toDate,
+                                               HttpSession session) {
+        // Kiểm tra quyền cashier
+        checkCashierAccess(session);
+        
+        try {
+            // Parse dates
+            java.time.LocalDateTime startDate = java.time.LocalDate.parse(fromDate).atStartOfDay();
+            java.time.LocalDateTime endDate = java.time.LocalDate.parse(toDate).atTime(23, 59, 59);
+            
+            // Lấy dữ liệu
+            Long totalOrders = reportService.countTotalOrders(startDate, endDate);
+            Double totalRevenue = reportService.calculateTotalRevenue(startDate, endDate);
+            
+            // Tạo context cho Thymeleaf
+            org.thymeleaf.context.Context context = new org.thymeleaf.context.Context();
+            context.setVariable("fromDate", fromDate);
+            context.setVariable("toDate", toDate);
+            context.setVariable("totalOrders", totalOrders != null ? totalOrders : 0);
+            context.setVariable("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
+            context.setVariable("exportTime", java.time.LocalDateTime.now().format(
+                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+            ));
+            
+            // Render template
+            String html = templateEngine.process("NhanVienBanHang/report-template", context);
+            
+            // Convert to PDF
+            byte[] pdfBytes = invoiceService.generatePDFFromHTML(html);
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "bao-cao-doanh-thu.pdf");
+            
+            return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+                
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(("Lỗi: " + e.getMessage()).getBytes());
+        }
     }
 }
