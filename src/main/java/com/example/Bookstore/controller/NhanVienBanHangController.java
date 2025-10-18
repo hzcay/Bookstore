@@ -635,8 +635,8 @@ public class NhanVienBanHangController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
         }
-    } 
-
+    }
+    
     @GetMapping("/orders/{orderId}/invoice-pdf")
     @Transactional
     public ResponseEntity<byte[]> downloadInvoicePDF(@PathVariable String orderId) {

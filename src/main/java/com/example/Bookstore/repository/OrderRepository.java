@@ -37,4 +37,7 @@ public interface OrderRepository extends JpaRepository<Order, String> {
            "o.createAt BETWEEN :fromDate AND :toDate")
     Long countDeliveredOrders(@Param("fromDate") LocalDateTime fromDate, 
                               @Param("toDate") LocalDateTime toDate);
+    
+    // Lấy đơn hàng theo khoảng thời gian và status
+    List<Order> findByCreateAtBetweenAndStatus(LocalDateTime fromDate, LocalDateTime toDate, Order.OrderStatus status);
 }

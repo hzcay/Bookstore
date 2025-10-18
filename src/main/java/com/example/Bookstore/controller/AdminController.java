@@ -451,7 +451,6 @@ public class AdminController {
     public String reports(
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,
-            @RequestParam(defaultValue = "day") String granularity,
             Model model) {
         
         model.addAttribute("activePage", "reports");
@@ -472,7 +471,7 @@ public class AdminController {
             Long totalOrders = reportService.countTotalOrders(from, to);
             Double avgOrderValue = reportService.calculateAverageOrderValue(from, to);
             
-            ReportDTO.SalesReport salesReport = reportService.generateSalesReport(from, to, granularity);
+            ReportDTO.SalesReport salesReport = reportService.generateSalesReport(from, to, "day");
             ReportDTO.InventoryReport inventoryReport = reportService.generateInventoryReport();
             ReportDTO.SupplierDebtReport debtReport = reportService.generateSupplierDebtReport();
             
@@ -484,7 +483,6 @@ public class AdminController {
             model.addAttribute("debtReport", debtReport);
             model.addAttribute("fromDate", fromDate);
             model.addAttribute("toDate", toDate);
-            model.addAttribute("granularity", granularity);
             
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi tải báo cáo: " + e.getMessage());
@@ -492,6 +490,12 @@ public class AdminController {
         
         return "admin/reports";
     }
+    
+    @GetMapping("/test-reports")
+    public String testReports() {
+        return "admin/test-reports";
+    }
+    
 
     @GetMapping("/categories")
     public String listCategories(

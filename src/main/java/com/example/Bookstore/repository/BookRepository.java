@@ -34,6 +34,8 @@ public interface BookRepository extends JpaRepository<Book, String>, JpaSpecific
     
     List<Book> findByQuantityLessThan(Integer quantity);
     
+    List<Book> findByQuantityLessThanAndStatus(Integer quantity, Integer status);
+    
     Optional<Book> findByBookIdAndStatus(String bookId, Integer status);
     
     // ===== Warehouse methods =====

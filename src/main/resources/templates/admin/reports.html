@@ -2,41 +2,62 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::content})}">
 <head>
     <title>Báo cáo Thống kê</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div th:fragment="content">
     <h2 class="mb-4">Báo cáo Thống kê</h2>
 
-    <div class="card mb-4">
-        <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">Bộ lọc báo cáo</h6>
-            </div>
-            <div class="card-body">
-                <form th:action="@{/admin/reports}" method="get" class="row g-3">
-                <div class="col-md-4">
-                        <label class="form-label">Từ ngày</label>
-                        <input type="date" name="fromDate" class="form-control" th:value="${fromDate}">
-                    </div>
-                <div class="col-md-4">
-                        <label class="form-label">Đến ngày</label>
-                        <input type="date" name="toDate" class="form-control" th:value="${toDate}">
-                    </div>
-                <div class="col-md-4">
-                        <label class="form-label">Chu kỳ</label>
-                        <select name="granularity" class="form-select">
-                            <option value="day" th:selected="${granularity == 'day'}">Theo ngày</option>
-                            <option value="week" th:selected="${granularity == 'week'}">Theo tuần</option>
-                            <option value="month" th:selected="${granularity == 'month'}">Theo tháng</option>
-                        </select>
-                    </div>
-                <div class="col-12">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-search"></i> Xem báo cáo
-                            </button>
-                    </div>
-                </form>
-            </div>
+    <!-- ========== BỘ LỌC BÁO CÁO ========== -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="bi bi-funnel-fill"></i> Bộ lọc báo cáo
+            </h6>
         </div>
+        <div class="card-body">
+            <form th:action="@{/admin/reports}" method="get">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Từ ngày</label>
+                        <input type="date" name="fromDate" class="form-control" th:value="${fromDate}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Đến ngày</label>
+                        <input type="date" name="toDate" class="form-control" th:value="${toDate}" required>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Xem báo cáo
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Nút preset nhanh -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('today')">
+                                <i class="bi bi-calendar-day"></i> Hôm nay
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('yesterday')">
+                                <i class="bi bi-calendar-minus"></i> Hôm qua
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('thisWeek')">
+                                <i class="bi bi-calendar-week"></i> Tuần này
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('thisMonth')">
+                                <i class="bi bi-calendar-month"></i> Tháng này
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('lastMonth')">
+                                <i class="bi bi-calendar-x"></i> Tháng trước
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
         <div class="row mb-4">
         <div class="col-xl-4 col-md-6 mb-3">
@@ -79,7 +100,7 @@
             </div>
         </div>
 
-    <div class="card mb-4" th:if="${salesReport != null && !salesReport.data.empty}">
+    <div class="card mb-4" th:if="${salesReport != null && salesReport.revenueByPeriod != null && !salesReport.revenueByPeriod.empty}">
         <div class="card-header">
             <h6 class="m-0 font-weight-bold text-primary">Biểu đồ Doanh thu</h6>
                     </div>
@@ -131,7 +152,7 @@
                         </tr>
                         <tr>
                             <th>Số NCC còn nợ:</th>
-                            <td th:text="${debtReport.suppliersWithDebt}">0</td>
+                            <td th:text="${debtReport.suppliers != null ? debtReport.suppliers.size() : 0}">0</td>
                         </tr>
                     </table>
                     
@@ -158,18 +179,130 @@
         </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script th:if="${salesReport != null && !salesReport.data.empty}">
+    
+    <script>
+    // ========== XỬ LÝ PRESET NGÀY ==========
+    function setDateRange(type) {
+        const today = new Date();
+        const fromDateInput = document.querySelector('input[name="fromDate"]');
+        const toDateInput = document.querySelector('input[name="toDate"]');
+        
+        let fromDate, toDate;
+        
+        switch(type) {
+            case 'today':
+                fromDate = toDate = formatDate(today);
+                break;
+            case 'yesterday':
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                fromDate = toDate = formatDate(yesterday);
+                break;
+            case 'thisWeek':
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay());
+                fromDate = formatDate(startOfWeek);
+                toDate = formatDate(today);
+                break;
+            case 'thisMonth':
+                fromDate = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
+                toDate = formatDate(today);
+                break;
+            case 'lastMonth':
+                const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+                fromDate = formatDate(lastMonth);
+                toDate = formatDate(lastMonthEnd);
+                break;
+        }
+        
+        fromDateInput.value = fromDate;
+        toDateInput.value = toDate;
+        
+        console.log('📅 Đã chọn:', type, 'Từ:', fromDate, 'Đến:', toDate);
+    }
+    
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+       // Auto-submit khi chọn preset
+       function setDateRangeAndSubmit(type) {
+           setDateRange(type);
+           document.querySelector('form').submit();
+       }
+       
+    // ========== TEST EMAIL ==========
+    function testEmail() {
+        const email = document.getElementById('autoEmail').value || 'admin@bookstore.com';
+        
+        if (!email) {
+            alert('Vui lòng nhập email để test');
+            return;
+        }
+        
+        fetch('/api/v1/reports/test-email?email=' + encodeURIComponent(email), {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('❌ Lỗi: ' + data.error);
+            } else {
+                alert('✅ ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Lỗi test email:', error);
+            alert('❌ Lỗi kết nối server');
+        });
+    }
+    
+    // ========== TEST AUTO REPORT ==========
+    function testAutoReport() {
+        const email = document.getElementById('autoEmail').value || 'admin@bookstore.com';
+        
+        if (!email) {
+            alert('Vui lòng nhập email để test');
+            return;
+        }
+        
+        if (!confirm('Gửi báo cáo test ngay bây giờ?')) {
+            return;
+        }
+        
+        fetch('/api/v1/reports/test-auto-report?email=' + encodeURIComponent(email), {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('❌ Lỗi: ' + data.error);
+            } else {
+                alert('✅ ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Lỗi test auto report:', error);
+            alert('❌ Lỗi kết nối server');
+        });
+    }
+    </script>
+    <script th:if="${salesReport != null && salesReport.revenueByPeriod != null && !salesReport.revenueByPeriod.empty}">
         const revenueData = {
             labels: [
-                /*[# th:each="item : ${salesReport.data}" ]*/
-                /*[[ ${item.period} ]]*/,
+                /*[# th:each="entry : ${salesReport.revenueByPeriod}" ]*/
+                /*[[ ${entry.key} ]]*/,
                 /*[/]*/
             ],
             datasets: [{
                 label: 'Doanh thu',
                 data: [
-                    /*[# th:each="item : ${salesReport.data}" ]*/
-                    /*[[ ${item.revenue} ]]*/,
+                    /*[# th:each="entry : ${salesReport.revenueByPeriod}" ]*/
+                    /*[[ ${entry.value} ]]*/,
                     /*[/]*/
                 ],
                 backgroundColor: 'rgba(78, 115, 223, 0.2)',
@@ -235,6 +368,287 @@
                 }
             }
         });
+        </script>
+        
+        <!-- ========== BIỂU ĐỒ PHÂN TÍCH SÁCH ========== -->
+        <div class="card shadow mb-4 mt-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-pie-chart-fill"></i> Phân tích doanh thu theo sách (Top 10)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div style="height: 400px; position: relative;">
+                    <canvas id="booksRevenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ========== CẤU HÌNH GỬI BÁO CÁO TỰ ĐỘNG ========== -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-envelope-fill"></i> Gửi báo cáo tự động qua Email
+                </h6>
+                <button class="btn btn-sm btn-primary" onclick="openAutoReportModal()">
+                    <i class="bi bi-gear-fill"></i> Cấu hình
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p class="mb-1"><strong>Email nhận báo cáo:</strong></p>
+                        <p id="configuredEmail" class="text-muted">admin@bookstore.com (mặc định)</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="mb-1"><strong>Thời gian gửi:</strong></p>
+                        <p id="configuredTime" class="text-muted">08:00 sáng hàng ngày</p>
+                    </div>
+                   <div class="col-md-4">
+                       <p class="mb-1"><strong>Trạng thái:</strong></p>
+                       <p>
+                           <span id="autoReportStatus" class="badge bg-success">Đang hoạt động</span>
+                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="testEmail()">
+                            <i class="bi bi-envelope"></i> Test Email
+                        </button>
+                        <button class="btn btn-sm btn-outline-success ms-2" onclick="testAutoReport()">
+                            <i class="bi bi-send"></i> Test Auto Report
+                        </button>
+                       </p>
+                   </div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle-fill"></i>
+                    Báo cáo PDF sẽ được gửi tự động vào email đã cấu hình mỗi ngày. 
+                    Báo cáo bao gồm: doanh thu, đơn hàng, công nợ NCC, và biểu đồ phân tích.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Setup Email -->
+        <div class="modal fade" id="autoReportModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cấu hình gửi báo cáo tự động</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Email nhận báo cáo</label>
+                            <input type="email" class="form-control" id="autoEmail" 
+                                   placeholder="admin@bookstore.com" value="admin@bookstore.com">
+                            <small class="text-muted">Email này sẽ nhận báo cáo PDF hàng ngày</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Thời gian gửi</label>
+                            <input type="time" class="form-control" id="autoTime" value="08:00">
+                            <small class="text-muted">Chọn giờ gửi báo cáo (VD: 08:00 = 8 giờ sáng)</small>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="autoEnabled" checked>
+                            <label class="form-check-label" for="autoEnabled">
+                                Bật gửi báo cáo tự động
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary" onclick="saveAutoReportConfig()">
+                            <i class="bi bi-save"></i> Lưu cấu hình
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        // ========== Biểu đồ phân tích sách ==========
+        let booksChart = null;
+        
+        function loadBooksRevenueChart() {
+            console.log('🚀 Bắt đầu load biểu đồ...');
+            
+            const fromDate = document.querySelector('input[name="fromDate"]')?.value;
+            const toDate = document.querySelector('input[name="toDate"]')?.value;
+            
+            console.log('From date:', fromDate);
+            console.log('To date:', toDate);
+            
+            if (!fromDate || !toDate) {
+                console.log('⚠️ Chưa có ngày, skip load chart');
+                return;
+            }
+            
+            const fromDateTime = fromDate + 'T00:00:00';
+            const toDateTime = toDate + 'T23:59:59';
+            
+            console.log('📡 Gọi API:', `/api/v1/reports/books-revenue?from=${fromDateTime}&to=${toDateTime}`);
+            
+            fetch(`/api/v1/reports/books-revenue?from=${fromDateTime}&to=${toDateTime}`)
+                .then(response => {
+                    console.log('📡 API response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📊 Dữ liệu nhận được:', data);
+                    
+                    if (!data || data.length === 0) {
+                        console.log('⚠️ Không có dữ liệu sách');
+                        return;
+                    }
+                    
+                    const labels = data.map(item => item.title);
+                    const revenues = data.map(item => item.revenue);
+                    const percentages = data.map(item => item.percentage);
+                    
+                    console.log('📈 Labels:', labels);
+                    console.log('💰 Revenues:', revenues);
+                    
+                    const ctx = document.getElementById('booksRevenueChart');
+                    if (!ctx) {
+                        console.error('❌ Không tìm thấy canvas booksRevenueChart');
+                        return;
+                    }
+                    
+                    // Destroy chart cũ nếu có
+                    if (booksChart) {
+                        booksChart.destroy();
+                    }
+                    
+                    booksChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Doanh thu',
+                                data: revenues,
+                                backgroundColor: [
+                                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                                    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            const percentage = percentages[context.dataIndex];
+                                            return label + ': ' + value.toLocaleString('vi-VN') + ' đ (' + percentage + '%)';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    console.log('✅ Đã tạo biểu đồ thành công!');
+                })
+                .catch(error => {
+                    console.error('❌ Lỗi load biểu đồ sách:', error);
+                });
+        }
+        
+        // ========== Setup Email tự động ==========
+        function openAutoReportModal() {
+            const modal = new bootstrap.Modal(document.getElementById('autoReportModal'));
+            modal.show();
+        }
+        
+       function saveAutoReportConfig() {
+           const email = document.getElementById('autoEmail').value;
+           const time = document.getElementById('autoTime').value;
+           const enabled = document.getElementById('autoEnabled').checked;
+           
+           if (!email) {
+               alert('Vui lòng nhập email');
+               return;
+           }
+           
+           // Gửi cấu hình lên server
+           fetch('/api/v1/reports/auto-report/configure', {
+               method: 'POST',
+               headers: {
+                   'Content-Type': 'application/json',
+               },
+               body: JSON.stringify({
+                   email: email,
+                   time: time,
+                   enabled: enabled
+               })
+           })
+           .then(response => response.json())
+           .then(data => {
+               if (data.error) {
+                   alert('❌ Lỗi: ' + data.error);
+                   return;
+               }
+               
+               // Lưu vào localStorage
+               localStorage.setItem('autoReportEmail', email);
+               localStorage.setItem('autoReportTime', time);
+               localStorage.setItem('autoReportEnabled', enabled);
+               
+               // Cập nhật UI
+               document.getElementById('configuredEmail').textContent = email;
+               document.getElementById('configuredTime').textContent = time + ' sáng hàng ngày';
+               document.getElementById('autoReportStatus').textContent = enabled ? 'Đang hoạt động' : 'Đã tắt';
+               document.getElementById('autoReportStatus').className = enabled ? 'badge bg-success' : 'badge bg-secondary';
+               
+               // Đóng modal
+               bootstrap.Modal.getInstance(document.getElementById('autoReportModal')).hide();
+               
+               alert('✅ Đã lưu cấu hình thành công!');
+               
+               console.log('✅ Cấu hình đã lưu:', data);
+           })
+           .catch(error => {
+               console.error('❌ Lỗi cấu hình:', error);
+               alert('❌ Lỗi kết nối server');
+           });
+       }
+        
+        // Load cấu hình khi trang load
+        function loadAutoReportConfig() {
+            const email = localStorage.getItem('autoReportEmail') || 'admin@bookstore.com';
+            const time = localStorage.getItem('autoReportTime') || '08:00';
+            const enabled = localStorage.getItem('autoReportEnabled') !== 'false';
+            
+            document.getElementById('configuredEmail').textContent = email;
+            document.getElementById('configuredTime').textContent = time + ' sáng hàng ngày';
+            document.getElementById('autoReportStatus').textContent = enabled ? 'Đang hoạt động' : 'Đã tắt';
+            document.getElementById('autoReportStatus').className = enabled ? 'badge bg-success' : 'badge bg-secondary';
+            
+            document.getElementById('autoEmail').value = email;
+            document.getElementById('autoTime').value = time;
+            document.getElementById('autoEnabled').checked = enabled;
+        }
+        
+        // Init khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Trang reports đã load');
+            loadAutoReportConfig();
+            loadBooksRevenueChart();
+        });
+        
+        // Load lại biểu đồ khi submit form filter
+        const filterForm = document.querySelector('form[action*="reports"]');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function() {
+                console.log('📊 Đang load lại biểu đồ...');
+                setTimeout(loadBooksRevenueChart, 500);
+            });
+        }
         </script>
     </div>
 </body>

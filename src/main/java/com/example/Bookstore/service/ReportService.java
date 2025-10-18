@@ -22,4 +22,7 @@ public interface ReportService {
     byte[] exportReportToPDF(LocalDateTime fromDate, LocalDateTime toDate, String granularity) throws IOException;
     
     byte[] exportReportToExcel(LocalDateTime fromDate, LocalDateTime toDate, String granularity) throws IOException;
+    
+    // Phân tích doanh thu theo sách
+    java.util.List<java.util.Map<String, Object>> getBooksRevenueAnalysis(LocalDateTime fromDate, LocalDateTime toDate);
 }

@@ -109,7 +109,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public List<BookDTO> getLowStockBooks(Integer threshold) {
-        return bookRepository.findByQuantityLessThan(threshold)
+        return bookRepository.findByQuantityLessThanAndStatus(threshold, 1)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

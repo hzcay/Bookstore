@@ -142,16 +142,7 @@ public class AuthController {
             if (employee.isPresent()) {
                 EmployeeDTO emp = employee.get();
                 if (emp.getStatus() == 0) {
-                    if (passwordEncoder.matches(request.getPassword(), emp.getPassword())) {
-                        authService.sendOTP(request.getEmail());
-                        Map<String, Object> response = new HashMap<>();
-                        response.put("needVerification", true);
-                        response.put("email", request.getEmail());
-                        response.put("message", "Tài khoản chưa xác thực. Mã OTP đã được gửi qua email.");
-                        return ResponseEntity.ok(response);
-                    } else {
-                        return ResponseEntity.badRequest().body(Map.of("message", "Email hoặc mật khẩu không đúng"));
-                    }
+                    return ResponseEntity.badRequest().body(Map.of("message", "Tài khoản nhân viên đã bị vô hiệu hóa"));
                 } else {
                     if (passwordEncoder.matches(request.getPassword(), emp.getPassword())) {
                         session.setAttribute("userId", emp.getEmployeeId());
@@ -203,24 +194,7 @@ public class AuthController {
                 return ResponseEntity.ok(response);
             }
             
-            Optional<EmployeeDTO> employee = employeeService.getEmployeeByEmailForAuth(request.getEmail());
-            if (employee.isPresent()) {
-                EmployeeDTO emp = employee.get();
-                employeeService.activateEmployeeByEmail(request.getEmail());
-                
-                session.setAttribute("userId", emp.getEmployeeId());
-                session.setAttribute("userType", "EMPLOYEE");
-                session.setAttribute("userName", emp.getName());
-                session.setAttribute("userRole", emp.getRole());
-                
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("userType", "EMPLOYEE");
-                response.put("userId", emp.getEmployeeId());
-                response.put("userName", emp.getName());
-                response.put("role", emp.getRole());
-                return ResponseEntity.ok(response);
-            }
+            // Employee không cần verify OTP - chỉ customer mới cần
             
             return ResponseEntity.badRequest().body("Không tìm thấy tài khoản");
         } catch (Exception e) {

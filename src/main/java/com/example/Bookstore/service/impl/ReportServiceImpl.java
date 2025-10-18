@@ -2,8 +2,10 @@ package com.example.Bookstore.service.impl;
 
 import com.example.Bookstore.dto.ReportDTO;
 import com.example.Bookstore.dto.SupplierDTO;
+import com.example.Bookstore.entity.Book;
 import com.example.Bookstore.entity.Order;
 import com.example.Bookstore.entity.Supplier;
+import com.example.Bookstore.repository.BookRepository;
 import com.example.Bookstore.repository.OrderRepository;
 import com.example.Bookstore.repository.SupplierRepository;
 import com.example.Bookstore.service.ReportService;
@@ -37,6 +39,9 @@ public class ReportServiceImpl implements ReportService {
     
     @Autowired
     private SupplierRepository supplierRepository;
+    
+    @Autowired
+    private BookRepository bookRepository;
 
     @Override
     public ReportDTO.SalesReport generateSalesReport(LocalDateTime fromDate, LocalDateTime toDate, String granularity) {
@@ -56,10 +61,44 @@ public class ReportServiceImpl implements ReportService {
     public ReportDTO.InventoryReport generateInventoryReport() {
         ReportDTO.InventoryReport report = new ReportDTO.InventoryReport();
         report.setReportType("inventory");
-        report.setTotalBooks(0);
-        report.setTotalQuantity(0);
-        report.setTotalValue(0.0);
-        report.setLowStockCount(0);
+        
+        try {
+            // Query thực tế từ database
+            List<Book> allBooks = bookRepository.findAll();
+            
+            int totalBooks = allBooks.size();
+            int totalQuantity = allBooks.stream()
+                .filter(book -> book.getQuantity() != null)
+                .mapToInt(Book::getQuantity)
+                .sum();
+            double totalValue = allBooks.stream()
+                .filter(book -> book.getQuantity() != null && book.getImportPrice() != null)
+                .mapToDouble(b -> b.getQuantity() * b.getImportPrice())
+                .sum();
+            int lowStockCount = (int) allBooks.stream()
+                .filter(book -> book.getQuantity() != null && book.getQuantity() < 10)
+                .count();
+            
+            report.setTotalBooks(totalBooks);
+            report.setTotalQuantity(totalQuantity);
+            report.setTotalValue(totalValue);
+            report.setLowStockCount(lowStockCount);
+            
+            System.out.println("📦 Generating real inventory report:");
+            System.out.println("📚 Total books: " + totalBooks);
+            System.out.println("📦 Total quantity: " + totalQuantity);
+            System.out.println("💰 Total value: " + totalValue);
+            System.out.println("⚠️ Low stock count: " + lowStockCount);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error generating inventory report: " + e.getMessage());
+            e.printStackTrace();
+            report.setTotalBooks(0);
+            report.setTotalQuantity(0);
+            report.setTotalValue(0.0);
+            report.setLowStockCount(0);
+        }
+        
         return report;
     }
 
@@ -250,6 +289,57 @@ public class ReportServiceImpl implements ReportService {
         workbook.close();
         
         return baos.toByteArray();
+    }
+    
+    @Override
+    public List<Map<String, Object>> getBooksRevenueAnalysis(LocalDateTime fromDate, LocalDateTime toDate) {
+        // Lấy tất cả đơn hàng DELIVERED trong khoảng thời gian
+        List<Order> orders = orderRepository.findByCreateAtBetweenAndStatus(
+            fromDate, toDate, Order.OrderStatus.DELIVERED
+        );
+        
+        // Tính tổng doanh thu
+        double totalRevenue = orders.stream()
+            .mapToDouble(Order::getTotal)
+            .sum();
+        
+        // Map để tích lũy doanh thu theo sách
+        Map<String, Map<String, Object>> bookRevenueMap = new HashMap<>();
+        
+        for (Order order : orders) {
+            if (order.getOrderItems() != null) {
+                for (var item : order.getOrderItems()) {
+                    String bookTitle = item.getBook() != null ? item.getBook().getTitle() : "Unknown";
+                    double itemRevenue = item.getPrice() * item.getQuantity();
+                    
+                    bookRevenueMap.computeIfAbsent(bookTitle, k -> {
+                        Map<String, Object> bookData = new HashMap<>();
+                        bookData.put("title", bookTitle);
+                        bookData.put("revenue", 0.0);
+                        bookData.put("quantity", 0);
+                        return bookData;
+                    });
+                    
+                    Map<String, Object> bookData = bookRevenueMap.get(bookTitle);
+                    bookData.put("revenue", (Double) bookData.get("revenue") + itemRevenue);
+                    bookData.put("quantity", (Integer) bookData.get("quantity") + item.getQuantity());
+                }
+            }
+        }
+        
+        // Chuyển thành list, tính %, sắp xếp và lấy top 10
+        List<Map<String, Object>> result = bookRevenueMap.values().stream()
+            .map(bookData -> {
+                double revenue = (Double) bookData.get("revenue");
+                double percentage = totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0;
+                bookData.put("percentage", Math.round(percentage * 100.0) / 100.0);
+                return bookData;
+            })
+            .sorted((a, b) -> Double.compare((Double) b.get("revenue"), (Double) a.get("revenue")))
+            .limit(10)
+            .collect(Collectors.toList());
+        
+        return result;
     }
 }
 
