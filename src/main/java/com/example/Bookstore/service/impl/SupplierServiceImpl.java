@@ -123,5 +123,53 @@ public class SupplierServiceImpl implements SupplierService {
         supplier.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
         return supplier;
     }
+    
+    // ===== Warehouse support methods =====
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Supplier> list(String keyword, Pageable pageable) {
+        return (keyword == null || keyword.isBlank())
+            ? supplierRepository.findAll(pageable)
+            : supplierRepository.findByNameContainingIgnoreCase(keyword, pageable);
+    }
+    
+    @Override
+    public Supplier create(String name, String address, String phone) {
+        Supplier s = new Supplier();
+        s.setName(name);
+        s.setAddress(address);
+        s.setPhone(phone);
+        s.setDebt(0.0);
+        s.setStatus(1);
+        return supplierRepository.save(s);
+    }
+    
+    @Override
+    public Supplier update(String id, String name, String address, String phone) {
+        Supplier s = supplierRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Supplier not found"));
+        s.setName(name);
+        s.setAddress(address);
+        s.setPhone(phone);
+        return supplierRepository.save(s);
+    }
+    
+    @Override
+    public void delete(String id) {
+        supplierRepository.deleteById(id);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<Supplier> findAll() {
+        return supplierRepository.findAll();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Supplier findById(String id) {
+        return supplierRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Supplier not found"));
+    }
 }
 

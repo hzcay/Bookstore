@@ -1,0 +1,92 @@
+/* Layout nội dung trang stock */
+.page-stock .kpi-row {
+	row-gap: 12px;
+}
+
+.page-stock .card-kpi {
+	border: none;
+	border-radius: 16px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, .04);
+}
+
+.page-stock .kpi-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	background: #f1f5f9;
+	color: #334155;
+}
+
+/* Bộ lọc */
+.page-stock .filter-bar {
+	gap: 8px;
+}
+
+.page-stock .filter-bar .form-control, .page-stock .filter-bar .form-select
+	{
+	border-radius: 12px;
+}
+
+/* Bảng */
+.page-stock .table thead th {
+	color: #64748b;
+	font-weight: 600;
+	border-bottom: 1px solid #eef2f7;
+}
+
+.page-stock .table td, .page-stock .table th {
+	vertical-align: middle;
+}
+
+.page-stock .col-actions .btn-ghost {
+	border: none;
+	background: transparent;
+	color: #64748b;
+}
+
+.page-stock .col-actions .btn-ghost:hover {
+	color: #111827;
+}
+
+/* Badge */
+.page-stock .badge-soft {
+	background: #f1f5f9;
+	color: #334155;
+	border: 1px solid #e2e8f0;
+}
+
+.page-stock .badge-ok {
+	background: #e8f7ef;
+	color: #0f5132;
+	border: 1px solid #c7eed8;
+}
+
+.page-stock .badge-warn {
+	background: #fff1f2;
+	color: #b42318;
+	border: 1px solid #fecaca;
+}
+
+/* Pagination */
+.page-stock .pager .btn {
+	border-radius: 10px;
+}
+
+/* Responsive nhỏ */
+@media ( max-width : 992px) {
+	.page-stock .table {
+		font-size: 14px;
+	}
+}
+
+/* Ensure Bootstrap modal overlays above layout containers */
+.modal {
+	z-index: 2000;
+}
+
+.modal-backdrop {
+	z-index: 1999;
+}

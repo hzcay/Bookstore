@@ -16,5 +16,13 @@ public interface SupplierService {
     void deleteSupplier(String id);
     void updateSupplierDebt(String id, Double debt);
     List<SupplierDTO> getActiveSuppliers();
+    
+    // Warehouse support methods
+    Page<com.example.Bookstore.entity.Supplier> list(String keyword, Pageable pageable);
+    com.example.Bookstore.entity.Supplier create(String name, String address, String phone);
+    com.example.Bookstore.entity.Supplier update(String id, String name, String address, String phone);
+    void delete(String id);
+    List<com.example.Bookstore.entity.Supplier> findAll();
+    com.example.Bookstore.entity.Supplier findById(String id);
 }
 

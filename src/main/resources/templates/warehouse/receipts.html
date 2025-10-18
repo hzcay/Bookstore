@@ -1,0 +1,161 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']})}">
+
+<!-- CSS riêng của trang nhập sách -->
+<link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-receipts.css}" />
+
+<div data-content class="page-receipts">
+	<!-- Card: Form nhập sách -->
+	<div class="card shadow-sm border-0 mb-4">
+		<div class="card-header py-3 gradient-header text-white d-flex align-items-center gap-2">
+			<i class="bi bi-plus-lg"></i>
+			<div>
+				<div class="fw-semibold">Nhập sách mới</div>
+				<div class="small opacity-75">Thêm sách vào kho từ nhà cung cấp</div>
+			</div>
+		</div>
+
+		<form class="card-body" th:action="@{/warehouse/receipts}" method="post">
+			<div class="row g-3">
+				<div class="col-md-4">
+					<label class="form-label"><i class="bi bi-book me-1"></i> Chọn sách</label>
+					<select name="bookId" class="form-select" required>
+						<option value="">-- Chọn sách --</option>
+						<option th:each="book : ${books}" th:value="${book.bookId}" th:text="${book.title}"></option>
+					</select>
+				</div>
+				<div class="col-md-4">
+					<label class="form-label"><i class="bi bi-people me-1"></i> Nhà cung cấp</label>
+					<select name="supplierId" class="form-select" required>
+						<option value="">-- Chọn NCC --</option>
+						<option th:each="supplier : ${suppliers}" th:value="${supplier.supplierId}" th:text="${supplier.name}"></option>
+					</select>
+				</div>
+				<div class="col-md-2">
+					<label class="form-label"><i class="bi bi-123 me-1"></i> Số lượng</label>
+					<input class="form-control" type="number" min="1" name="quantity" value="1" required/>
+				</div>
+				<div class="col-md-2 d-flex align-items-end">
+					<button type="submit" class="btn btn-primary w-100">
+						<i class="bi bi-plus-lg me-1"></i> Nhập sách
+					</button>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<!-- Thống kê nhanh -->
+	<div class="row mb-4">
+		<div class="col-md-3">
+			<div class="card bg-primary text-white">
+				<div class="card-body">
+					<div class="d-flex justify-content-between">
+						<div>
+							<div class="h4 mb-0" th:text="${totalReceipts}">0</div>
+							<div class="small">Tổng phiếu nhập</div>
+						</div>
+						<i class="bi bi-file-text fs-1 opacity-50"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card bg-success text-white">
+				<div class="card-body">
+					<div class="d-flex justify-content-between">
+						<div>
+							<div class="h4 mb-0" th:text="${totalBooks}">0</div>
+							<div class="small">Tổng sách nhập</div>
+						</div>
+						<i class="bi bi-book fs-1 opacity-50"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card bg-info text-white">
+				<div class="card-body">
+					<div class="d-flex justify-content-between">
+						<div>
+							<div class="h4 mb-0" th:text="${totalSuppliers}">0</div>
+							<div class="small">NCC hoạt động</div>
+						</div>
+						<i class="bi bi-people fs-1 opacity-50"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card bg-warning text-white">
+				<div class="card-body">
+					<div class="d-flex justify-content-between">
+						<div>
+							<div class="h4 mb-0" th:text="${lowStockCount}">0</div>
+							<div class="small">Sách sắp hết</div>
+						</div>
+						<i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Lịch sử nhập sách -->
+	<div class="card shadow-sm border-0">
+		<div class="card-header d-flex justify-content-between align-items-center">
+			<h6 class="m-0">Lịch sử nhập sách</h6>
+			<div class="d-flex gap-2">
+				<button class="btn btn-outline-secondary btn-sm">
+					<i class="bi bi-download me-1"></i> Xuất Excel
+				</button>
+				<button class="btn btn-outline-primary btn-sm">
+					<i class="bi bi-funnel me-1"></i> Lọc
+				</button>
+			</div>
+		</div>
+		<div class="table-responsive">
+			<table class="table align-middle mb-0">
+				<thead>
+					<tr>
+						<th>Mã phiếu</th>
+						<th>Tên sách</th>
+						<th>Nhà cung cấp</th>
+						<th class="text-center">Số lượng</th>
+						<th class="text-center">Ngày nhập</th>
+						<th class="text-center">Trạng thái</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="i : ${receipts}">
+						<td>
+							<span class="badge bg-light text-dark" th:text="${i.inventoryId}"></span>
+						</td>
+						<td>
+							<div class="fw-semibold" th:text="${i.book.title}"></div>
+							<div class="small text-muted" th:text="${i.book.author?.name ?: 'N/A'}"></div>
+						</td>
+						<td>
+							<div th:text="${i.supplier.name}"></div>
+							<div class="small text-muted" th:text="${i.supplier.phone}"></div>
+						</td>
+						<td class="text-center">
+							<span class="badge bg-success" th:text="${i.quantity}"></span>
+						</td>
+						<td class="text-center">
+							<span th:text="${#temporals.format(i.importDate, 'dd/MM/yyyy HH:mm')}"></span>
+						</td>
+						<td class="text-center">
+							<span class="badge bg-success" th:if="${i.status == 1}">Hoàn thành</span>
+							<span class="badge bg-warning" th:if="${i.status == 0}">Đang xử lý</span>
+						</td>
+					</tr>
+					<tr th:if="${#lists.isEmpty(receipts)}">
+						<td class="text-center py-4" colspan="6">Chưa có phiếu nhập nào</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+</html>

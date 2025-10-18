@@ -22,6 +22,13 @@ public interface SupplierRepository extends JpaRepository<Supplier, String> {
     Page<Supplier> findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCase(
         String name, String phone, Pageable pageable);
     
+    Page<Supplier> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    
+    List<Supplier> findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCaseOrAddressContainingIgnoreCase(
+        String name, String phone, String address);
+    
+    boolean existsByPhone(String phone);
+    
     List<Supplier> findByStatus(Integer status);
     
     Optional<Supplier> findBySupplierIdAndStatus(String supplierId, Integer status);

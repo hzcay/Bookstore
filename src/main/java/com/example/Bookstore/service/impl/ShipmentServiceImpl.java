@@ -8,6 +8,7 @@ import com.example.Bookstore.repository.EmployeeRepository;
 import com.example.Bookstore.repository.OrderRepository;
 import com.example.Bookstore.repository.ShipmentRepository;
 import com.example.Bookstore.service.ShipmentService;
+import com.example.Bookstore.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,9 @@ public class ShipmentServiceImpl implements ShipmentService {
 
 	@Autowired
 	private EmployeeRepository employeeRepository;
+	
+	@Autowired
+	private BookService bookService;
 
 	// LẤY DANH SÁCH / THỐNG KÊ
 	@Override
@@ -93,11 +97,16 @@ public class ShipmentServiceImpl implements ShipmentService {
 		Employee shipper = employeeRepository.findById(shipperId)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy shipper"));
 
-		// 3) Cập nhật Order -> SHIPPING và flush để đồng bộ
+		// 3) TRỪ TỒN KHO khi shipper nhận đơn
+		for (var orderItem : order.getOrderItems()) {
+			bookService.updateStock(orderItem.getBook().getBookId(), -orderItem.getQuantity());
+		}
+
+		// 4) Cập nhật Order -> SHIPPING và flush để đồng bộ
 		order.setStatus(Order.OrderStatus.SHIPPING);
 		orderRepository.saveAndFlush(order);
 
-		// 4) Tạo Shipment (KHÔNG gán shipmentId)
+		// 5) Tạo Shipment (KHÔNG gán shipmentId)
 		Shipment shipment = new Shipment();
 		// KHÔNG: shipment.setShipmentId(UUID.randomUUID().toString());
 		shipment.setOrder(orderRepository.getReferenceById(order.getOrderId()));
@@ -107,7 +116,7 @@ public class ShipmentServiceImpl implements ShipmentService {
 		shipment.setStatus(Shipment.ShipmentStatus.PICKING);
 		shipment.setCodAmount(order.getTotal() - order.getDiscount() + order.getShippingFee());
 
-		// 5) Lưu (Hibernate sẽ INSERT và tự sinh UUID)
+		// 6) Lưu (Hibernate sẽ INSERT và tự sinh UUID)
 		shipmentRepository.save(shipment);
 
 		return convertToDTO(shipment);

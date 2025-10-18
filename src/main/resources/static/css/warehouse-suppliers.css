@@ -1,0 +1,35 @@
+.page-suppliers .gradient-header {
+	background: linear-gradient(90deg, #4f46e5, #6366f1);
+}
+
+.page-suppliers .form-control, .page-suppliers .form-select,
+	.page-suppliers textarea {
+	border-radius: 12px;
+}
+
+.page-suppliers .btn-ghost {
+	border: none;
+	background: transparent;
+	color: #64748b;
+}
+
+.page-suppliers .btn-ghost:hover {
+	color: #111827;
+}
+
+.page-suppliers .input-group.search .input-group-text {
+	background: #fff;
+	border-right: 0;
+	border-radius: 12px 0 0 12px;
+}
+
+.page-suppliers .input-group.search .form-control {
+	border-left: 0;
+	border-radius: 0 12px 12px 0;
+}
+
+.page-suppliers .table thead th {
+	color: #64748b;
+	font-weight: 600;
+	border-bottom: 1px solid #eef2f7;
+}

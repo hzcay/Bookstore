@@ -110,6 +110,16 @@ public class ViewController {
         return "redirect:/NhanVienBanHang/home";
     }
 
+    @GetMapping("/warehouse/dashboard")
+    public String warehouseDashboard(HttpSession session) {
+        String userType = (String) session.getAttribute("userType");
+        String userRole = (String) session.getAttribute("userRole");
+        if (!"EMPLOYEE".equals(userType) || !"WAREHOUSE".equals(userRole)) {
+            return "redirect:/login";
+        }
+        return "redirect:/warehouse/stock";
+    }
+
     @GetMapping("/admin/access-denied")
     public String accessDenied() {
         return "admin/access-denied";
