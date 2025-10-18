@@ -18,7 +18,6 @@ import java.util.List;
 public class Order {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "orderID")
     private String orderId;
     

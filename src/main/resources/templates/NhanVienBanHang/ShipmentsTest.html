@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{NhanVienBanHang/Layout :: head('Test Shipments - Debug')}"></head>
+<body>
+    <!-- Mobile Toggle -->
+    <div th:replace="~{NhanVienBanHang/Layout :: mobile-toggle}"></div>
+    
+    <!-- Sidebar -->
+    <nav th:replace="~{NhanVienBanHang/Layout :: sidebar('shipments')}"></nav>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>🧪 Test & Debug - Quản lý giao hàng</h1>
+            <p class="text-muted mb-0">Trang kiểm tra và debug dữ liệu shipment</p>
+        </div>
+        
+        <!-- Error Alert -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Lỗi:</strong> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <!-- Debug Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock-history text-warning" style="font-size: 2.5rem;"></i>
+                        <h3 class="mt-2 mb-0" th:text="${pendingOrders != null ? pendingOrders.size() : 0}">0</h3>
+                        <p class="text-muted mb-0">PENDING Orders</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card border-info">
+                    <div class="card-body text-center">
+                        <i class="bi bi-gear-fill text-info" style="font-size: 2.5rem;"></i>
+                        <h3 class="mt-2 mb-0" th:text="${processingOrders != null ? processingOrders.size() : 0}">0</h3>
+                        <p class="text-muted mb-0">PROCESSING Orders</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="bi bi-truck text-primary" style="font-size: 2.5rem;"></i>
+                        <h3 class="mt-2 mb-0" th:text="${shipments != null ? shipments.size() : 0}">0</h3>
+                        <p class="text-muted mb-0">Total Shipments</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-badge text-success" style="font-size: 2.5rem;"></i>
+                        <h3 class="mt-2 mb-0" th:text="${shippers != null ? shippers.size() : 0}">0</h3>
+                        <p class="text-muted mb-0">Active Shippers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Debug Info -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-bug"></i> Debug Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary"><i class="bi bi-list-check"></i> Orders Status</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Pending Orders:</span>
+                                <strong class="badge bg-warning" th:text="${pendingOrders != null ? pendingOrders.size() : 'null'}">0</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Processing Orders:</span>
+                                <strong class="badge bg-info" th:text="${processingOrders != null ? processingOrders.size() : 'null'}">0</strong>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6 class="text-success"><i class="bi bi-box-seam"></i> Shipment Status</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Total Shipments:</span>
+                                <strong class="badge bg-primary" th:text="${shipments != null ? shipments.size() : 'null'}">0</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Active Shippers:</span>
+                                <strong class="badge bg-success" th:text="${shippers != null ? shippers.size() : 'null'}">0</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Test Links -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-terminal"></i> API Test Endpoints</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="/NhanVienBanHang/api/test-shipments" target="_blank" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1"><i class="bi bi-file-earmark-code"></i> Test Shipments API</h6>
+                            <small class="text-muted">GET</small>
+                        </div>
+                        <p class="mb-1"><code>/NhanVienBanHang/api/test-shipments</code></p>
+                        <small>Kiểm tra tổng số shipments và dữ liệu chi tiết</small>
+                    </a>
+                    
+                    <a href="/NhanVienBanHang/api/test-shippers" target="_blank" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1"><i class="bi bi-file-earmark-code"></i> Test Shippers API</h6>
+                            <small class="text-muted">GET</small>
+                        </div>
+                        <p class="mb-1"><code>/NhanVienBanHang/api/test-shippers</code></p>
+                        <small>Kiểm tra danh sách shipper trong database</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+            <a th:href="@{/NhanVienBanHang/shipments}" class="btn btn-primary">
+                <i class="bi bi-truck"></i> Đến trang Shipments
+            </a>
+            <a th:href="@{/NhanVienBanHang/home}" class="btn btn-secondary">
+                <i class="bi bi-house"></i> Quay lại trang chủ
+            </a>
+            <button onclick="location.reload()" class="btn btn-outline-info">
+                <i class="bi bi-arrow-clockwise"></i> Refresh Data
+            </button>
+        </div>
+    </div>
+
+<!-- Include common scripts -->
+<div th:replace="~{NhanVienBanHang/Layout :: scripts}"></div>
+</body>
+</html>

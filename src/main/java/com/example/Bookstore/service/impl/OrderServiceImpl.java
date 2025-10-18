@@ -312,6 +312,7 @@ public class OrderServiceImpl implements OrderService {
 
         // 5) Tạo Order
         Order order = new Order();
+        order.setOrderId(com.example.Bookstore.util.IDGenerator.generateOrderId());
 
         // (Optional) nếu đã login thì gắn customer
         Object uidObj = session.getAttribute(AuthController.SESSION_UID);

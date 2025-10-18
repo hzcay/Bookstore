@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{NhanVienBanHang/Layout :: head('Danh sách khách hàng - Bookstore')}"></head>
+<body>
+    <!-- Mobile Toggle -->
+    <div th:replace="~{NhanVienBanHang/Layout :: mobile-toggle}"></div>
+    
+    <!-- Sidebar -->
+    <nav th:replace="~{NhanVienBanHang/Layout :: sidebar('customers')}"></nav>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>👥 Danh sách khách hàng</h1>
+        </div>
+
+        <!-- Error display -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Lỗi:</strong> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Search Form -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form th:action="@{/NhanVienBanHang/customers}" method="get">
+                    <div class="row">
+                        <div class="col-md-10 mb-2">
+                            <input type="text" name="search" id="customerSearch" class="form-control" 
+                                   placeholder="🔍 Tìm kiếm khách hàng theo tên, số điện thoại, email..."
+                                   th:value="${searchKeyword}"
+                                   autocomplete="off">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Customers Table -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-people-fill"></i> Danh sách khách hàng 
+                    <span class="badge bg-light text-dark" th:text="${customers != null ? customers.size() : 0}">0</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${customers == null || customers.isEmpty()}" class="alert alert-info text-center">
+                    <i class="bi bi-inbox"></i> Không tìm thấy khách hàng nào
+                </div>
+                
+                <div th:if="${customers != null && !customers.isEmpty()}" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã KH</th>
+                                <th>Họ và tên</th>
+                                <th>Số điện thoại</th>
+                                <th>Email</th>
+                                <th class="text-center">Điểm tích lũy</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="customer : ${customers}">
+                                <td><code th:text="${customer.customerId}">-</code></td>
+                                <td>
+                                    <strong th:text="${customer.name}">-</strong>
+                                </td>
+                                <td>
+                                    <i class="bi bi-telephone-fill text-primary"></i>
+                                    <span th:text="${customer.phone}">-</span>
+                                </td>
+                                <td>
+                                    <i class="bi bi-envelope-fill text-info"></i>
+                                    <span th:text="${customer.email}">-</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning text-dark" style="font-size: 1rem;">
+                                        <i class="bi bi-star-fill"></i>
+                                        <span th:text="${customer.points != null ? customer.points : 0}">0</span> điểm
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span th:if="${customer.status == 1}" class="badge bg-success">Hoạt động</span>
+                                    <span th:unless="${customer.status == 1}" class="badge bg-secondary">Khóa</span>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            th:attr="onclick=|viewCustomerDetail('${customer.customerId}')|">
+                                        <i class="bi bi-eye-fill"></i> Chi tiết
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="mt-3">
+            <a th:href="@{/NhanVienBanHang/home}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Quay lại trang chủ
+            </a>
+        </div>
+    </div>
+
+    <!-- Customer Detail Modal -->
+    <div class="modal fade" id="customerDetailModal" tabindex="-1" aria-labelledby="customerDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="customerDetailModalLabel">
+                        <i class="bi bi-person-fill"></i> Chi tiết khách hàng
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="customerDetailContent">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Autocomplete Suggestions Dropdown -->
+    <div id="autocomplete-customer-list" class="autocomplete-suggestions" style="display: none;"></div>
+
+<!-- Include common scripts -->
+<div th:replace="~{NhanVienBanHang/Layout :: scripts}"></div>
+
+<style>
+    .autocomplete-suggestions {
+        position: absolute;
+        border: 1px solid #ddd;
+        border-top: none;
+        background-color: white;
+        max-height: 350px;
+        overflow-y: auto;
+        z-index: 1050;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 0 0 5px 5px;
+    }
+    
+    .autocomplete-item {
+        padding: 12px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .autocomplete-item:hover {
+        background-color: #e9ecef;
+    }
+    
+    .customer-name {
+        font-weight: 600;
+        color: #212529;
+        font-size: 1rem;
+    }
+    
+    .customer-phone {
+        font-size: 0.875rem;
+        color: #0d6efd;
+        margin-right: 15px;
+    }
+    
+    .customer-points {
+        font-size: 0.875rem;
+        color: #ffc107;
+        font-weight: 500;
+    }
+</style>
+
+<script>
+    // Function to view customer detail
+    function viewCustomerDetail(customerId) {
+        const modal = new bootstrap.Modal(document.getElementById('customerDetailModal'));
+        modal.show();
+        
+        // Show loading
+        document.getElementById('customerDetailContent').innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Đang tải thông tin khách hàng...</p>
+            </div>
+        `;
+        
+        // Fetch customer details
+        fetch(`/NhanVienBanHang/customers/${customerId}/detail`)
+            .then(response => response.json())
+            .then(customer => {
+                const statusBadge = customer.status === 1 
+                    ? `<span class="badge bg-success">Hoạt động</span>`
+                    : `<span class="badge bg-secondary">Đã khóa</span>`;
+                
+                document.getElementById('customerDetailContent').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="bi bi-person-badge"></i> Thông tin cơ bản</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="40%">Mã khách hàng:</th>
+                                    <td><code>${customer.customerId}</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Họ và tên:</th>
+                                    <td><strong>${customer.name}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Số điện thoại:</th>
+                                    <td>
+                                        <i class="bi bi-telephone-fill text-primary"></i>
+                                        <a href="tel:${customer.phone}">${customer.phone || '-'}</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>
+                                        <i class="bi bi-envelope-fill text-info"></i>
+                                        <a href="mailto:${customer.email}">${customer.email || '-'}</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Địa chỉ:</th>
+                                    <td>${customer.address || '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="bi bi-star-fill"></i> Thông tin tích lũy</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="40%">Điểm tích lũy:</th>
+                                    <td>
+                                        <span class="badge bg-warning text-dark" style="font-size: 1.2rem;">
+                                            <i class="bi bi-star-fill"></i> ${customer.points || 0} điểm
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Trạng thái:</th>
+                                    <td>${statusBadge}</td>
+                                </tr>
+                            </table>
+                            
+                            <div class="alert alert-info mt-3">
+                                <i class="bi bi-info-circle-fill"></i>
+                                <strong>Lưu ý:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>10 điểm = 1,000 ₫ giảm giá</li>
+                                    <li>Tích lũy: 1% giá trị đơn hàng</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                document.getElementById('customerDetailContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>Lỗi:</strong> Không thể tải thông tin khách hàng. ${error.message}
+                    </div>
+                `;
+            });
+    }
+    
+    // Autocomplete functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('customerSearch');
+        const autocompleteList = document.getElementById('autocomplete-customer-list');
+        
+        if (!searchInput) return;
+        
+        let currentFocus = -1;
+        
+        // Position autocomplete dropdown
+        function positionAutocomplete() {
+            const rect = searchInput.getBoundingClientRect();
+            autocompleteList.style.top = (rect.bottom + window.scrollY) + 'px';
+            autocompleteList.style.left = rect.left + 'px';
+            autocompleteList.style.width = rect.width + 'px';
+        }
+        
+        // Handle input
+        searchInput.addEventListener('input', function(e) {
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                autocompleteList.style.display = 'none';
+                return;
+            }
+            
+            // Fetch suggestions
+            fetch(`/NhanVienBanHang/customers/search/suggestions?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(suggestions => {
+                    if (suggestions.length === 0) {
+                        autocompleteList.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Build suggestions HTML
+                    autocompleteList.innerHTML = suggestions.map(customer => `
+                        <div class="autocomplete-item" data-customerid="${customer.customerId}">
+                            <div class="customer-name">${highlightMatch(customer.name, query)}</div>
+                            <div class="d-flex align-items-center mt-1">
+                                <span class="customer-phone">
+                                    <i class="bi bi-telephone-fill"></i> ${customer.phone || '-'}
+                                </span>
+                                <span class="customer-points">
+                                    <i class="bi bi-star-fill"></i> ${customer.points || 0} điểm
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    positionAutocomplete();
+                    autocompleteList.style.display = 'block';
+                    currentFocus = -1;
+                    
+                    // Add click handlers
+                    autocompleteList.querySelectorAll('.autocomplete-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const customerId = this.getAttribute('data-customerid');
+                            viewCustomerDetail(customerId);
+                            autocompleteList.style.display = 'none';
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Autocomplete error:', error);
+                    autocompleteList.style.display = 'none';
+                });
+        });
+        
+        // Handle keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            const items = autocompleteList.querySelectorAll('.autocomplete-item');
+            if (items.length === 0) return;
+            
+            if (e.keyCode === 40) { // Down arrow
+                e.preventDefault();
+                currentFocus++;
+                addActive(items);
+            } else if (e.keyCode === 38) { // Up arrow
+                e.preventDefault();
+                currentFocus--;
+                addActive(items);
+            } else if (e.keyCode === 13) { // Enter
+                if (currentFocus > -1 && items[currentFocus]) {
+                    e.preventDefault();
+                    items[currentFocus].click();
+                }
+            } else if (e.keyCode === 27) { // Escape
+                autocompleteList.style.display = 'none';
+            }
+        });
+        
+        function addActive(items) {
+            if (!items) return false;
+            removeActive(items);
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            items[currentFocus].classList.add('bg-light');
+            items[currentFocus].scrollIntoView({ block: 'nearest' });
+        }
+        
+        function removeActive(items) {
+            items.forEach(item => item.classList.remove('bg-light'));
+        }
+        
+        // Highlight matching text
+        function highlightMatch(text, query) {
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<strong class="text-primary">$1</strong>');
+        }
+        
+        // Close on click outside
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchInput && !autocompleteList.contains(e.target)) {
+                autocompleteList.style.display = 'none';
+            }
+        });
+        
+        // Reposition on scroll/resize
+        window.addEventListener('scroll', positionAutocomplete);
+        window.addEventListener('resize', positionAutocomplete);
+    });
+</script>
+</body>
+</html>

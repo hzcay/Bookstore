@@ -100,6 +100,16 @@ public class ViewController {
         return "redirect:/shipper/home";
     }
 
+    @GetMapping("/cashier/dashboard")
+    public String cashierDashboard(HttpSession session) {
+        String userType = (String) session.getAttribute("userType");
+        String userRole = (String) session.getAttribute("userRole");
+        if (!"EMPLOYEE".equals(userType) || !"CASHIER".equals(userRole)) {
+            return "redirect:/login";
+        }
+        return "redirect:/NhanVienBanHang/home";
+    }
+
     @GetMapping("/admin/access-denied")
     public String accessDenied() {
         return "admin/access-denied";

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{NhanVienBanHang/Layout :: head('Trang chủ - Nhân viên bán hàng')}"></head>
+<body>
+    <!-- Mobile Toggle -->
+    <div th:replace="~{NhanVienBanHang/Layout :: mobile-toggle}"></div>
+    
+    <!-- Sidebar -->
+    <nav th:replace="~{NhanVienBanHang/Layout :: sidebar('home')}"></nav>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>🏠 Trang chủ nhân viên bán hàng</h1>
+        </div>
+        
+        <!-- Welcome Card -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Chào mừng bạn đến với hệ thống <strong>Bookstore</strong></h5>
+                <p class="card-text">Hôm nay là ngày: <strong th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy')}"></strong></p>
+                <p class="card-text">Bạn có thể bắt đầu công việc bằng cách chọn chức năng trong menu bên trái.</p>
+            </div>
+        </div>
+        
+        <!-- Quick Access Cards -->
+        <div class="row mt-4">
+            <div class="col-md-4 mb-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-cart-check"></i> Quản lý đơn hàng</h5>
+                        <p class="card-text">Xem và quản lý đơn hàng của khách hàng</p>
+                        <a th:href="@{/NhanVienBanHang/orders}" class="btn btn-light btn-sm">Truy cập</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-truck"></i> Quản lý giao hàng</h5>
+                        <p class="card-text">Theo dõi và xác nhận giao hàng</p>
+                        <a th:href="@{/NhanVienBanHang/shipments}" class="btn btn-light btn-sm">Truy cập</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-graph-up"></i> Báo cáo</h5>
+                        <p class="card-text">Xem báo cáo doanh thu và tồn kho</p>
+                        <a href="#" class="btn btn-light btn-sm">Truy cập</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Include common scripts -->
+<div th:replace="~{NhanVienBanHang/Layout :: scripts}"></div>
+</body>
+</html>

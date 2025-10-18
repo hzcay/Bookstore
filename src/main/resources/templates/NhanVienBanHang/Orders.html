@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{NhanVienBanHang/Layout :: head('Quản lý đơn hàng - Bookstore')}"></head>
+<body>
+    <!-- Mobile Toggle -->
+    <div th:replace="~{NhanVienBanHang/Layout :: mobile-toggle}"></div>
+    
+    <!-- Sidebar -->
+    <nav th:replace="~{NhanVienBanHang/Layout :: sidebar('orders')}"></nav>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>📦 Quản lý đơn hàng</h1>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form th:action="@{/NhanVienBanHang/orders}" method="get">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Tìm kiếm đơn hàng theo mã, tên khách hàng..."
+                                   th:value="${searchKeyword}">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <select name="status" class="form-select">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">Chờ xác nhận</option>
+                                <option value="PROCESSING" th:selected="${selectedStatus == 'PROCESSING'}">Đang xử lý</option>
+                                <option value="SHIPPING" th:selected="${selectedStatus == 'SHIPPING'}">Đang giao</option>
+                                <option value="DELIVERED" th:selected="${selectedStatus == 'DELIVERED'}">Đã giao</option>
+                                <option value="CANCELED" th:selected="${selectedStatus == 'CANCELED'}">Đã hủy</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label small mb-1">📅 Từ ngày</label>
+                            <input type="date" name="fromDate" class="form-control" 
+                                   th:value="${fromDate}">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label small mb-1">📅 Đến ngày</label>
+                            <input type="date" name="toDate" class="form-control" 
+                                   th:value="${toDate}">
+                        </div>
+                        <div class="col-md-1 mb-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Danh sách đơn hàng</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${orders == null || orders.isEmpty()}" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                    <p class="mt-2">Chưa có đơn hàng nào</p>
+                </div>
+                
+                <div th:if="${orders != null && !orders.isEmpty()}" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orders}">
+                                <td><strong th:text="${order.orderId}">ORD001</strong></td>
+                                <td th:text="${order.customerName}">Nguyễn Văn A</td>
+                                <td th:text="${order.createAt != null ? #temporals.format(order.createAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">01/01/2025 10:00</td>
+                                <td>
+                                    <strong th:text="${order.total != null ? (#numbers.formatDecimal(order.total, 0, 'POINT', 0, 'COMMA') + ' ₫') : '0 ₫'}">200,000 ₫</strong>
+                                </td>
+                                <td>
+                                    <span th:if="${order.status != null}" 
+                                          class="badge" 
+                                          th:classappend="${order.status.name() == 'PENDING' ? 'bg-warning' : 
+                                                          (order.status.name() == 'PROCESSING' ? 'bg-info' : 
+                                                          (order.status.name() == 'SHIPPING' ? 'bg-primary' : 
+                                                          (order.status.name() == 'DELIVERED' ? 'bg-success' : 'bg-danger')))}"
+                                          th:text="${order.status.name()}">PENDING</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" 
+                                            th:attr="onclick='viewOrderDetail(\'' + ${order.orderId} + '\')'"
+                                            title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </button>
+                                    <button class="btn btn-sm btn-success ms-1" 
+                                            th:attr="onclick='viewInvoice(\'' + ${order.orderId} + '\')'"
+                                            title="Xem hóa đơn">
+                                        <i class="bi bi-receipt"></i> Xem hóa đơn
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <a th:href="@{/NhanVienBanHang/home}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Quay lại trang chủ
+            </a>
+        </div>
+    </div>
+
+<!-- Modal Chi tiết đơn hàng -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-file-text"></i> Chi tiết đơn hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Hóa đơn -->
+<div class="modal fade" id="invoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-receipt"></i> Hóa đơn</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="invoiceContent">
+                <p class="text-center">Nhấn nút bên dưới để tải hóa đơn PDF</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-danger" id="downloadPDFBtn">
+                    <i class="bi bi-file-pdf"></i> Tải hóa đơn PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewOrderDetail(orderId) {
+    // Mở modal
+    const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+    modal.show();
+    
+    // Reset content
+    document.getElementById('orderDetailContent').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Đang tải dữ liệu...</p>
+        </div>
+    `;
+    
+    // Fetch order detail
+    fetch('/NhanVienBanHang/orders/' + orderId + '/detail')
+        .then(response => {
+            if (!response.ok) throw new Error('Không thể tải dữ liệu');
+            return response.json();
+        })
+        .then(order => {
+            // Format currency
+            const formatMoney = (amount) => {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
+            };
+            
+            // Calculate subtotal from order items
+            const calculateSubtotal = (order) => {
+                if (!order.orderItems || order.orderItems.length === 0) return 0;
+                return order.orderItems.reduce((sum, item) => {
+                    return sum + (item.price * item.quantity);
+                }, 0);
+            };
+            
+            // Format date
+            const formatDate = (dateString) => {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString);
+                return date.toLocaleString('vi-VN');
+            };
+            
+            // Status badge color
+            const getStatusClass = (status) => {
+                const statusMap = {
+                    'PENDING': 'bg-warning',
+                    'PROCESSING': 'bg-info',
+                    'SHIPPING': 'bg-primary',
+                    'DELIVERED': 'bg-success',
+                    'CANCELED': 'bg-danger'
+                };
+                return statusMap[status] || 'bg-secondary';
+            };
+            
+            // Build HTML
+            let html = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary"><i class="bi bi-info-circle"></i> Thông tin đơn hàng</h6>
+                        <table class="table table-sm">
+                            <tr><th>Mã đơn:</th><td><strong>${order.orderId}</strong></td></tr>
+                            <tr><th>Ngày tạo:</th><td>${formatDate(order.createAt)}</td></tr>
+                            <tr><th>Trạng thái:</th><td><span class="badge ${getStatusClass(order.status)}">${order.status}</span></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success"><i class="bi bi-person"></i> Thông tin khách hàng</h6>
+                        <table class="table table-sm">
+                            <tr><th>Tên:</th><td>${order.customerName || 'N/A'}</td></tr>
+                            <tr><th>Điện thoại:</th><td>${order.customerPhone || 'N/A'}</td></tr>
+                            <tr><th>Địa chỉ giao:</th><td>${order.shippingAddress || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="text-info"><i class="bi bi-cart"></i> Chi tiết sản phẩm</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            if (order.orderItems && order.orderItems.length > 0) {
+                order.orderItems.forEach(item => {
+                    html += `
+                        <tr>
+                            <td>${item.bookTitle || 'N/A'}</td>
+                            <td class="text-center">${item.quantity}</td>
+                            <td class="text-end">${formatMoney(item.price)}</td>
+                            <td class="text-end"><strong>${formatMoney(item.price * item.quantity)}</strong></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += `<tr><td colspan="4" class="text-center text-muted">Không có sản phẩm</td></tr>`;
+            }
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6 offset-md-6">
+                        <table class="table table-sm">
+                            <tr><th>Tạm tính:</th><td class="text-end">${formatMoney(calculateSubtotal(order))}</td></tr>
+                            <tr><th>Giảm giá:</th><td class="text-end text-danger">-${formatMoney(order.discount)}</td></tr>
+                            <tr><th>Phí ship:</th><td class="text-end">${formatMoney(order.shippingFee)}</td></tr>
+                            <tr class="table-primary"><th>Tổng cộng:</th><td class="text-end"><strong>${formatMoney(order.total)}</strong></td></tr>
+                        </table>
+                        
+                        <div class="alert alert-${order.paymentMethod === 'COD' ? 'warning' : 'info'} mb-0">
+                            <strong>Thanh toán:</strong> ${order.paymentMethod === 'COD' ? '💵 Thanh toán khi nhận hàng (COD)' : '💳 Đã thanh toán online'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('orderDetailContent').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('orderDetailContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>Lỗi:</strong> ${error.message}
+                </div>
+            `;
+        });
+}
+
+// Xem hóa đơn
+let currentInvoiceOrderId = null;
+
+function viewInvoice(orderId) {
+    currentInvoiceOrderId = orderId;
+    const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+    modal.show();
+}
+
+// Tải PDF hóa đơn
+document.getElementById('downloadPDFBtn').addEventListener('click', function() {
+    if (!currentInvoiceOrderId) {
+        alert('Không tìm thấy thông tin đơn hàng');
+        return;
+    }
+    
+    // Tạo link tải file
+    const url = '/NhanVienBanHang/orders/' + currentInvoiceOrderId + '/invoice-pdf';
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'hoadon-' + currentInvoiceOrderId + '.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+</script>
+
+<!-- Include common scripts -->
+<div th:replace="~{NhanVienBanHang/Layout :: scripts}"></div>
+</body>
+</html>

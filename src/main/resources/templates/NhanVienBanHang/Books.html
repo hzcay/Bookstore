@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{NhanVienBanHang/Layout :: head('Danh sách sách - Bookstore')}"></head>
+<body>
+    <!-- Mobile Toggle -->
+    <div th:replace="~{NhanVienBanHang/Layout :: mobile-toggle}"></div>
+    
+    <!-- Sidebar -->
+    <nav th:replace="~{NhanVienBanHang/Layout :: sidebar('books')}"></nav>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>📚 Danh sách sách</h1>
+        </div>
+
+        <!-- Error display -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Lỗi:</strong> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Search Form -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form th:action="@{/NhanVienBanHang/books}" method="get">
+                    <div class="row">
+                        <div class="col-md-10 mb-2">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="🔍 Tìm kiếm sách theo tên, tác giả, mã sách..."
+                                   th:value="${searchKeyword}">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Books Table -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-book"></i> Danh sách sách 
+                    <span class="badge bg-light text-dark" th:text="${books != null ? books.size() : 0}">0</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${books == null || books.isEmpty()}" class="alert alert-info text-center">
+                    <i class="bi bi-inbox"></i> Không tìm thấy sách nào
+                </div>
+                
+                <div th:if="${books != null && !books.isEmpty()}" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã sách</th>
+                                <th>Tên sách</th>
+                                <th>Tác giả</th>
+                                <th>Thể loại</th>
+                                <th>Nhà xuất bản</th>
+                                <th class="text-end">Giá bán</th>
+                                <th class="text-center">Tồn kho</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="book : ${books}" 
+                                style="cursor: pointer;" 
+                                th:attr="onclick=|viewBookDetail('${book.bookId}')|">
+                                <td><code th:text="${book.bookId}">-</code></td>
+                                <td><strong th:text="${book.title}">-</strong></td>
+                                <td th:text="${book.authorName}">-</td>
+                                <td>
+                                    <span class="badge bg-info" th:text="${book.categoryName}">-</span>
+                                </td>
+                                <td th:text="${book.publisherName}">-</td>
+                                <td class="text-end">
+                                    <strong th:text="${#numbers.formatDecimal(book.salePrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+                                </td>
+                                <td class="text-center">
+                                    <span th:if="${book.stockQuantity != null && book.stockQuantity > 0}" 
+                                          class="badge bg-success" 
+                                          th:text="${book.stockQuantity} + ' cuốn'">0</span>
+                                    <span th:unless="${book.stockQuantity != null && book.stockQuantity > 0}" 
+                                          class="badge bg-danger">Hết hàng</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="mt-3">
+            <a th:href="@{/NhanVienBanHang/home}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Quay lại trang chủ
+            </a>
+        </div>
+    </div>
+
+    <!-- Book Detail Modal -->
+    <div class="modal fade" id="bookDetailModal" tabindex="-1" aria-labelledby="bookDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="bookDetailModalLabel">
+                        <i class="bi bi-book-fill"></i> Chi tiết sách
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="bookDetailContent">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Autocomplete Suggestions Dropdown -->
+    <div id="autocomplete-list" class="autocomplete-suggestions" style="display: none;"></div>
+
+<!-- Include common scripts -->
+<div th:replace="~{NhanVienBanHang/Layout :: scripts}"></div>
+
+<style>
+    .autocomplete-suggestions {
+        position: absolute;
+        border: 1px solid #ddd;
+        border-top: none;
+        background-color: white;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1050;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 0 0 5px 5px;
+    }
+    
+    .autocomplete-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .autocomplete-item:hover {
+        background-color: #e9ecef;
+    }
+    
+    .autocomplete-item .book-title {
+        font-weight: 600;
+        color: #212529;
+    }
+    
+    .autocomplete-item .book-author {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .autocomplete-item .book-price {
+        font-size: 0.875rem;
+        color: #0d6efd;
+        font-weight: 500;
+    }
+</style>
+
+<script>
+    // Function to view book detail
+    function viewBookDetail(bookId) {
+        const modal = new bootstrap.Modal(document.getElementById('bookDetailModal'));
+        modal.show();
+        
+        // Show loading
+        document.getElementById('bookDetailContent').innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Đang tải thông tin sách...</p>
+            </div>
+        `;
+        
+        // Fetch book details
+        fetch(`/NhanVienBanHang/books/${bookId}/detail`)
+            .then(response => response.json())
+            .then(book => {
+                const stockBadge = book.stockQuantity > 0 
+                    ? `<span class="badge bg-success">${book.stockQuantity} cuốn</span>`
+                    : `<span class="badge bg-danger">Hết hàng</span>`;
+                
+                const statusBadge = book.status === 1 
+                    ? `<span class="badge bg-success">Đang bán</span>`
+                    : `<span class="badge bg-secondary">Ngừng bán</span>`;
+                
+                document.getElementById('bookDetailContent').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="bi bi-info-circle"></i> Thông tin cơ bản</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="40%">Mã sách:</th>
+                                    <td><code>${book.bookId}</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Tên sách:</th>
+                                    <td><strong>${book.title}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Tác giả:</th>
+                                    <td>${book.authorName || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>Thể loại:</th>
+                                    <td><span class="badge bg-info">${book.categoryName || '-'}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Nhà xuất bản:</th>
+                                    <td>${book.publisherName || '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="bi bi-cash-stack"></i> Thông tin giá & kho</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="40%">Giá nhập:</th>
+                                    <td>${book.importPrice ? new Intl.NumberFormat('vi-VN').format(book.importPrice) + ' ₫' : '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>Giá bán:</th>
+                                    <td><strong class="text-success">${new Intl.NumberFormat('vi-VN').format(book.salePrice)} ₫</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Tồn kho:</th>
+                                    <td>${stockBadge}</td>
+                                </tr>
+                                <tr>
+                                    <th>Số lượng (Book):</th>
+                                    <td>${book.quantity || 0}</td>
+                                </tr>
+                                <tr>
+                                    <th>Trạng thái:</th>
+                                    <td>${statusBadge}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="text-primary"><i class="bi bi-calendar3"></i> Thông tin thời gian</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="20%">Ngày tạo:</th>
+                                    <td>${book.createAt ? new Date(book.createAt).toLocaleString('vi-VN') : '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>Ngày cập nhật:</th>
+                                    <td>${book.updateAt ? new Date(book.updateAt).toLocaleString('vi-VN') : '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                document.getElementById('bookDetailContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>Lỗi:</strong> Không thể tải thông tin sách. ${error.message}
+                    </div>
+                `;
+            });
+    }
+    
+    // Autocomplete functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('input[name="search"]');
+        const autocompleteList = document.getElementById('autocomplete-list');
+        
+        if (!searchInput) return;
+        
+        let currentFocus = -1;
+        
+        // Position autocomplete dropdown
+        function positionAutocomplete() {
+            const rect = searchInput.getBoundingClientRect();
+            autocompleteList.style.top = (rect.bottom + window.scrollY) + 'px';
+            autocompleteList.style.left = rect.left + 'px';
+            autocompleteList.style.width = rect.width + 'px';
+        }
+        
+        // Handle input
+        searchInput.addEventListener('input', function(e) {
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                autocompleteList.style.display = 'none';
+                return;
+            }
+            
+            // Fetch suggestions
+            fetch(`/NhanVienBanHang/books/search/suggestions?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(suggestions => {
+                    if (suggestions.length === 0) {
+                        autocompleteList.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Build suggestions HTML
+                    autocompleteList.innerHTML = suggestions.map(book => `
+                        <div class="autocomplete-item" data-bookid="${book.bookId}" data-title="${book.title}">
+                            <div class="book-title">${highlightMatch(book.title, query)}</div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <span class="book-author">
+                                    <i class="bi bi-person"></i> ${book.authorName || '-'}
+                                </span>
+                                <span class="book-price">
+                                    ${new Intl.NumberFormat('vi-VN').format(book.salePrice)} ₫
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    positionAutocomplete();
+                    autocompleteList.style.display = 'block';
+                    currentFocus = -1;
+                    
+                    // Add click handlers
+                    autocompleteList.querySelectorAll('.autocomplete-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const bookId = this.getAttribute('data-bookid');
+                            viewBookDetail(bookId);
+                            autocompleteList.style.display = 'none';
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Autocomplete error:', error);
+                    autocompleteList.style.display = 'none';
+                });
+        });
+        
+        // Handle keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            const items = autocompleteList.querySelectorAll('.autocomplete-item');
+            if (items.length === 0) return;
+            
+            if (e.keyCode === 40) { // Down arrow
+                e.preventDefault();
+                currentFocus++;
+                addActive(items);
+            } else if (e.keyCode === 38) { // Up arrow
+                e.preventDefault();
+                currentFocus--;
+                addActive(items);
+            } else if (e.keyCode === 13) { // Enter
+                if (currentFocus > -1 && items[currentFocus]) {
+                    e.preventDefault();
+                    items[currentFocus].click();
+                }
+            } else if (e.keyCode === 27) { // Escape
+                autocompleteList.style.display = 'none';
+            }
+        });
+        
+        function addActive(items) {
+            if (!items) return false;
+            removeActive(items);
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            items[currentFocus].classList.add('bg-light');
+            items[currentFocus].scrollIntoView({ block: 'nearest' });
+        }
+        
+        function removeActive(items) {
+            items.forEach(item => item.classList.remove('bg-light'));
+        }
+        
+        // Highlight matching text
+        function highlightMatch(text, query) {
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<strong class="text-primary">$1</strong>');
+        }
+        
+        // Close on click outside
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchInput && !autocompleteList.contains(e.target)) {
+                autocompleteList.style.display = 'none';
+            }
+        });
+        
+        // Reposition on scroll/resize
+        window.addEventListener('scroll', positionAutocomplete);
+        window.addEventListener('resize', positionAutocomplete);
+    });
+</script>
+</body>
+</html>

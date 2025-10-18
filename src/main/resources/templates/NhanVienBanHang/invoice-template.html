@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Hoa Don</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            font-size: 14px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 5px 0;
+        }
+        .title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .info {
+            margin: 20px 0;
+        }
+        .info-row {
+            margin: 8px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .summary {
+            margin-top: 20px;
+            float: right;
+            width: 300px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .summary-row.total {
+            border-top: 2px solid #000;
+            font-weight: bold;
+            font-size: 16px;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .footer {
+            clear: both;
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>BOOKSTORE</h1>
+        <p>123 Nguyen Hue, Quan 1, TP.HCM</p>
+        <p>Dien thoai: 024-1234-5678 | Email: bookstore@example.com</p>
+    </div>
+    
+    <!-- Title -->
+    <div class="title">HOA DON BAN HANG</div>
+    
+    <!-- Order Info -->
+    <div class="info">
+        <div class="info-row">
+            <span class="info-label">Ma don hang:</span>
+            <span th:text="${order.orderId}"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Ngay tao:</span>
+            <span th:text="${formattedDate}"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Khach hang:</span>
+            <span th:text="${order.customer?.name}"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">So dien thoai:</span>
+            <span th:text="${order.customer?.phone}"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Dia chi giao hang:</span>
+            <span th:text="${order.shippingAddress}"></span>
+        </div>
+    </div>
+    
+    <!-- Items Table -->
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50px;" class="text-center">STT</th>
+                <th>Ten san pham</th>
+                <th style="width: 80px;" class="text-center">So luong</th>
+                <th style="width: 120px;" class="text-right">Don gia</th>
+                <th style="width: 120px;" class="text-right">Thanh tien</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="item, iterStat : ${orderItems}">
+                <td class="text-center" th:text="${iterStat.count}"></td>
+                <td th:text="${item.book?.title}"></td>
+                <td class="text-center" th:text="${item.quantity}"></td>
+                <td class="text-right" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                <td class="text-right" th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <!-- Summary -->
+    <div class="summary">
+        <div class="summary-row">
+            <span>Tam tinh:</span>
+            <span th:text="${#numbers.formatDecimal(subtotal, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+        </div>
+        <div class="summary-row">
+            <span>Giam gia:</span>
+            <span th:text="'-' + ${#numbers.formatDecimal(order.discount, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+        </div>
+        <div class="summary-row">
+            <span>Phi van chuyen:</span>
+            <span th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+        </div>
+        <div class="summary-row total">
+            <span>TONG CONG:</span>
+            <span th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <p>Cam on quy khach da mua hang!</p>
+        <p>Hen gap lai!</p>
+    </div>
+</body>
+</html>

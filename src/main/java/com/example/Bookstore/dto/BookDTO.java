@@ -22,6 +22,7 @@ public class BookDTO {
     private Double importPrice;
     private Double salePrice;
     private Integer quantity;
+    private Integer stockQuantity; // Tồn kho thực tế từ Inventory
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
     private Integer status;
