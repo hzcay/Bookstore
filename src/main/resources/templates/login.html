@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Bookstore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .login-container {
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        .card {
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            padding: 30px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2><i class="bi bi-book"></i> Bookstore</h2>
+                    <p class="mb-0">Đăng nhập vào hệ thống</p>
+                </div>
+                <div class="card-body p-4">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="password" required>
+                            </div>
+                        </div>
+                        <div id="alertBox"></div>
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                        </button>
+                    </form>
+                    <div class="text-center">
+                        <a href="/forgot-password" class="text-decoration-none">Quên mật khẩu?</a>
+                        <span class="mx-2">|</span>
+                        <a href="/register" class="text-decoration-none">Đăng ký tài khoản</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="otpModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác thực OTP</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tài khoản chưa xác thực. Vui lòng nhập mã OTP đã được gửi qua email.</p>
+                    <input type="text" class="form-control" id="otpCode" placeholder="Nhập mã OTP">
+                    <div id="otpAlert" class="mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="resendOTP">Gửi lại OTP</button>
+                    <button type="button" class="btn btn-primary" id="verifyOTP">Xác thực</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentEmail = '';
+        const otpModal = new bootstrap.Modal(document.getElementById('otpModal'));
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            currentEmail = email;
+
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.needVerification) {
+                    showAlert('info', data.message);
+                    otpModal.show();
+                } else if (data.success) {
+                    showAlert('success', 'Đăng nhập thành công!');
+                    setTimeout(() => {
+                        if (data.userType === 'CUSTOMER') {
+                            window.location.href = '/customer/dashboard';
+                        } else {
+                            if (data.role === 'ADMIN') {
+                                window.location.href = '/admin/dashboard';
+                            } else if (data.role === 'CASHIER') {
+                                window.location.href = '/admin/orders';
+                            } else if (data.role === 'WAREHOUSE') {
+                                window.location.href = '/admin/inventory';
+                            } else if (data.role === 'SHIPPER') {
+                                window.location.href = '/admin/shipments';
+                            } else {
+                                window.location.href = '/admin/dashboard';
+                            }
+                        }
+                    }, 1000);
+                } else {
+                    showAlert('danger', typeof data === 'string' ? data : 'Email hoặc mật khẩu không đúng');
+                }
+            } catch (error) {
+                showAlert('danger', 'Lỗi kết nối. Vui lòng thử lại.');
+            }
+        });
+
+        document.getElementById('verifyOTP').addEventListener('click', async () => {
+            const otp = document.getElementById('otpCode').value;
+            if (!otp) {
+                showOTPAlert('danger', 'Vui lòng nhập mã OTP');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/auth/verify-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentEmail, otp })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showOTPAlert('success', 'Xác thực thành công!');
+                    setTimeout(() => {
+                        if (data.userType === 'CUSTOMER') {
+                            window.location.href = '/customer/dashboard';
+                        } else {
+                            if (data.role === 'ADMIN') {
+                                window.location.href = '/admin/dashboard';
+                            } else if (data.role === 'CASHIER') {
+                                window.location.href = '/admin/orders';
+                            } else if (data.role === 'WAREHOUSE') {
+                                window.location.href = '/admin/inventory';
+                            } else if (data.role === 'SHIPPER') {
+                                window.location.href = '/admin/shipments';
+                            } else {
+                                window.location.href = '/admin/dashboard';
+                            }
+                        }
+                    }, 1000);
+                } else {
+                    showOTPAlert('danger', typeof data === 'string' ? data : 'OTP không đúng');
+                }
+            } catch (error) {
+                showOTPAlert('danger', 'Lỗi xác thực. Vui lòng thử lại.');
+            }
+        });
+
+        document.getElementById('resendOTP').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/v1/auth/resend-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentEmail })
+                });
+
+                if (response.ok) {
+                    showOTPAlert('success', 'Đã gửi lại mã OTP');
+                } else {
+                    showOTPAlert('danger', 'Lỗi gửi OTP');
+                }
+            } catch (error) {
+                showOTPAlert('danger', 'Lỗi kết nối');
+            }
+        });
+
+        function showAlert(type, message) {
+            document.getElementById('alertBox').innerHTML = 
+                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`;
+        }
+
+        function showOTPAlert(type, message) {
+            document.getElementById('otpAlert').innerHTML = 
+                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`;
+        }
+    </script>
+</body>
+</html>
+

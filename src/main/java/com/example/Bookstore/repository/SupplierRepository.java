@@ -28,4 +28,15 @@ public interface SupplierRepository extends JpaRepository<Supplier, String> {
     
     @Query("SELECT s FROM Supplier s WHERE s.debt > 0 AND s.status = 1")
     List<Supplier> findSuppliersWithDebt();
+    
+    Page<Supplier> findByDebtGreaterThan(Double debt, Pageable pageable);
+    
+    Page<Supplier> findByDebtEquals(Double debt, Pageable pageable);
+    
+    @Query("SELECT s FROM Supplier s WHERE " +
+           "(LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%')) OR " +
+           "LOWER(s.phone) LIKE LOWER(CONCAT('%', :phone, '%'))) AND " +
+           "((:hasDebt = true AND s.debt > 0) OR (:hasDebt = false AND s.debt = 0))")
+    Page<Supplier> findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCaseAndDebtCondition(
+        String name, String phone, Boolean hasDebt, Pageable pageable);
 }

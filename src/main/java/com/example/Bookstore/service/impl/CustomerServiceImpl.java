@@ -7,6 +7,7 @@ import com.example.Bookstore.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Autowired
     private CustomerRepository customerRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -48,6 +52,7 @@ public class CustomerServiceImpl implements CustomerService {
                 c.setPhone(customerDTO.getPhone());
                 c.setAddress(customerDTO.getAddress());
                 c.setPoints(customerDTO.getPoints());
+                c.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
                 c = customerRepository.save(c);
                 
                 return toDTO(c);
@@ -70,7 +75,7 @@ public class CustomerServiceImpl implements CustomerService {
         if (customerDTO.getPhone() != null) c.setPhone(customerDTO.getPhone());
         if (customerDTO.getEmail() != null) c.setEmail(customerDTO.getEmail());
         if (customerDTO.getPassword() != null && !customerDTO.getPassword().isEmpty()) {
-            c.setPassword(customerDTO.getPassword());
+            c.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
         }
         if (customerDTO.getAddress() != null) c.setAddress(customerDTO.getAddress());
         if (customerDTO.getPoints() != null) c.setPoints(customerDTO.getPoints());
@@ -99,6 +104,16 @@ public class CustomerServiceImpl implements CustomerService {
         Optional<Customer> customer = customerRepository.findByEmail(email);
         if (customer.isPresent() && customer.get().getStatus() == 1) {
             return Optional.of(toDTO(customer.get()));
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CustomerDTO> getCustomerByEmailForAuth(String email) {
+        Optional<Customer> customer = customerRepository.findByEmail(email);
+        if (customer.isPresent()) {
+            return Optional.of(toDTOForAuth(customer.get()));
         }
         return Optional.empty();
     }
@@ -142,13 +157,26 @@ public class CustomerServiceImpl implements CustomerService {
         return dto;
     }
 
+    private CustomerDTO toDTOForAuth(Customer c) {
+        CustomerDTO dto = new CustomerDTO();
+        dto.setCustomerId(c.getCustomerId());
+        dto.setName(c.getName());
+        dto.setPhone(c.getPhone());
+        dto.setEmail(c.getEmail());
+        dto.setPassword(c.getPassword()); // Trả về password cho auth
+        dto.setAddress(c.getAddress());
+        dto.setPoints(c.getPoints());
+        dto.setStatus(c.getStatus());
+        return dto;
+    }
+
     private Customer toEntity(CustomerDTO dto) {
         Customer c = new Customer();
         // Không set customerId - để JPA tự sinh UUID
         c.setName(dto.getName());
         c.setPhone(dto.getPhone());
         c.setEmail(dto.getEmail());
-        c.setPassword(dto.getPassword());
+        c.setPassword(passwordEncoder.encode(dto.getPassword()));
         c.setAddress(dto.getAddress());
         c.setPoints(dto.getPoints());
         c.setStatus(dto.getStatus());

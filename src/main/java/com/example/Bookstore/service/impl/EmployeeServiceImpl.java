@@ -7,6 +7,7 @@ import com.example.Bookstore.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,16 +21,36 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Page<EmployeeDTO> getAllEmployees(String searchTerm, Pageable pageable) {
         Page<Employee> employees;
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
             employees = employeeRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                searchTerm, searchTerm, pageable);
+                searchTerm, pageable);
         } else {
             employees = employeeRepository.findAll(pageable);
         }
+        return employees.map(this::convertToDTO);
+    }
+
+    @Override
+    public Page<EmployeeDTO> getAllEmployees(String searchTerm, String role, Pageable pageable) {
+        if (role == null || role.trim().isEmpty()) {
+            return getAllEmployees(searchTerm, pageable);
+        }
+        
+        Page<Employee> employees;
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            employees = employeeRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCaseAndRole(
+                searchTerm, role, pageable);
+        } else {
+            employees = employeeRepository.findByRole(role, pageable);
+        }
+        
         return employees.map(this::convertToDTO);
     }
 
@@ -57,7 +78,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPhone(employeeDTO.getPhone());
         employee.setEmail(employeeDTO.getEmail());
         if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isEmpty()) {
-            employee.setPassword(employeeDTO.getPassword());
+            employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         }
         // Không cho phép thay đổi trạng thái khi update - chỉ có thể thay đổi qua xác thực OTP
         
@@ -76,6 +97,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Optional<EmployeeDTO> getEmployeeByEmail(String email) {
         return employeeRepository.findByEmail(email).map(this::convertToDTO);
+    }
+
+    @Override
+    public Optional<EmployeeDTO> getEmployeeByEmailForAuth(String email) {
+        return employeeRepository.findByEmail(email).map(this::convertToDTOForAuth);
     }
 
     @Override
@@ -108,6 +134,18 @@ public class EmployeeServiceImpl implements EmployeeService {
         return dto;
     }
 
+    private EmployeeDTO convertToDTOForAuth(Employee employee) {
+        EmployeeDTO dto = new EmployeeDTO();
+        dto.setEmployeeId(employee.getEmployeeId());
+        dto.setName(employee.getName());
+        dto.setRole(employee.getRole());
+        dto.setPhone(employee.getPhone());
+        dto.setEmail(employee.getEmail());
+        dto.setPassword(employee.getPassword()); // Trả về password cho auth
+        dto.setStatus(employee.getStatus());
+        return dto;
+    }
+
     private Employee convertToEntity(EmployeeDTO dto) {
         Employee employee = new Employee();
         employee.setEmployeeId(dto.getEmployeeId());
@@ -115,7 +153,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setRole(dto.getRole());
         employee.setPhone(dto.getPhone());
         employee.setEmail(dto.getEmail());
-        employee.setPassword(dto.getPassword());
+        employee.setPassword(passwordEncoder.encode(dto.getPassword()));
         employee.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
         return employee;
     }

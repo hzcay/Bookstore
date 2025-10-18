@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::content})}">
+<head>
+    <title>Quản lý Mã giảm giá</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Quản lý Mã giảm giá</h2>
+        <a th:href="@{/admin/promotions/new}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Thêm mã giảm giá mới
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/admin/promotions}" method="get" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="search" th:value="${search}" 
+                           class="form-control" placeholder="Tìm kiếm mã giảm giá...">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Tìm kiếm
+                    </button>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã code</th>
+                            <th>Giảm giá (%)</th>
+                            <th>Giá trị tối thiểu</th>
+                            <th>Ngày hết hạn</th>
+                            <th>Trạng thái</th>
+                            <th style="width: 150px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${promotions.empty}">
+                            <td colspan="6" class="text-center">Không có dữ liệu</td>
+                        </tr>
+                        <tr th:each="promo : ${promotions}">
+                            <td th:text="${promo.code}"></td>
+                            <td th:text="${promo.discount} + '%'"></td>
+                            <td th:text="${#numbers.formatDecimal(promo.minValue, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                            <td th:text="${#temporals.format(promo.expireDate, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td>
+                                <span th:if="${promo.status == 1}" class="badge bg-success">Hoạt động</span>
+                                <span th:if="${promo.status == 0}" class="badge bg-danger">Hết hạn</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/admin/promotions/edit/{id}(id=${promo.promoId})}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a th:href="@{/admin/promotions/delete/{id}(id=${promo.promoId})}" 
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Bạn có chắc muốn xóa mã giảm giá này?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${promotions.totalPages > 1}" class="d-flex justify-content-center mt-3">
+                <nav>
+                    <ul class="pagination">
+                        <li class="page-item" th:classappend="${promotions.first} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/promotions(page=${currentPage - 1}, search=${search})}">Trước</a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, promotions.totalPages - 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/admin/promotions(page=${i}, search=${search})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${promotions.last} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/promotions(page=${currentPage + 1}, search=${search})}">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

@@ -101,48 +101,53 @@
             </div>
             <div class="list-group list-group-flush">
                 <a th:href="@{/admin/dashboard}" 
-                   th:classappend="${activePage == 'dashboard' ? 'active' : ''}"
-                   class="list-group-item list-group-item-action bg-dark text-white">
-                    <i class="bi bi-speedometer2"></i> Dashboard
+                th:classappend="${activePage == 'dashboard' ? 'active' : ''}"
+                class="list-group-item list-group-item-action bg-dark text-white admin-only">
+                 <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
                 <a th:href="@{/admin/books}" 
                    th:classappend="${activePage == 'books' ? 'active' : ''}"
                    class="list-group-item list-group-item-action bg-dark text-white">
                     <i class="bi bi-book"></i> Quản lý Sách
                 </a>
-                <a th:href="@{/admin/categories}" 
-                   th:classappend="${activePage == 'categories' ? 'active' : ''}"
-                   class="list-group-item list-group-item-action bg-dark text-white">
-                    <i class="bi bi-bookmark"></i> Quản lý Thể loại
-                </a>
-                <a th:href="@{/admin/authors}" 
-                   th:classappend="${activePage == 'authors' ? 'active' : ''}"
-                   class="list-group-item list-group-item-action bg-dark text-white">
-                    <i class="bi bi-pen"></i> Quản lý Tác giả
-                </a>
-                <a th:href="@{/admin/publishers}" 
-                   th:classappend="${activePage == 'publishers' ? 'active' : ''}"
-                   class="list-group-item list-group-item-action bg-dark text-white">
-                    <i class="bi bi-building"></i> Quản lý NXB
-                </a>
                 <a th:href="@{/admin/customers}" 
                    th:classappend="${activePage == 'customers' ? 'active' : ''}"
                    class="list-group-item list-group-item-action bg-dark text-white">
                     <i class="bi bi-people"></i> Quản lý Khách hàng
                 </a>
+                <a th:href="@{/admin/categories}" 
+                   th:classappend="${activePage == 'categories' ? 'active' : ''}"
+                   class="list-group-item list-group-item-action bg-dark text-white admin-only">
+                    <i class="bi bi-bookmark"></i> Quản lý Thể loại
+                </a>
+                <a th:href="@{/admin/authors}" 
+                   th:classappend="${activePage == 'authors' ? 'active' : ''}"
+                   class="list-group-item list-group-item-action bg-dark text-white admin-only">
+                    <i class="bi bi-pen"></i> Quản lý Tác giả
+                </a>
+                <a th:href="@{/admin/publishers}" 
+                   th:classappend="${activePage == 'publishers' ? 'active' : ''}"
+                   class="list-group-item list-group-item-action bg-dark text-white admin-only">
+                    <i class="bi bi-building"></i> Quản lý NXB
+                </a>
+                <a th:href="@{/admin/promotions}" 
+                   th:classappend="${activePage == 'promotions' ? 'active' : ''}"
+                   class="list-group-item list-group-item-action bg-dark text-white admin-only">
+                    <i class="bi bi-tag"></i> Quản lý Mã giảm giá
+                </a>
                 <a th:href="@{/admin/suppliers}" 
                    th:classappend="${activePage == 'suppliers' ? 'active' : ''}"
-                   class="list-group-item list-group-item-action bg-dark text-white">
+                   class="list-group-item list-group-item-action bg-dark text-white admin-only">
                     <i class="bi bi-truck"></i> Quản lý NCC
                 </a>
                 <a th:href="@{/admin/employees}" 
                    th:classappend="${activePage == 'employees' ? 'active' : ''}"
-                   class="list-group-item list-group-item-action bg-dark text-white">
+                   class="list-group-item list-group-item-action bg-dark text-white admin-only">
                     <i class="bi bi-person-badge"></i> Quản lý Nhân viên
                 </a>
                 <a th:href="@{/admin/reports}" 
                    th:classappend="${activePage == 'reports' ? 'active' : ''}"
-                   class="list-group-item list-group-item-action bg-dark text-white">
+                   class="list-group-item list-group-item-action bg-dark text-white admin-only">
                     <i class="bi bi-graph-up"></i> Báo cáo Thống kê
                 </a>
             </div>
@@ -155,10 +160,10 @@
                         <i class="bi bi-list"></i>
                     </button>
                     <div class="ms-auto">
-                        <span class="me-3">Xin chào, <strong>Admin</strong></span>
-                        <a href="#" class="btn btn-outline-danger btn-sm">
+                        <span class="me-3">Xin chào, <strong id="userName">Admin</strong> (<span id="userRole"></span>)</span>
+                        <button onclick="logout()" class="btn btn-outline-danger btn-sm">
                             <i class="bi bi-box-arrow-right"></i> Đăng xuất
-                        </a>
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -192,7 +197,81 @@
                     wrapper.classList.toggle('toggled');
                 });
             }
+
+            loadUserSession();
         });
+
+        async function loadUserSession() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                document.getElementById('userName').textContent = data.userName || 'User';
+                
+                if (data.role) {
+                    document.getElementById('userRole').textContent = data.role;
+                    filterMenuByRole(data.role);
+                }
+            } catch (error) {
+                console.error('Error loading session:', error);
+            }
+        }
+
+        function filterMenuByRole(role) {
+            const adminOnly = document.querySelectorAll('.admin-only');
+            const cashierOnly = document.querySelectorAll('.cashier-only');
+            const warehouseOnly = document.querySelectorAll('.warehouse-only');
+            const shipperOnly = document.querySelectorAll('.shipper-only');
+
+            if (role !== 'ADMIN') {
+                adminOnly.forEach(el => {
+                    if (!el.classList.contains('cashier-only') && 
+                        !el.classList.contains('warehouse-only') && 
+                        !el.classList.contains('shipper-only')) {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+
+            if (role !== 'CASHIER' && role !== 'ADMIN') {
+                cashierOnly.forEach(el => {
+                    if (!el.classList.contains('admin-only')) {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+
+            if (role !== 'WAREHOUSE' && role !== 'ADMIN') {
+                warehouseOnly.forEach(el => {
+                    if (!el.classList.contains('admin-only') && !el.classList.contains('shipper-only')) {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+
+            if (role !== 'SHIPPER' && role !== 'ADMIN' && role !== 'WAREHOUSE') {
+                shipperOnly.forEach(el => {
+                    if (!el.classList.contains('admin-only') && !el.classList.contains('warehouse-only')) {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/v1/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Error logging out:', error);
+                window.location.href = '/login';
+            }
+        }
     </script>
 </body>
 </html>

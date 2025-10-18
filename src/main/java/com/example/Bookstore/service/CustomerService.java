@@ -23,6 +23,8 @@ public interface CustomerService {
     
     Optional<CustomerDTO> getCustomerByEmail(String email);
     
+    Optional<CustomerDTO> getCustomerByEmailForAuth(String email);
+    
     void updateCustomerPoints(String customerId, Integer points);
     
     List<CustomerDTO> getActiveCustomers();

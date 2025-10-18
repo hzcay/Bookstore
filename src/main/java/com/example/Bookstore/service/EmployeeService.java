@@ -9,11 +9,13 @@ import java.util.Optional;
 
 public interface EmployeeService {
     Page<EmployeeDTO> getAllEmployees(String searchTerm, Pageable pageable);
+    Page<EmployeeDTO> getAllEmployees(String searchTerm, String role, Pageable pageable);
     Optional<EmployeeDTO> getEmployeeById(String id);
     EmployeeDTO createEmployee(EmployeeDTO employeeDTO);
     EmployeeDTO updateEmployee(String id, EmployeeDTO employeeDTO);
     void deleteEmployee(String id);
     Optional<EmployeeDTO> getEmployeeByEmail(String email);
+    Optional<EmployeeDTO> getEmployeeByEmailForAuth(String email);
     List<EmployeeDTO> getActiveEmployees();
     void activateEmployeeByEmail(String email);
 }

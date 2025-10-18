@@ -46,6 +46,9 @@ public class AdminController {
     
     @Autowired
     private AuthService authService;
+    
+    @Autowired
+    private PromotionService promotionService;
 
     @GetMapping({"", "/", "/dashboard"})
     public String dashboard(Model model) {
@@ -103,7 +106,6 @@ public class AdminController {
         model.addAttribute("activePage", "books");
         Pageable pageable = PageRequest.of(page, size, Sort.by("title").ascending());
         Page<BookDTO> books;
-        
         if (search != null && !search.trim().isEmpty()) {
             books = bookService.searchBooks(search, null, null, null, null, null, pageable);
         } else {
@@ -266,15 +268,26 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
             Model model) {
         
         model.addAttribute("activePage", "employees");
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-        Page<EmployeeDTO> employees = employeeService.getAllEmployees(search, pageable);
+        
+        Page<EmployeeDTO> employees;
+        if (role != null && !role.trim().isEmpty()) {
+            employees = employeeService.getAllEmployees(search, role, pageable);
+        } else {
+            employees = employeeService.getAllEmployees(search, pageable);
+        }
         
         model.addAttribute("employees", employees);
         model.addAttribute("search", search);
+        model.addAttribute("role", role);
         model.addAttribute("currentPage", page);
+        
+        // Thêm danh sách roles để hiển thị trong filter
+        model.addAttribute("roles", List.of("ADMIN", "CASHIER", "WAREHOUSE", "SHIPPER"));
         
         return "admin/employees";
     }
@@ -686,6 +699,81 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "Lỗi xóa nhà xuất bản: " + e.getMessage());
         }
         return "redirect:/admin/publishers";
+    }
+
+    @GetMapping("/promotions")
+    public String listPromotions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search,
+            Model model) {
+        
+        model.addAttribute("activePage", "promotions");
+        Pageable pageable = PageRequest.of(page, size, Sort.by("expireDate").descending());
+        Page<PromotionDTO> promotions = promotionService.getAllPromotions(search, pageable);
+        
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("search", search);
+        model.addAttribute("currentPage", page);
+        
+        return "admin/promotions";
+    }
+
+    @GetMapping("/promotions/new")
+    public String newPromotionForm(Model model) {
+        model.addAttribute("activePage", "promotions");
+        model.addAttribute("promotion", new PromotionDTO());
+        model.addAttribute("isEdit", false);
+        return "admin/promotion-form";
+    }
+
+    @GetMapping("/promotions/edit/{id}")
+    public String editPromotionForm(@PathVariable String id, Model model, RedirectAttributes redirectAttributes) {
+        model.addAttribute("activePage", "promotions");
+        try {
+            PromotionDTO promotion = promotionService.getPromotionById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy mã giảm giá"));
+            model.addAttribute("promotion", promotion);
+            model.addAttribute("isEdit", true);
+            return "admin/promotion-form";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy mã giảm giá!");
+            return "redirect:/admin/promotions";
+        }
+    }
+
+    @PostMapping("/promotions/save")
+    public String savePromotion(@ModelAttribute("promotion") PromotionDTO promotionDTO,
+                               BindingResult result,
+                               RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            return "admin/promotion-form";
+        }
+        
+        try {
+            if (promotionDTO.getPromoId() != null && !promotionDTO.getPromoId().isEmpty()) {
+                promotionService.updatePromotion(promotionDTO.getPromoId(), promotionDTO);
+                redirectAttributes.addFlashAttribute("success", "Cập nhật mã giảm giá thành công!");
+            } else {
+                promotionService.createPromotion(promotionDTO);
+                redirectAttributes.addFlashAttribute("success", "Thêm mã giảm giá mới thành công!");
+            }
+            return "redirect:/admin/promotions";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            return "redirect:/admin/promotions";
+        }
+    }
+
+    @GetMapping("/promotions/delete/{id}")
+    public String deletePromotion(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            promotionService.deletePromotion(id);
+            redirectAttributes.addFlashAttribute("success", "Xóa mã giảm giá thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi xóa mã giảm giá: " + e.getMessage());
+        }
+        return "redirect:/admin/promotions";
     }
 }
 

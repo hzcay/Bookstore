@@ -5,23 +5,23 @@
 </head>
 <body>
     <div th:fragment="content">
-        <h1 class="mb-4">Báo cáo Thống kê</h1>
+    <h2 class="mb-4">Báo cáo Thống kê</h2>
 
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
+    <div class="card mb-4">
+        <div class="card-header">
                 <h6 class="m-0 font-weight-bold text-primary">Bộ lọc báo cáo</h6>
             </div>
             <div class="card-body">
                 <form th:action="@{/admin/reports}" method="get" class="row g-3">
-                    <div class="col-md-3">
+                <div class="col-md-4">
                         <label class="form-label">Từ ngày</label>
                         <input type="date" name="fromDate" class="form-control" th:value="${fromDate}">
                     </div>
-                    <div class="col-md-3">
+                <div class="col-md-4">
                         <label class="form-label">Đến ngày</label>
                         <input type="date" name="toDate" class="form-control" th:value="${toDate}">
                     </div>
-                    <div class="col-md-3">
+                <div class="col-md-4">
                         <label class="form-label">Chu kỳ</label>
                         <select name="granularity" class="form-select">
                             <option value="day" th:selected="${granularity == 'day'}">Theo ngày</option>
@@ -29,32 +29,23 @@
                             <option value="month" th:selected="${granularity == 'month'}">Theo tháng</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-grid gap-2">
+                <div class="col-12">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-search"></i> Xem báo cáo
                             </button>
-                            <button type="button" class="btn btn-success" onclick="exportToPDF()">
-                                <i class="bi bi-file-pdf"></i> Xuất PDF
-                            </button>
-                            <button type="button" class="btn btn-success" onclick="exportToExcel()">
-                                <i class="bi bi-file-excel"></i> Xuất Excel
-                            </button>
-                        </div>
                     </div>
                 </form>
             </div>
         </div>
 
         <div class="row mb-4">
-            <div class="col-xl-4 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100">
                     <div class="card-body">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                             Tổng Doanh thu
                         </div>
-                        <div class="h5 mb-0 font-weight-bold"
+                    <div class="h5 mb-0 font-weight-bold text-gray-800"
                              th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">
                             0 đ
                         </div>
@@ -62,24 +53,24 @@
                 </div>
             </div>
 
-            <div class="col-xl-4 col-md-6 mb-4">
-                <div class="card border-left-success shadow h-100 py-2">
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100">
                     <div class="card-body">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                             Tổng Đơn hàng
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold" th:text="${totalOrders}">0</div>
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalOrders}">0</div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xl-4 col-md-6 mb-4">
-                <div class="card border-left-info shadow h-100 py-2">
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100">
                     <div class="card-body">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                             Giá trị TB/Đơn
                         </div>
-                        <div class="h5 mb-0 font-weight-bold"
+                    <div class="h5 mb-0 font-weight-bold text-gray-800"
                              th:text="${#numbers.formatDecimal(avgOrderValue, 0, 'COMMA', 0, 'POINT')} + ' đ'">
                             0 đ
                         </div>
@@ -88,130 +79,163 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-lg-8 mb-4">
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Báo cáo Tồn kho</h6>
+    <div class="card mb-4" th:if="${salesReport != null && !salesReport.data.empty}">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">Biểu đồ Doanh thu</h6>
                     </div>
-                    <div class="card-body" th:if="${inventoryReport != null}">
-                        <p><strong>Tổng số loại sách:</strong> <span th:text="${inventoryReport.totalBooks}">0</span></p>
-                        <p><strong>Tổng số lượng:</strong> <span th:text="${inventoryReport.totalQuantity}">0</span></p>
-                        <p><strong>Giá trị kho:</strong> 
-                            <span th:text="${#numbers.formatDecimal(inventoryReport.totalValue, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
-                        </p>
-                        <p class="text-danger"><strong>Sách tồn kho thấp:</strong> 
-                            <span th:text="${inventoryReport.lowStockCount}">0</span>
-                        </p>
-                    </div>
+        <div class="card-body">
+            <canvas id="revenueChart" height="80"></canvas>
                 </div>
             </div>
 
-            <div class="col-lg-4 mb-4">
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Thông tin</h6>
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Báo cáo Tồn kho</h6>
                     </div>
-                    <div class="card-body">
-                        <p class="text-muted">
-                            Báo cáo doanh thu theo biểu đồ và xuất PDF/Excel sẽ được phát triển trong phiên bản tiếp theo.
-                        </p>
-                        <p class="text-muted">
-                            Hiện tại, bạn có thể xem thống kê cơ bản và báo cáo công nợ nhà cung cấp.
-                        </p>
-                    </div>
+                <div class="card-body" th:if="${inventoryReport != null}">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Tổng số loại sách:</th>
+                            <td th:text="${inventoryReport.totalBooks}">0</td>
+                        </tr>
+                        <tr>
+                            <th>Tổng số lượng:</th>
+                            <td th:text="${inventoryReport.totalQuantity}">0</td>
+                        </tr>
+                        <tr>
+                            <th>Giá trị kho:</th>
+                            <td th:text="${#numbers.formatDecimal(inventoryReport.totalValue, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</td>
+                        </tr>
+                        <tr>
+                            <th>Số sách sắp hết:</th>
+                            <td th:text="${inventoryReport.lowStockCount}">0</td>
+                        </tr>
+                    </table>
+                    <canvas id="inventoryChart" height="150"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-lg-12 mb-4">
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Báo cáo Công nợ Nhà cung cấp</h6>
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Công nợ Nhà cung cấp</h6>
                     </div>
-                    <div class="card-body">
-                        <div th:if="${debtReport != null and !#lists.isEmpty(debtReport.suppliers)}" 
-                             class="table-responsive">
-                            <table class="table table-hover">
+                <div class="card-body" th:if="${debtReport != null}">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Tổng công nợ:</th>
+                            <td th:text="${#numbers.formatDecimal(debtReport.totalDebt, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</td>
+                        </tr>
+                        <tr>
+                            <th>Số NCC còn nợ:</th>
+                            <td th:text="${debtReport.suppliersWithDebt}">0</td>
+                        </tr>
+                    </table>
+                    
+                    <h6 class="mt-3">Chi tiết công nợ:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
                                 <thead>
                                     <tr>
-                                        <th>Tên NCC</th>
-                                        <th>Số điện thoại</th>
-                                        <th>Địa chỉ</th>
-                                        <th>Công nợ</th>
+                                    <th>Nhà cung cấp</th>
+                                    <th class="text-end">Công nợ</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr th:each="supplier : ${debtReport.suppliers}">
-                                        <td th:text="${supplier.name}">Tên NCC</td>
-                                        <td th:text="${supplier.phone} ?: 'N/A'">SĐT</td>
-                                        <td th:text="${supplier.address} ?: 'N/A'">Địa chỉ</td>
-                                        <td>
-                                            <span class="badge bg-danger" 
-                                                  th:text="${#numbers.formatDecimal(supplier.debt, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                                0 đ
-                                            </span>
-                                        </td>
+                                    <td th:text="${supplier.name}"></td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(supplier.debt, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
                                     </tr>
                                 </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="3" class="text-end"><strong>Tổng công nợ:</strong></td>
-                                        <td>
-                                            <strong class="text-danger" 
-                                                    th:text="${#numbers.formatDecimal(debtReport.totalDebt, 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                                0 đ
-                                            </strong>
-                                        </td>
-                                    </tr>
-                                </tfoot>
                             </table>
-                        </div>
-                        <div th:if="${debtReport == null or #lists.isEmpty(debtReport.suppliers)}" class="text-muted">
-                            Không có nhà cung cấp nào có công nợ
-                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <script>
-            function exportToPDF() {
-                const fromDate = document.querySelector('input[name="fromDate"]').value;
-                const toDate = document.querySelector('input[name="toDate"]').value;
-                const granularity = document.querySelector('select[name="granularity"]').value;
-                
-                if (!fromDate || !toDate) {
-                    alert('Vui lòng chọn khoảng thời gian');
-                    return;
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script th:if="${salesReport != null && !salesReport.data.empty}">
+        const revenueData = {
+            labels: [
+                /*[# th:each="item : ${salesReport.data}" ]*/
+                /*[[ ${item.period} ]]*/,
+                /*[/]*/
+            ],
+            datasets: [{
+                label: 'Doanh thu',
+                data: [
+                    /*[# th:each="item : ${salesReport.data}" ]*/
+                    /*[[ ${item.revenue} ]]*/,
+                    /*[/]*/
+                ],
+                backgroundColor: 'rgba(78, 115, 223, 0.2)',
+                borderColor: 'rgba(78, 115, 223, 1)',
+                borderWidth: 2,
+                fill: true
+            }]
+        };
+
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: revenueData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('vi-VN', { notation: 'compact' }).format(value);
+                            }
+                        }
+                    }
                 }
-                
-                const fromDateTime = fromDate + 'T00:00:00';
-                const toDateTime = toDate + 'T23:59:59';
-                
-                const url = `/api/v1/reports/export/pdf?fromDate=${fromDateTime}&toDate=${toDateTime}&granularity=${granularity}`;
-                window.open(url, '_blank');
             }
-            
-            function exportToExcel() {
-                const fromDate = document.querySelector('input[name="fromDate"]').value;
-                const toDate = document.querySelector('input[name="toDate"]').value;
-                const granularity = document.querySelector('select[name="granularity"]').value;
-                
-                if (!fromDate || !toDate) {
-                    alert('Vui lòng chọn khoảng thời gian');
-                    return;
+        });
+    </script>
+
+    <script th:if="${inventoryReport != null}">
+        new Chart(document.getElementById('inventoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Sách tồn kho', 'Sách sắp hết'],
+                datasets: [{
+                    data: [
+                        /*[[ ${inventoryReport.totalQuantity - inventoryReport.lowStockCount} ]]*/,
+                        /*[[ ${inventoryReport.lowStockCount} ]]*/
+                    ],
+                    backgroundColor: [
+                        'rgba(28, 200, 138, 0.8)',
+                        'rgba(231, 74, 59, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
-                
-                const fromDateTime = fromDate + 'T00:00:00';
-                const toDateTime = toDate + 'T23:59:59';
-                
-                const url = `/api/v1/reports/export/excel?fromDate=${fromDateTime}&toDate=${toDateTime}&granularity=${granularity}`;
-                window.open(url, '_blank');
             }
+        });
         </script>
     </div>
 </body>
 </html>
-

@@ -34,6 +34,27 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    public Page<SupplierDTO> getAllSuppliers(String searchTerm, Boolean hasDebt, Pageable pageable) {
+        if (hasDebt == null) {
+            return getAllSuppliers(searchTerm, pageable);
+        }
+        
+        Page<Supplier> suppliers;
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            suppliers = supplierRepository.findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCaseAndDebtCondition(
+                searchTerm, searchTerm, hasDebt, pageable);
+        } else {
+            if (hasDebt) {
+                suppliers = supplierRepository.findByDebtGreaterThan(0.0, pageable);
+            } else {
+                suppliers = supplierRepository.findByDebtEquals(0.0, pageable);
+            }
+        }
+        
+        return suppliers.map(this::convertToDTO);
+    }
+
+    @Override
     public Optional<SupplierDTO> getSupplierById(String id) {
         return supplierRepository.findById(id).map(this::convertToDTO);
     }

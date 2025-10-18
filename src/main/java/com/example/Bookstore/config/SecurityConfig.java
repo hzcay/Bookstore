@@ -17,7 +17,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -25,7 +25,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**","/swagger-config.json").permitAll()
                 .requestMatchers("/", "/error").permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/login", "/register", "/forgot-password", "/verify-otp").permitAll()
                 .requestMatchers("/admin/**").permitAll()
+                .requestMatchers("/customer/**").permitAll()
                 .requestMatchers("/api/v1/books/**").permitAll()
                 .requestMatchers("/api/v1/categories/**").permitAll()
                 .requestMatchers("/api/v1/authors/**").permitAll()
@@ -39,6 +42,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/employees/**").permitAll()
                 .requestMatchers("/api/v1/reports/**").permitAll()
                 .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .maximumSessions(1)
             );
         
         return http.build();
