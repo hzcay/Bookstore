@@ -50,8 +50,9 @@ public class Order {
     @Column(name = "update_at")
     private LocalDateTime updateAt;
     
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private Integer status = 0;
+    private OrderStatus status = OrderStatus.PENDING;
     
     @Column(name = "shipping_address")
     private String shippingAddress;
@@ -63,4 +64,7 @@ public class Order {
         COD, ONLINE
     }
     
+    public enum OrderStatus {
+        PENDING, PROCESSING, SHIPPING, DELIVERED, CANCELED
+    }
 }

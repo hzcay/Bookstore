@@ -17,6 +17,10 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
     
     Optional<Promotion> findByCode(String code);
     
+    Optional<Promotion> findByCodeIgnoreCaseAndStatusAndExpireDateAfter(String code, Integer status, LocalDateTime now);
+    
+    List<Promotion> findByStatusAndExpireDateAfterOrderByExpireDateAsc(Integer status, LocalDateTime now);
+    
     List<Promotion> findByStatus(Integer status);
     
     Page<Promotion> findByStatus(Integer status, Pageable pageable);

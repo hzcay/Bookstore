@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi"
+      th:replace="~{layout :: layout(~{::content}, 'Đơn hàng của tôi – Bookstore VIP')}">
+  <div th:fragment="content">
+    <nav class="breadcrumb muted" style="margin: 8px 0 14px">
+      <a th:href="@{/}">Home</a><span>›</span><span>Orders</span>
+    </nav>
+
+    <section class="card section-lg container-narrow">
+      <header class="section-head">
+        <h2>Đơn hàng của tôi</h2>
+        <span class="muted">Xem trạng thái & chi tiết các đơn bạn đã đặt</span>
+      </header>
+
+      <!-- list sẽ render vào đây -->
+      <div id="myOrdersBox" class="track-result">
+        <div class="muted">Đang tải…</div>
+      </div>
+    </section>
+  </div>
+</html>

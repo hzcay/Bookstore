@@ -1,6 +1,8 @@
 package com.example.Bookstore.service;
 
 import com.example.Bookstore.dto.CustomerDTO;
+import com.example.Bookstore.dto.UpdateProfileRequest;
+import com.example.Bookstore.entity.Customer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -30,4 +32,10 @@ public interface CustomerService {
     List<CustomerDTO> getActiveCustomers();
 
     void activateCustomerByEmail(String email);
+
+    Customer getCurrentCustomer();
+
+    Customer getCurrentCustomerOrNull();
+
+    void updateProfile(String customerId, UpdateProfileRequest req);
 }

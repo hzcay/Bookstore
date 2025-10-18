@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  lang="vi"
+  th:replace="~{layout :: layout(~{::content}, 'Thanh toán – Bookstore VIP')}"
+>
+  <div th:fragment="content">
+    <nav class="breadcrumb muted" style="margin: 8px 0 14px">
+      <a th:href="@{/}">Home</a><span>›</span><span>Checkout</span>
+    </nav>
+
+    <section class="card section-lg container-narrow">
+      <header class="section-head">
+        <h2>Guest checkout</h2>
+        <span class="muted">Free ship nội thành cho đơn &gt; 300k</span>
+      </header>
+
+      <form id="checkoutForm" class="form-grid" autocomplete="on">
+        <!-- Hàng 1 -->
+        <input class="input" name="fullName" placeholder="Full name" autocomplete="name" required />
+        <input class="input" name="email" placeholder="Email" type="email" autocomplete="email" />
+        <input class="input" name="phone" placeholder="Phone" type="tel" autocomplete="tel" />
+
+        <!-- Địa chỉ (datalist = gợi ý từ Nominatim) -->
+        <input
+          id="shippingAddress"
+          class="input span-3"
+          name="shippingAddress"
+          placeholder="Số nhà, tên đường…"
+          autocomplete="shipping street-address"
+          list="address-suggestions"
+          required
+          aria-describedby="addrHelp"
+        />
+        <datalist id="address-suggestions"></datalist>
+        <small id="addrHelp" class="muted span-3" style="margin-top:-6px">
+          Gõ tên đường/số nhà → chọn gợi ý, map sẽ nhảy theo.
+        </small>
+
+        <!-- Map (Leaflet) -->
+        <div
+          id="map"
+          class="span-3"
+          style="height:300px;width:100%;margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid var(--line);"
+        ></div>
+
+        <!-- Hàng 2: Promotion + Points -->
+        <div class="span-2 row" style="gap:8px; align-items:center; position:relative;">
+          <input id="promoCode" class="input" name="promoCode" placeholder="Promo code (optional)" />
+          <button id="pickPromoBtn" type="button" class="btn outline">Chọn mã</button>
+
+          <!-- Popover danh sách mã -->
+          <div id="promoPopover" class="card" style="display:none; position:absolute; z-index:50; top:100%; left:0; width:min(420px, 90vw); margin-top:6px;">
+            <div class="section-head"><b>Mã khuyến mãi còn hiệu lực</b></div>
+            <div id="promoList" style="max-height:300px; overflow:auto;"></div>
+          </div>
+        </div>
+
+        <input id="usePoints" class="input" name="usePoints" type="number" min="0" value="0" placeholder="Use points" />
+
+        <!-- Payment method -->
+        <div class="span-3">
+          <div class="muted" style="margin:8px 0 4px">Phương thức thanh toán</div>
+          <label class="row" style="gap:8px; align-items:center;">
+            <input type="radio" name="paymentMethod" value="COD" checked /> COD (Thanh toán khi nhận hàng)
+          </label>
+          <label class="row" style="gap:8px; align-items:center;">
+            <input type="radio" name="paymentMethod" value="ONLINE" /> Online (demo)
+          </label>
+        </div>
+
+        <!-- Summary -->
+        <div class="span-3 card" style="padding:12px;">
+          <div class="row" style="justify-content:space-between;"><span>Tiền hàng</span><b id="sumSubtotal">0₫</b></div>
+          <div class="row" style="justify-content:space-between;"><span>Giảm từ mã</span><b id="sumPromo">0₫</b></div>
+          <div class="row" style="justify-content:space-between;"><span>Giảm từ điểm</span><b id="sumPoints">0₫</b></div>
+          <div class="row" style="justify-content:space-between;"><span>Tổng giảm</span><b id="sumDiscount">0₫</b></div>
+          <div class="row" style="justify-content:space-between;"><span>Phí ship</span><b id="sumShip">0₫</b></div>
+          <hr />
+          <div class="row" style="justify-content:space-between;font-size:1.05em;">
+            <span><b>Thành tiền</b></span><b id="sumTotal">0₫</b>
+          </div>
+        </div>
+
+        <button class="btn btn-submit span-3" type="submit">Place order</button>
+      </form>
+
+      <pre id="checkoutResult" class="pre" aria-live="polite"></pre>
+    </section>
+
+    <p class="muted" style="margin:12px 4px">
+      Đã bao gồm VAT nếu có. Giá có thể thay đổi khi áp dụng mã giảm.
+    </p>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+    <!-- App -->
+    <script th:src="@{/js/app.js}" defer></script>
+  </div>
+</html>

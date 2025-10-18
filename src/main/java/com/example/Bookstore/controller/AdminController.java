@@ -7,11 +7,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpSession;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -51,7 +53,12 @@ public class AdminController {
     private PromotionService promotionService;
 
     @GetMapping({"", "/", "/dashboard"})
-    public String dashboard(Model model) {
+    // @PreAuthorize("hasRole('ADMIN')")  // Disabled temporarily
+    public String dashboard(Model model, HttpSession session) {
+        String userRole = (String) session.getAttribute("userRole");
+        if (!"ADMIN".equals(userRole)) {
+            return "redirect:/admin/access-denied";
+        }
         model.addAttribute("activePage", "dashboard");
         try {
             LocalDateTime now = LocalDateTime.now();
@@ -97,11 +104,16 @@ public class AdminController {
     }
 
     @GetMapping("/books")
+    // @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")  // Disabled temporarily
     public String listBooks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String search,
-            Model model) {
+            Model model, HttpSession session) {
+        String userRole = (String) session.getAttribute("userRole");
+        if (!"ADMIN".equals(userRole) && !"WAREHOUSE".equals(userRole)) {
+            return "redirect:/admin/access-denied";
+        }
         
         model.addAttribute("activePage", "books");
         Pageable pageable = PageRequest.of(page, size, Sort.by("title").ascending());
@@ -120,7 +132,12 @@ public class AdminController {
     }
 
     @GetMapping("/books/new")
-    public String newBookForm(Model model) {
+    // @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")  // Disabled temporarily
+    public String newBookForm(Model model, HttpSession session) {
+        String userRole = (String) session.getAttribute("userRole");
+        if (!"ADMIN".equals(userRole) && !"WAREHOUSE".equals(userRole)) {
+            return "redirect:/admin/access-denied";
+        }
         model.addAttribute("activePage", "books");
         model.addAttribute("book", new BookDTO());
         model.addAttribute("isEdit", false);

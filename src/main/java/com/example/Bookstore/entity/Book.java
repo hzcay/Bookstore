@@ -55,4 +55,7 @@ public class Book {
     
     @Column(name = "status")
     private Integer status = 1;
+
+    @Column(length = 512)
+    private String thumbnail;
 }

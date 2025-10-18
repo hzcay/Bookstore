@@ -1,11 +1,20 @@
 package com.example.Bookstore.controller;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import static com.example.Bookstore.controller.AuthController.SESSION_UID;
 
 @Controller
+@RequiredArgsConstructor
 public class ViewController {
+
+    @Value("${app.api-base:/api/v1}")
+    private String apiBase;
 
     @GetMapping("/login")
     public String login() {
@@ -23,34 +32,62 @@ public class ViewController {
     }
 
     @GetMapping("/")
-    public String index(HttpSession session) {
-        String userType = (String) session.getAttribute("userType");
-        if (userType != null) {
-            if ("CUSTOMER".equals(userType)) {
-                return "redirect:/customer/dashboard";
-            } else if ("EMPLOYEE".equals(userType)) {
-                String role = (String) session.getAttribute("userRole");
-                if ("ADMIN".equals(role)) {
-                    return "redirect:/admin/dashboard";
-                } else if ("CASHIER".equals(role)) {
-                    return "redirect:/admin/orders";
-                } else if ("WAREHOUSE".equals(role)) {
-                    return "redirect:/admin/inventory";
-                } else if ("SHIPPER".equals(role)) {
-                    return "redirect:/admin/shipments";
-                }
-                return "redirect:/admin/dashboard";
-            }
-        }
-        return "redirect:/login";
+    public String root(HttpSession session) {
+        return (session.getAttribute(SESSION_UID) == null)
+                ? "redirect:/login"
+                : "redirect:/homePage";
+    }
+
+    @GetMapping({ "/homePage" })
+    public String homePage(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", "/homePage");
+        model.addAttribute("apiBase", apiBase);
+        return "index";
+    }
+
+    @GetMapping({ "/browse", "/books" })
+    public String browse(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", req.getRequestURI());
+        model.addAttribute("apiBase", apiBase);
+        return "index";
+    }
+
+    @GetMapping("/book/{id}")
+    public String bookDetail(@PathVariable String id, Model model, HttpServletRequest req) {
+        model.addAttribute("uri", "/homePage");
+        model.addAttribute("apiBase", apiBase);
+        model.addAttribute("bookId", id);
+        return "book";
+    }
+
+    @GetMapping("/cart")
+    public String cart(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", req.getRequestURI());
+        model.addAttribute("apiBase", apiBase);
+        return "cart";
+    }
+
+    @GetMapping("/checkout")
+    public String checkout(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", req.getRequestURI());
+        model.addAttribute("apiBase", apiBase);
+        return "checkout";
+    }
+
+    @GetMapping("/track")
+    public String track(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", req.getRequestURI());
+        model.addAttribute("apiBase", apiBase);
+        return "track";
     }
 
     @GetMapping("/customer/dashboard")
     public String customerDashboard(HttpSession session) {
-        if (!"CUSTOMER".equals(session.getAttribute("userType"))) {
+        String userType = (String) session.getAttribute("userType");
+        if (!"CUSTOMER".equals(userType)) {
             return "redirect:/login";
         }
-        return "customer/dashboard";
+        return "dashboard";
     }
 
     @GetMapping("/admin/access-denied")

@@ -6,52 +6,38 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-@Component
+// @Component  // Disabled to avoid conflict
 public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String uri = request.getRequestURI();
-        HttpSession session = request.getSession(false);
-
-        if (uri.startsWith("/admin")) {
-            if (session == null || !"EMPLOYEE".equals(session.getAttribute("userType"))) {
-                response.sendRedirect("/login");
-                return false;
-            }
-
-            String role = (String) session.getAttribute("userRole");
-            
-            if (uri.contains("/dashboard") || uri.contains("/reports")) {
-                if (!"ADMIN".equals(role)) {
-                    response.sendRedirect("/admin/access-denied");
-                    return false;
-                }
-            } else if (uri.contains("/employees") || uri.contains("/suppliers") || 
-                       uri.contains("/categories") || uri.contains("/authors") || uri.contains("/publishers")) {
-                if (!"ADMIN".equals(role)) {
-                    response.sendRedirect("/admin/access-denied");
-                    return false;
-                }
-            } else if (uri.contains("/inventory") || uri.contains("/shipments")) {
-                if (!"ADMIN".equals(role) && !"WAREHOUSE".equals(role)) {
-                    response.sendRedirect("/admin/access-denied");
-                    return false;
-                }
-            } else if (uri.contains("/orders")) {
-                if (!"ADMIN".equals(role) && !"CASHIER".equals(role)) {
-                    response.sendRedirect("/admin/access-denied");
-                    return false;
-                }
-            }
-        } else if (uri.startsWith("/customer")) {
-            if (session == null || !"CUSTOMER".equals(session.getAttribute("userType"))) {
-                response.sendRedirect("/login");
-                return false;
-            }
+        String requestURI = request.getRequestURI();
+        
+        // Cho phép truy cập các trang public
+        if (isPublicPage(requestURI)) {
+            return true;
         }
-
+        
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userType") == null) {
+            response.sendRedirect("/login");
+            return false;
+        }
+        
         return true;
     }
+    
+    private boolean isPublicPage(String requestURI) {
+        return requestURI.equals("/") ||
+               requestURI.equals("/login") ||
+               requestURI.equals("/register") ||
+               requestURI.equals("/forgot-password") ||
+               requestURI.startsWith("/api/v1/auth/") ||
+               requestURI.startsWith("/api/v1/cart/") ||
+               requestURI.startsWith("/api/v1/categories/") ||
+               requestURI.startsWith("/static/") ||
+               requestURI.startsWith("/css/") ||
+               requestURI.startsWith("/js/") ||
+               requestURI.startsWith("/images/");
+    }
 }
-

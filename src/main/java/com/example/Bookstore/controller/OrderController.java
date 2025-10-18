@@ -2,13 +2,11 @@ package com.example.Bookstore.controller;
 
 import com.example.Bookstore.dto.OrderDTO;
 import com.example.Bookstore.dto.OrderItemDTO;
-import com.example.Bookstore.entity.Order;
 import com.example.Bookstore.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,31 +25,12 @@ public class OrderController {
     
     @GetMapping
     public ResponseEntity<Page<OrderDTO>> getAllOrders(
-            @RequestParam(required = false) String customerId,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) Integer paymentStatus,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir) {
+            @RequestParam(defaultValue = "20") int size) {
         
-        Sort sort = sortDir.equalsIgnoreCase("desc") ? 
-                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, size);
         
-        Integer orderStatus = null;
-        if (status != null) {
-            try {
-                orderStatus = Integer.parseInt(status);
-            } catch (NumberFormatException e) {
-                return ResponseEntity.badRequest().build();
-            }
-        }
-        
-        Page<OrderDTO> orders = orderService.getAllOrders(customerId, orderStatus, 
-                                                        paymentStatus, dateFrom, dateTo, pageable);
+        Page<OrderDTO> orders = orderService.getAllOrders(pageable);
         return ResponseEntity.ok(orders);
     }
     
@@ -170,5 +149,14 @@ public class OrderController {
         public void setPaymentStatus(Integer paymentStatus) {
             this.paymentStatus = paymentStatus;
         }
+    }
+    
+    @PostMapping("/guest-checkout")
+    public ResponseEntity<com.example.Bookstore.dto.OrderPlacedDTO> guestCheckout(
+            @RequestBody com.example.Bookstore.dto.CheckoutRequest req,
+            jakarta.servlet.http.HttpSession session) {
+        
+        var placed = orderService.guestCheckout(req, session);
+        return ResponseEntity.ok(placed);
     }
 }

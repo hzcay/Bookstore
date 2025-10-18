@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  lang="vi"
+  th:replace="~{layout :: layout(~{::content}, 'Browse – Bookstore VIP')}"
+>
+  <div th:fragment="content">
+    <section class="card">
+      <h2>Browse books</h2>
+
+      <form id="searchForm" class="row gap">
+        <input class="input" name="q" id="searchQ" type="search" placeholder="Search..." enterkeyhint="search" />
+        <input
+          class="input"
+          name="minPrice"
+          placeholder="Min price"
+          type="number"
+          step="5000"
+        />
+        <input
+          class="input"
+          name="maxPrice"
+          placeholder="Max price"
+          type="number"
+          step="5000"
+        />
+
+        <!-- NEW: category filter -->
+        <select class="input" name="categoryId" id="filterCategory">
+          <option value="">All categories</option>
+        </select>
+
+        <select class="input" name="sortBy">
+          <option value="title">Title</option>
+          <option value="salePrice">Price</option>
+          <!-- CHÚ Ý: khớp với field ở backend. Nếu entity là `createAt` thì để createAt -->
+          <option value="createAt">Newest</option>
+        </select>
+
+        <select class="input" name="sortDir">
+          <option value="asc">ASC</option>
+          <option value="desc">DESC</option>
+        </select>
+
+        <button class="btn" type="submit">Search</button>
+      </form>
+    </section>
+
+    <section class="grid" id="bookGrid"></section>
+    <div class="row center" id="pager"></div>
+  </div>
+</html>

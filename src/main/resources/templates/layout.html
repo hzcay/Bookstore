@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  lang="vi"
+  th:fragment="layout(content, pageTitle='Bookstore VIP')"
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#4f46e5" />
+    <title th:text="${pageTitle}">Bookstore VIP</title>
+
+    <!-- Base styles -->
+    <link th:href="@{/css/app.css}" rel="stylesheet" />
+  </head>
+  <body>
+    <header class="nav sticky">
+      <div class="container row space">
+        <a th:href="@{/}" class="brand"
+          >Bookstore <span class="vip">VIP</span></a
+        >
+
+        <nav class="row gap nav-links" id="mainNav">
+          <a
+            th:href="@{/}"
+            th:attr="aria-current=${uri=='/' ? 'page' : null}"
+            th:classappend="${uri=='/' ? 'badge' : ''}"
+            >Browse</a
+          >
+          <a
+            th:href="@{/cart}"
+            th:attr="aria-current=${#strings.startsWith(uri,'/cart') ? 'page' : null}"
+            th:classappend="${#strings.startsWith(uri,'/cart') ? 'badge' : ''}"
+            >Cart</a
+          >
+          <a
+            th:href="@{/checkout}"
+            th:attr="aria-current=${#strings.startsWith(uri,'/checkout') ? 'page' : null}"
+            th:classappend="${#strings.startsWith(uri,'/checkout') ? 'badge' : ''}"
+            >Checkout</a
+          >
+          <a
+            th:href="@{/track}"
+            th:attr="aria-current=${#strings.startsWith(uri,'/track') ? 'page' : null}"
+            th:classappend="${#strings.startsWith(uri,'/track') ? 'badge' : ''}"
+            >Track</a
+          >
+          <a
+            th:href="@{/profile}"
+            th:attr="aria-current=${#strings.startsWith(uri,'/profile') ? 'page' : null}"
+            th:classappend="${#strings.startsWith(uri,'/profile') ? 'badge' : ''}"
+            >Profile</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main class="container" th:replace="${content}"></main>
+
+    <footer class="footer">
+      <div class="container">© Bookstore — Spring Boot x Thymeleaf</div>
+    </footer>
+
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+      window.API_BASE = /*[[${apiBase} ?: '/api/v1']]]*/ "/api/v1";
+      /*]]>*/
+      (function () {
+        const btn = document.getElementById("menuToggle");
+        const nav = document.getElementById("mainNav");
+        if (!btn || !nav) return;
+        btn.addEventListener("click", () => {
+          const open = nav.classList.toggle("open");
+          btn.setAttribute("aria-expanded", String(open));
+        });
+      })();
+    </script>
+    <script
+      src="https://widget.cloudinary.com/v2.0/global/all.js"
+      defer
+    ></script>
+    <script th:src="@{/js/app.js}" defer></script>
+  </body>
+</html>

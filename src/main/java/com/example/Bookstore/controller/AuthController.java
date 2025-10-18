@@ -2,6 +2,8 @@ package com.example.Bookstore.controller;
 
 import com.example.Bookstore.dto.CustomerDTO;
 import com.example.Bookstore.dto.EmployeeDTO;
+import com.example.Bookstore.entity.Customer;
+import com.example.Bookstore.repository.CustomerRepository;
 import com.example.Bookstore.service.CustomerService;
 import com.example.Bookstore.service.EmployeeService;
 import com.example.Bookstore.service.AuthService;
@@ -20,6 +22,8 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class AuthController {
     
+    public static final String SESSION_UID = "AUTH_CUSTOMER_ID";
+    
     @Autowired
     private CustomerService customerService;
     
@@ -31,6 +35,9 @@ public class AuthController {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private CustomerRepository customerRepo;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
@@ -114,6 +121,7 @@ public class AuthController {
                     }
                 } else {
                     if (passwordEncoder.matches(request.getPassword(), cust.getPassword())) {
+                        session.setAttribute(SESSION_UID, cust.getCustomerId());
                         session.setAttribute("userId", cust.getCustomerId());
                         session.setAttribute("userType", "CUSTOMER");
                         session.setAttribute("userName", cust.getName());
@@ -182,6 +190,7 @@ public class AuthController {
                 CustomerDTO cust = customer.get();
                 customerService.activateCustomerByEmail(request.getEmail());
                 
+                session.setAttribute(SESSION_UID, cust.getCustomerId());
                 session.setAttribute("userId", cust.getCustomerId());
                 session.setAttribute("userType", "CUSTOMER");
                 session.setAttribute("userName", cust.getName());
@@ -324,6 +333,23 @@ public class AuthController {
 
         public String getPassword() { return password; }
         public void setPassword(String password) { this.password = password; }
+    }
+
+    @GetMapping("/me")
+    public Map<String, Object> me(HttpSession session) {
+        String uid = (String) session.getAttribute(SESSION_UID);
+        if (uid == null)
+            throw new RuntimeException("Unauthenticated");
+
+        Customer c = customerRepo.findByCustomerIdAndStatus(uid, 1)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return Map.of(
+                "customerId", c.getCustomerId(),
+                "name", c.getName(),
+                "email", c.getEmail(),
+                "phone", c.getPhone() != null ? c.getPhone() : "",
+                "points", c.getPoints() != null ? c.getPoints() : 0,
+                "address", c.getAddress() != null ? c.getAddress() : "");
     }
     
     public static class VerifyOTPRequest {

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content}, 'Profile – Bookstore')}">
+
+<div th:fragment="content" class="container-narrow section-lg card">
+
+  <header class="section-head row space" style="align-items:center">
+    <div>
+      <h2 style="margin:0">Thông tin cá nhân</h2>
+    </div>
+    <!-- chỉ là text, không phải input -->
+    <span class="badge">Points: <b th:text="${points}">0</b></span>
+  </header>
+
+  <div th:if="${success}" class="alert success" th:text="${success}"></div>
+  <div th:if="${error}" class="alert danger" th:text="${error}"></div>
+
+  <form th:action="@{/profile}" method="post" class="form-grid">
+
+    <!-- Họ tên -->
+    <label class="input col-4">
+      <span>Họ tên</span>
+      <input name="name" th:value="${form.name}" required>
+    </label>
+
+    <!-- Email -->
+    <label class="input col-4">
+      <span>Email</span>
+      <input name="email" th:value="${form.email}" required>
+    </label>
+
+    <!-- SĐT -->
+    <label class="input col-4">
+      <span>SĐT</span>
+      <input name="phone" th:value="${form.phone}" placeholder="09xxxxxxxx">
+    </label>
+
+    <!-- Địa chỉ -->
+    <label class="input col-span-3">
+      <span>Địa chỉ</span>
+      <input name="address" th:value="${form.address}" placeholder="Số nhà, đường, phường/xã, quận/huyện">
+    </label>
+
+    <!-- Chỉ là nhãn chia section, KHÔNG input -->
+    <div class="label-only col-span-3">Đổi mật khẩu (tuỳ chọn)</div>
+
+    <!-- Mật khẩu mới -->
+    <label class="input col-span-3">
+      <span>Mật khẩu mới</span>
+      <input name="password" type="password" placeholder="Để trống nếu không đổi">
+    </label>
+
+    <div class="actions col-span-3" style="margin-top:12px">
+      <button class="btn primary" type="submit">Lưu thay đổi</button>
+      <a class="btn" th:href="@{/homePage}">Về trang chủ</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  /* chỉ là text label, không có ô */
+  .label-only{
+    font-weight:600;
+    color:#111827;
+    padding:6px 2px;
+    margin-top:6px;
+  }
+
+  /* nếu cần chỉnh lại grid cho cân hơn */
+  .form-grid{
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap:12px;
+  }
+  .col-4{ grid-column: span 4 / span 4; }
+  .col-span-3{ grid-column: 1 / -1; } /* full width */
+  .input{ display:flex; flex-direction:column; gap:6px; }
+  .input > span{ font-size:13px; color:#6b7280; }
+  .input > input{
+    height:44px; padding:10px 12px;
+    border:1px solid #e5e7eb; border-radius:10px; background:#fff;
+  }
+</style>
+
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  lang="vi"
+  th:replace="~{layout :: layout(~{::content}, 'Giỏ hàng – Bookstore VIP')}"
+>
+  <div th:fragment="content">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb muted" style="margin: 8px 0 14px">
+      <a th:href="@{/}">Home</a>
+      <span>›</span>
+      <span>Cart</span>
+    </nav>
+
+    <section class="card">
+      <div class="row space" style="margin-bottom: 8px">
+        <h2 style="margin: 0">Your cart</h2>
+        <span class="muted">Free ship nội thành cho đơn &gt; 300k</span>
+      </div>
+
+      <!-- Where JS renders items & total -->
+      <div id="cartTable">
+        <!-- fallback khi JS đang load -->
+        <div class="muted">Loading…</div>
+      </div>
+
+      <!-- Actions -->
+      <div class="row right gap" style="margin-top: 16px">
+        <a th:href="@{/}" class="btn ghost">← Continue shopping</a>
+        <a th:href="@{/checkout}" class="btn">Proceed to checkout →</a>
+        <button class="btn outline" id="btnClear">Clear cart</button>
+      </div>
+    </section>
+
+    <!-- Tiny note -->
+    <p class="muted" style="margin: 12px 4px">
+      Đã bao gồm VAT nếu có. Giá có thể thay đổi khi áp dụng mã giảm.
+    </p>
+  </div>
+</html>

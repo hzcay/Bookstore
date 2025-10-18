@@ -1,6 +1,7 @@
 package com.example.Bookstore.service.impl;
 
 import com.example.Bookstore.dto.CustomerDTO;
+import com.example.Bookstore.dto.UpdateProfileRequest;
 import com.example.Bookstore.entity.Customer;
 import com.example.Bookstore.repository.CustomerRepository;
 import com.example.Bookstore.service.CustomerService;
@@ -8,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,7 +176,6 @@ public class CustomerServiceImpl implements CustomerService {
 
     private Customer toEntity(CustomerDTO dto) {
         Customer c = new Customer();
-        // Không set customerId - để JPA tự sinh UUID
         c.setName(dto.getName());
         c.setPhone(dto.getPhone());
         c.setEmail(dto.getEmail());
@@ -181,6 +184,60 @@ public class CustomerServiceImpl implements CustomerService {
         c.setPoints(dto.getPoints());
         c.setStatus(dto.getStatus());
         return c;
+    }
+
+    private String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated())
+            return null;
+        Object p = auth.getPrincipal();
+        if ("anonymousUser".equals(p))
+            return null;
+        if (p instanceof UserDetails ud)
+            return ud.getUsername();
+        return String.valueOf(p);
+    }
+
+    @Override
+    public Customer getCurrentCustomer() {
+        String username = currentUsername();
+        if (username == null)
+            throw new IllegalStateException("User chưa đăng nhập");
+        return customerRepository.findByEmail(username)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy Customer: " + username));
+    }
+
+    @Override
+    public Customer getCurrentCustomerOrNull() {
+        String username = currentUsername();
+        if (username == null)
+            return null;
+        return customerRepository.findByEmail(username).orElse(null);
+    }
+
+    @Override
+    public void updateProfile(String customerId, UpdateProfileRequest req) {
+        Customer c = customerRepository.findByCustomerIdAndStatus(customerId, 1)
+                .orElseThrow(() -> new IllegalArgumentException("User not found or inactive"));
+
+        if (req.getEmail() != null && !req.getEmail().equalsIgnoreCase(c.getEmail())) {
+            var other = customerRepository.findByEmail(req.getEmail());
+            if (other.isPresent() && !other.get().getCustomerId().equals(c.getCustomerId())
+                    && Integer.valueOf(1).equals(other.get().getStatus())) {
+                throw new IllegalArgumentException("Email đã được sử dụng");
+            }
+            c.setEmail(req.getEmail());
+        }
+
+        c.setName(req.getName());
+        c.setPhone(req.getPhone());
+        c.setAddress(req.getAddress());
+
+        if (req.getNewPassword() != null && !req.getNewPassword().isBlank()) {
+            c.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        }
+
+        customerRepository.save(c);
     }
 }
 

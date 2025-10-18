@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi"
+      th:replace="~{layout :: layout(~{::content}, 'Book Detail')}">
+
+  <div th:fragment="content">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb muted">
+      <a href="/">Home</a>
+      <span>›</span>
+      <span id="bc-category">Book</span>
+      <span>›</span>
+      <span id="bc-title">Detail</span>
+    </nav>
+
+    <section id="product" class="card row gap">
+      <!-- Left: gallery -->
+      <div class="col" style="max-width:420px">
+        <div class="thumb large">
+          <img id="p-thumb" src="/img/placeholder.png" alt="thumbnail" />
+          <span id="p-badge" class="badge-flag hidden">Out of stock</span>
+        </div>
+        <!-- thumbs (optional future) -->
+        <div class="row gap small-thumbs hidden" id="p-thumbs">
+          <!-- <img src="..." alt=""> -->
+        </div>
+      </div>
+
+      <!-- Right: info -->
+      <div class="col">
+        <h1 id="p-title" class="title">Loading…</h1>
+        <div id="p-meta" class="muted">—</div>
+
+        <div class="price-row row gap" style="margin:10px 0 6px">
+          <div class="price">
+            <span id="p-price" class="price-num">—</span><span>₫</span>
+          </div>
+          <span id="p-stock" class="stock muted">Stock: —</span>
+        </div>
+
+        <div class="muted" id="p-updated" style="margin-bottom:10px"></div>
+
+        <!-- Purchase row -->
+        <div class="row gap">
+          <label class="qty">
+            <span class="muted">Qty</span>
+            <input id="p-qty" class="input" type="number" min="1" step="1" value="1" />
+          </label>
+          <button id="btnAddCart" class="btn">Add to cart</button>
+          <a href="/" class="btn ghost">← Back</a>
+        </div>
+
+        <!-- Extra info -->
+        <ul class="bullets muted" style="margin-top:14px">
+          <li>Free ship nội thành cho đơn &gt; 300k</li>
+          <li>Đổi trả trong 7 ngày nếu lỗi in ấn</li>
+          <li>Thanh toán khi nhận hàng (COD)</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card" id="related" style="display:none">
+      <h3 style="margin:0 0 10px">Related books</h3>
+      <div id="rel-grid" class="grid"></div>
+    </section>
+  </div>
+</html>

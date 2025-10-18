@@ -1,8 +1,12 @@
 package com.example.Bookstore.service;
 
+import com.example.Bookstore.dto.CheckoutRequest;
 import com.example.Bookstore.dto.OrderDTO;
 import com.example.Bookstore.dto.OrderItemDTO;
+import com.example.Bookstore.dto.OrderPlacedDTO;
+import com.example.Bookstore.dto.OrderTrackDTO;
 import com.example.Bookstore.entity.Order;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,9 +16,7 @@ import java.util.Optional;
 
 public interface OrderService {
     
-    Page<OrderDTO> getAllOrders(String customerId, Integer status, 
-                               Integer paymentStatus, LocalDateTime dateFrom, 
-                               LocalDateTime dateTo, Pageable pageable);
+    Page<OrderDTO> getAllOrders(Pageable pageable);
     
     Optional<OrderDTO> getOrderById(String orderId);
     
@@ -39,4 +41,8 @@ public interface OrderService {
     Double calculateRevenue(LocalDateTime fromDate, LocalDateTime toDate);
     
     Long countDeliveredOrders(LocalDateTime fromDate, LocalDateTime toDate);
+    
+    OrderTrackDTO track(String orderId, String email, String phone);
+    
+    OrderPlacedDTO guestCheckout(CheckoutRequest req, HttpSession session);
 }

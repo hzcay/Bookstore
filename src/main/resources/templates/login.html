@@ -48,33 +48,29 @@
                     <form id="loginForm">
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                <input type="email" class="form-control" id="email" required>
-                            </div>
+                            <input type="email" class="form-control" id="email" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Mật khẩu</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                                <input type="password" class="form-control" id="password" required>
-                            </div>
+                            <input type="password" class="form-control" id="password" required>
                         </div>
-                        <div id="alertBox"></div>
-                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <div id="alertBox" class="mb-3"></div>
+                        <button type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
                         </button>
                     </form>
-                    <div class="text-center">
+                    <div class="text-center mt-3">
+                        <a href="/register" class="text-decoration-none">Chưa có tài khoản? Đăng ký</a>
+                    </div>
+                    <div class="text-center mt-2">
                         <a href="/forgot-password" class="text-decoration-none">Quên mật khẩu?</a>
-                        <span class="mx-2">|</span>
-                        <a href="/register" class="text-decoration-none">Đăng ký tài khoản</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- OTP Modal -->
     <div class="modal fade" id="otpModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -122,7 +118,7 @@
                     showAlert('success', 'Đăng nhập thành công!');
                     setTimeout(() => {
                         if (data.userType === 'CUSTOMER') {
-                            window.location.href = '/customer/dashboard';
+                            window.location.href = '/homePage';
                         } else {
                             if (data.role === 'ADMIN') {
                                 window.location.href = '/admin/dashboard';
@@ -138,7 +134,7 @@
                         }
                     }, 1000);
                 } else {
-                    showAlert('danger', typeof data === 'string' ? data : 'Email hoặc mật khẩu không đúng');
+                    showAlert('danger', data.message || 'Email hoặc mật khẩu không đúng');
                 }
             } catch (error) {
                 showAlert('danger', 'Lỗi kết nối. Vui lòng thử lại.');
@@ -165,7 +161,7 @@
                     showOTPAlert('success', 'Xác thực thành công!');
                     setTimeout(() => {
                         if (data.userType === 'CUSTOMER') {
-                            window.location.href = '/customer/dashboard';
+                            window.location.href = '/homePage';
                         } else {
                             if (data.role === 'ADMIN') {
                                 window.location.href = '/admin/dashboard';
@@ -224,4 +220,3 @@
     </script>
 </body>
 </html>
-
