@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{shipper/layout :: layout(~{::body})}">
+<body>
+<div class="container-fluid py-3">
+    <h2 class="mb-4 text-center"><i class="bi bi-graph-up"></i> Báo cáo giao hàng</h2>
+
+    <form class="row g-3 align-items-end mb-4" method="get" th:action="@{/shipper/report}">
+        <div class="col-6 col-md-4">
+            <label for="fromDate" class="form-label fw-bold">Từ ngày</label>
+            <input type="date" id="fromDate" name="from" class="form-control" 
+                   th:value="${#temporals.format(fromDate, 'yyyy-MM-dd')}">
+        </div>
+        <div class="col-6 col-md-4">
+            <label for="toDate" class="form-label fw-bold">Đến ngày</label>
+            <input type="date" id="toDate" name="to" class="form-control" 
+                   th:value="${#temporals.format(toDate, 'yyyy-MM-dd')}">
+        </div>
+        <div class="col-12 col-md-4">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search"></i> Xem báo cáo
+            </button>
+        </div>
+    </form>
+
+    <div class="row text-center g-3 mb-3">
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-success">
+                <div class="card-body">
+                    <h6>Đã giao</h6>
+                    <h3 th:text="${deliveredCount} ?: 0">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-danger">
+                <div class="card-body">
+                    <h6>Thất bại</h6>
+                    <h3 th:text="${failedCount} ?: 0">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="card text-bg-secondary">
+                <div class="card-body">
+                    <h6>Tổng tiền COD trong khoảng</h6>
+                    <h3 th:text="${#numbers.formatDecimal(totalCOD,0,'COMMA',0,'POINT')} + ' VND'">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-muted text-center">
+        Thời gian: 
+        <span th:text="${#temporals.format(fromDate, 'dd/MM/yyyy')}">—</span> 
+        - 
+        <span th:text="${#temporals.format(toDate, 'dd/MM/yyyy')}">—</span>
+    </p>
+</div>
+</body>
+</html>

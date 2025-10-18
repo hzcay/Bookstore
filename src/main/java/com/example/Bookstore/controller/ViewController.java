@@ -90,6 +90,16 @@ public class ViewController {
         return "dashboard";
     }
 
+    @GetMapping("/shipper/dashboard")
+    public String shipperDashboard(HttpSession session) {
+        String userType = (String) session.getAttribute("userType");
+        String userRole = (String) session.getAttribute("userRole");
+        if (!"EMPLOYEE".equals(userType) || !"SHIPPER".equals(userRole)) {
+            return "redirect:/login";
+        }
+        return "redirect:/shipper/home";
+    }
+
     @GetMapping("/admin/access-denied")
     public String accessDenied() {
         return "admin/access-denied";

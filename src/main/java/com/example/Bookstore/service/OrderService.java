@@ -18,6 +18,8 @@ public interface OrderService {
     
     Page<OrderDTO> getAllOrders(Pageable pageable);
     
+    Page<OrderDTO> getOrdersByStatus(Order.OrderStatus status, Pageable pageable);
+    
     Optional<OrderDTO> getOrderById(String orderId);
     
     OrderDTO createOrder(OrderDTO orderDTO);

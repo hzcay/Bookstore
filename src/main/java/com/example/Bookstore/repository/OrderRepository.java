@@ -22,6 +22,11 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     
     Optional<Order> findByOrderIdAndStatus(String orderId, Order.OrderStatus status);
     
+    // For shipper: get orders by status
+    Page<Order> findByStatus(Order.OrderStatus status, Pageable pageable);
+    
+    List<Order> findByStatus(Order.OrderStatus status);
+    
     @Query("SELECT SUM(o.total - o.discount + o.shippingFee) FROM Order o WHERE " +
            "o.status = com.example.Bookstore.entity.Order$OrderStatus.DELIVERED AND " +
            "o.createAt BETWEEN :fromDate AND :toDate")

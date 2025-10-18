@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{shipper/layout :: layout(~{::body})}">
+<body>
+<div class="card shadow mt-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-truck"></i> Chi tiết đơn giao</h4>
+    </div>
+
+    <div class="card-body">
+
+        <!-- Không tìm thấy shipment -->
+        <div th:if="${shipment == null}">
+            <div class="alert alert-danger">Không tìm thấy đơn hàng.</div>
+        </div>
+
+        <!-- Có shipment -->
+        <div th:if="${shipment != null}">
+            <div class="row mb-3">
+                <div class="col-md-6 col-12">
+                    <p><strong>Mã giao hàng:</strong> <span th:text="${shipment.shipmentId}">—</span></p>
+                    <p><strong>Mã đơn hàng:</strong> <span th:text="${shipment.orderId}">—</span></p>
+                    <p><strong>Khách hàng:</strong> <span th:text="${shipment.customerName} ?: '—'">—</span></p>
+                    <p><strong>Địa chỉ giao:</strong> <span th:text="${shipment.deliveryAddress} ?: '—'">—</span></p>
+                    <p><strong>COD:</strong> 
+                        <span th:text="${#numbers.formatDecimal(shipment.codAmount,0,'COMMA',0,'POINT')} + ' VND'">0</span>
+                    </p>
+                    <p><strong>Phương thức thanh toán:</strong> 
+                        <span th:text="${shipment.paymentMethod != null ? shipment.paymentMethod : '—'}">—</span>
+                    </p>
+                </div>
+
+                <div class="col-md-6 col-12">
+                    <p><strong>Trạng thái:</strong>
+                        <span th:class="${shipment.status.name() == 'PICKING' ? 'badge bg-warning text-dark' :
+                                         (shipment.status.name() == 'OUT_FOR_DELIVERY' ? 'badge bg-info text-white' :
+                                         (shipment.status.name() == 'DELIVERED' ? 'badge bg-success' :
+                                         (shipment.status.name() == 'FAILED' ? 'badge bg-danger' : 'badge bg-secondary')))}"
+                              th:text="${shipment.status.name()}">STATUS</span>
+                    </p>
+
+                    <div th:if="${shipment.status.name() == 'OUT_FOR_DELIVERY' 
+                                or shipment.status.name() == 'DELIVERED' 
+                                or shipment.status.name() == 'FAILED'}">
+                        <p><strong>Thời gian nhận hàng (Pickup):</strong> 
+                            <span th:text="${shipment.pickupTime != null ? #temporals.format(shipment.pickupTime, 'dd/MM/yyyy HH:mm') : '—'}"></span>
+                        </p>
+                    </div>
+
+                    <div th:if="${shipment.status.name() == 'DELIVERED'}">
+                        <p><strong>Thời gian giao hàng (Delivery):</strong> 
+                            <span th:text="${shipment.deliveryTime != null ? #temporals.format(shipment.deliveryTime, 'dd/MM/yyyy HH:mm') : '—'}"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Form cập nhật trạng thái -->
+            <div th:if="${shipment.status.name() != 'DELIVERED' and shipment.status.name() != 'FAILED'}">
+                <form th:action="@{'/shipper/shipments/update/' + ${shipment.shipmentId}}" method="post" class="mt-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cập nhật trạng thái</label>
+                        <select class="form-select" name="status" required>
+                            <option th:value="'PICKING'" th:selected="${shipment.status.name() == 'PICKING'}">Picking (Chờ lấy hàng)</option>
+                            <option th:value="'OUT_FOR_DELIVERY'" th:selected="${shipment.status.name() == 'OUT_FOR_DELIVERY'}">Out For Delivery (Đang giao)</option>
+                            <option th:value="'DELIVERED'" th:selected="${shipment.status.name() == 'DELIVERED'}">Delivered (Đã giao)</option>
+                            <option th:value="'FAILED'" th:selected="${shipment.status.name() == 'FAILED'}">Failed (Thất bại)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="paymentSection" style="display: none;">
+                        <label class="form-label fw-bold">Phương thức thanh toán (khi Delivered)</label>
+                        <select class="form-select" name="paymentMethod">
+                            <option value="">-- Chọn phương thức --</option>
+                            <option value="COD">COD (Tiền mặt)</option>
+                            <option value="ONLINE">Online</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Cập nhật
+                    </button>
+                    <a th:href="@{/shipper/shipments}" class="btn btn-secondary">Quay lại</a>
+                </form>
+            </div>
+
+            <div th:if="${shipment.status.name() == 'DELIVERED' or shipment.status.name() == 'FAILED'}" class="mt-4">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i>
+                    Đơn hàng này đã 
+                    <span th:text="${shipment.status.name() == 'DELIVERED' ? 'giao thành công' : 'giao thất bại'}"></span>.
+                </div>
+                <a th:href="@{/shipper/shipments}" class="btn btn-primary">
+                    <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const selectStatus = document.querySelector('select[name="status"]');
+    const paymentSection = document.getElementById('paymentSection');
+    if (selectStatus && selectStatus.value === 'DELIVERED') {
+        paymentSection.style.display = 'block';
+    }
+    if (selectStatus) {
+        selectStatus.addEventListener('change', function () {
+            paymentSection.style.display = this.value === 'DELIVERED' ? 'block' : 'none';
+        });
+    }
+</script>
+
+<style>
+@media (max-width: 768px) {
+    .card-body {
+        font-size: 14px;
+    }
+    .btn {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+    p strong {
+        display: inline-block;
+        width: 160px;
+    }
+}
+</style>
+</body>
+</html>

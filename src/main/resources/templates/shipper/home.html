@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{shipper/layout :: layout(~{::body})}">
+<body>
+<div class="container-fluid px-4">
+    <h2 class="mt-3 mb-4 text-center">
+        <i class="bi bi-speedometer2"></i> Tổng quan giao hàng
+    </h2>
+
+    <div class="row g-3 text-center">
+
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-bg-warning">
+                <div class="card-body py-4">
+                    <i class="bi bi-box-seam fs-1"></i>
+                    <h6 class="mt-2 mb-1">Đang nhận</h6>
+                    <h3 class="fw-bold" th:text="${picking}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-bg-primary">
+                <div class="card-body py-4">
+                    <i class="bi bi-truck fs-1"></i>
+                    <h6 class="mt-2 mb-1">Đang giao</h6>
+                    <h3 class="fw-bold" th:text="${delivering}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-bg-success">
+                <div class="card-body py-4">
+                    <i class="bi bi-check-circle fs-1"></i>
+                    <h6 class="mt-2 mb-1">Đã giao</h6>
+                    <h3 class="fw-bold" th:text="${delivered}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-bg-danger">
+                <div class="card-body py-4">
+                    <i class="bi bi-x-circle fs-1"></i>
+                    <h6 class="mt-2 mb-1">Thất bại</h6>
+                    <h3 class="fw-bold" th:text="${failed}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card border-0 shadow-sm text-bg-secondary mt-3">
+                <div class="card-body py-4">
+                    <i class="bi bi-cash-stack fs-1"></i>
+                    <h6 class="mt-2 mb-1">Tổng tiền COD hôm nay</h6>
+                    <h3 class="fw-bold" th:text="${#numbers.formatDecimal(todayCOD,0,'COMMA',0,'POINT')} + ' VND'">0</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

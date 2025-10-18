@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-// @Component  // Disabled to avoid conflict
+@Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{shipper/layout :: layout(~{::body})}">
+<body>
+	<div class="container-fluid mt-4">
+
+		<!-- 🔸 THÔNG BÁO -->
+		<div th:if="${success}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<span th:text="${success}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
+		<div th:if="${error}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<span th:text="${error}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
+
+		<!-- 🔹 ĐƠN HÀNG CHỜ NHẬN (PROCESSING) -->
+		<div class="card mb-4 border-warning">
+			<div class="card-header bg-warning fw-bold">
+				<i class="bi bi-hourglass-split"></i> Đơn hàng chờ nhận giao (Processing)
+			</div>
+			<div class="card-body p-0">
+				<!-- ✅ Responsive table -->
+				<div class="table-responsive">
+					<table class="table table-bordered mb-0 align-middle text-center">
+						<thead class="table-light">
+							<tr>
+								<th>Mã đơn hàng</th>
+								<th>Khách hàng</th>
+								<th>Địa chỉ giao</th>
+								<th>Tổng tiền</th>
+								<th>Thao tác</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="order : ${pendingOrders}">
+								<td th:text="${order.orderId}"></td>
+								<td th:text="${order.customerName}"></td>
+								<td th:text="${order.shippingAddress}"></td>
+								<td
+									th:text="${#numbers.formatDecimal(order.total,0,'COMMA',0,'POINT')} + ' VND'"></td>
+								<td>
+									<form th:action="@{'/shipper/accept-order/' + ${order.orderId}}"
+										method="post" style="display: inline;">
+										<button type="submit" class="btn btn-success btn-sm">
+											<i class="bi bi-box-arrow-in-down"></i> Nhận giao
+										</button>
+									</form>
+								</td>
+							</tr>
+							<tr
+								th:if="${pendingOrders == null or #lists.isEmpty(pendingOrders)}">
+								<td colspan="5" class="text-muted">Không có đơn hàng chờ nhận.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<!-- 🔹 ĐƠN HÀNG CỦA BẠN -->
+		<div class="card border-primary">
+			<div class="card-header bg-primary text-white fw-bold">
+				<i class="bi bi-truck"></i> Đơn hàng của bạn
+			</div>
+			<div class="card-body">
+
+				<!-- FORM LỌC -->
+				<form class="row g-3 align-items-end mb-4" method="get"
+					th:action="@{/shipper/shipments}">
+					<div class="col-md-4 col-12">
+						<label for="status" class="form-label fw-bold">Trạng thái</label>
+						<select id="status" name="status" class="form-select"
+							onchange="toggleDateFilter()">
+							<option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất
+								cả</option>
+							<option value="PICKING"
+								th:selected="${selectedStatus == 'PICKING'}">Đang nhận
+								(Picking)</option>
+							<option value="OUT_FOR_DELIVERY"
+								th:selected="${selectedStatus == 'OUT_FOR_DELIVERY'}">Đang
+								giao</option>
+							<option value="DELIVERED"
+								th:selected="${selectedStatus == 'DELIVERED'}">Đã giao</option>
+							<option value="FAILED"
+								th:selected="${selectedStatus == 'FAILED'}">Thất bại</option>
+						</select>
+					</div>
+
+					<!-- Ẩn/hiện khi chọn DELIVERED -->
+					<div class="col-md-3 col-6 date-filter" style="display: none;">
+						<label for="fromDate" class="form-label fw-bold">Từ ngày</label> 
+						<input type="date" id="fromDate" name="from" class="form-control"
+							th:value="${#temporals.format(fromDate, 'yyyy-MM-dd')}">
+					</div>
+					<div class="col-md-3 col-6 date-filter" style="display: none;">
+						<label for="toDate" class="form-label fw-bold">Đến ngày</label> 
+						<input type="date" id="toDate" name="to" class="form-control"
+							th:value="${#temporals.format(toDate, 'yyyy-MM-dd')}">
+					</div>
+
+					<div class="col-md-2 col-12">
+						<button type="submit" class="btn btn-primary w-100">
+							<i class="bi bi-filter"></i> Lọc
+						</button>
+					</div>
+				</form>
+
+				<!-- 🔸 DANH SÁCH SHIPMENTS -->
+				<div class="table-responsive">
+					<table class="table table-striped table-bordered align-middle text-center">
+						<thead class="table-light">
+							<tr>
+								<th>Mã giao hàng</th>
+								<th>Mã đơn hàng</th>
+								<th>Trạng thái</th>
+								<th>Địa chỉ giao</th>
+								<th>COD</th>
+								<th>Thời gian giao</th>
+								<th>Thao tác</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="s : ${shipments}">
+								<td th:text="${s.shipmentId}"></td>
+								<td th:text="${s.orderId}"></td>
+								<td>
+									<span th:if="${s.status == T(com.example.Bookstore.entity.Shipment.ShipmentStatus).PICKING}" class="badge bg-warning text-dark">PICKING</span> 
+									<span th:if="${s.status == T(com.example.Bookstore.entity.Shipment.ShipmentStatus).OUT_FOR_DELIVERY}" class="badge bg-info text-white">OUT FOR DELIVERY</span> 
+									<span th:if="${s.status == T(com.example.Bookstore.entity.Shipment.ShipmentStatus).DELIVERED}" class="badge bg-success">DELIVERED</span> 
+									<span th:if="${s.status == T(com.example.Bookstore.entity.Shipment.ShipmentStatus).FAILED}" class="badge bg-danger">FAILED</span>
+								</td>
+								<td th:text="${s.deliveryAddress}"></td>
+								<td th:text="${#numbers.formatDecimal(s.codAmount,0,'COMMA',0,'POINT')} + ' VND'"></td>
+								<td th:text="${s.deliveryTime != null ? #temporals.format(s.deliveryTime, 'dd/MM/yyyy HH:mm') : '—'}"></td>
+								<td>
+									<a th:href="@{'/shipper/shipments/' + ${s.shipmentId}}"
+										class="btn btn-outline-primary btn-sm">
+										<i class="bi bi-eye"></i> Xem
+									</a>
+								</td>
+							</tr>
+							<tr th:if="${shipments == null or #lists.isEmpty(shipments)}">
+								<td colspan="7" class="text-muted">Không có đơn hàng nào.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<!--  PHÂN TRANG -->
+				<nav th:if="${shipments.totalPages > 1}">
+					<ul class="pagination justify-content-center flex-wrap">
+						<li class="page-item" th:classappend="${shipments.first} ? 'disabled'">
+							<a class="page-link"
+							th:href="@{/shipper/shipments(page=${shipments.number - 1}, status=${selectedStatus}, from=${fromDate}, to=${toDate})}">
+								« Trước
+							</a>
+						</li>
+						<li class="page-item disabled">
+							<a class="page-link"
+							th:text="'Trang ' + ${shipments.number + 1} + ' / ' + ${shipments.totalPages}"></a>
+						</li>
+						<li class="page-item" th:classappend="${shipments.last} ? 'disabled'">
+							<a class="page-link"
+							th:href="@{/shipper/shipments(page=${shipments.number + 1}, status=${selectedStatus}, from=${fromDate}, to=${toDate})}">
+								Sau »
+							</a>
+						</li>
+					</ul>
+				</nav>
+
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function toggleDateFilter() {
+			const status = document.getElementById('status').value;
+			const dateFilters = document.querySelectorAll('.date-filter');
+			dateFilters.forEach(f => f.style.display = (status === 'DELIVERED') ? 'block' : 'none');
+		}
+		window.onload = toggleDateFilter;
+	</script>
+</body>
+</html>

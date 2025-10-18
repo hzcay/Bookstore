@@ -55,6 +55,13 @@ public class OrderServiceImpl implements OrderService {
     
     @Override
     @Transactional(readOnly = true)
+    public Page<OrderDTO> getOrdersByStatus(Order.OrderStatus status, Pageable pageable) {
+        return orderRepository.findByStatus(status, pageable)
+                .map(this::convertToDTO);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
     public Optional<OrderDTO> getOrderById(String orderId) {
         return orderRepository.findById(orderId)
                 .map(this::convertToDTO);
@@ -298,15 +305,6 @@ public class OrderServiceImpl implements OrderService {
 
         double pointsDiscount = pointsUsed * 1_000d; // 1 điểm = 1.000đ
         double discount = Math.min(subtotal, promoDiscount + pointsDiscount);
-        
-        // Debug: In ra để kiểm tra
-        System.out.println("=== DISCOUNT DEBUG ===");
-        System.out.println("Subtotal: " + subtotal);
-        System.out.println("Promo code: '" + code + "'");
-        System.out.println("Promo discount: " + promoDiscount);
-        System.out.println("Points discount: " + pointsDiscount);
-        System.out.println("Total discount: " + discount);
-        System.out.println("=====================");
 
         // 4) Ship fee + total
         double shippingFee = subtotal >= 300_000 ? 0d : 25_000d;
