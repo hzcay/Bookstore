@@ -9,6 +9,13 @@ RUN mvn clean package -DskipTests
 # --- Stage 2: Runtime ---
 FROM amazoncorretto:17-alpine
 WORKDIR /app
+
+# Install fonts and dependencies for Apache POI (Excel export with Vietnamese + Emoji)
+RUN apk add --no-cache \
+    fontconfig \
+    ttf-dejavu \
+    && fc-cache -f
+
 COPY --from=builder /app/target/*.jar app.jar
 
 # Cấu hình runtime
