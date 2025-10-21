@@ -23,7 +23,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.List;
@@ -206,8 +205,8 @@ public class NhanVienBanHangController {
             }
             
             // ✅ TỰ ĐỘNG ĐỒNG BỘ: Sửa order status theo shipment status
-            // shipmentService.syncOrderStatusWithShipments(); // TODO: Method không có trong ShipmentService
-            System.out.println("✅ Skipping sync order status với shipment status");
+            shipmentService.syncOrderStatusWithShipments();
+            System.out.println("✅ Đã đồng bộ order status với shipment status");
             
             // Lấy danh sách orders ở trạng thái PENDING
             System.out.println("Fetching PENDING orders...");
@@ -219,10 +218,9 @@ public class NhanVienBanHangController {
             processingOrders = orderService.getOrdersByStatus(Order.OrderStatus.PROCESSING, org.springframework.data.domain.Pageable.unpaged()).getContent();
             System.out.println("PROCESSING orders count: " + (processingOrders != null ? processingOrders.size() : 0));
             
-            // Lấy tất cả shipments (comment out vì method không có)
+            // Lấy tất cả shipments từ database
             System.out.println("Fetching all shipments...");
-            // allShipments = shipmentService.getAllShipments(); // TODO: Method không có
-            allShipments = java.util.Collections.emptyList();
+            allShipments = shipmentService.getAllShipments();
             System.out.println("All shipments count: " + (allShipments != null ? allShipments.size() : 0));
             
             // Lọc shipments theo trạng thái
@@ -376,8 +374,7 @@ public class NhanVienBanHangController {
     @ResponseBody
     public ResponseEntity<?> testShipments() {
         try {
-            // List<ShipmentDTO> allShipments = shipmentService.getAllShipments(); // TODO: Method không có
-            List<ShipmentDTO> allShipments = java.util.Collections.emptyList();
+            List<ShipmentDTO> allShipments = shipmentService.getAllShipments();
             
             java.util.Map<String, Object> result = new java.util.HashMap<>();
             result.put("count", allShipments != null ? allShipments.size() : 0);

@@ -12,9 +12,15 @@ public interface BookService {
     
     Page<BookDTO> getAllBooks(Pageable pageable);
     
+    Page<BookDTO> getAllBooksForAdmin(Pageable pageable);
+    
     Page<BookDTO> searchBooks(String title, String categoryId, String authorId, 
                              String publisherId, Double minPrice, Double maxPrice, 
                              Pageable pageable);
+    
+    Page<BookDTO> searchBooksForAdmin(String title, String categoryId, String authorId, 
+                                     String publisherId, Double minPrice, Double maxPrice, 
+                                     Pageable pageable);
     
     Optional<BookDTO> getBookById(String bookId);
     

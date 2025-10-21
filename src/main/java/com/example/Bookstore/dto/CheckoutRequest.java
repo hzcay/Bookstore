@@ -1,7 +1,7 @@
 package com.example.Bookstore.dto;
 
 import lombok.Data;
-import java.util.Map;
+import java.util.List;
 
 @Data
 public class CheckoutRequest {
@@ -11,5 +11,6 @@ public class CheckoutRequest {
     private String shippingAddress;
     private String promoCode;
     private Integer usePoints;
+    private List<String> selectedIds;
 }
 

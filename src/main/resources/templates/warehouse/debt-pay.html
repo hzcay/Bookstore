@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']}, null)}"
+>
+     <link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-suppliers.css}" />
+
+     <div data-content class="page-debt-report">
+          <div class="warehouse-header mb-4">
+               <div
+                    class="card border-0 shadow-lg"
+                    style="
+                         background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+                         border-radius: 15px;
+                    "
+               >
+                    <div class="card-body p-4">
+                         <h2 class="text-white mb-1 fw-bold">
+                              <i class="bi bi-cash-stack me-2"></i> THANH TOÁN CÔNG NỢ
+                         </h2>
+                         <p class="text-white mb-0 opacity-75">
+                              <a
+                                   th:href="@{/warehouse/debt-report}"
+                                   class="text-white text-decoration-none"
+                              >
+                                   <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+                              </a>
+                         </p>
+                    </div>
+               </div>
+          </div>
+
+          <!-- Thông báo -->
+          <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+               <i class="bi bi-check-circle-fill me-2"></i>
+               <span th:text="${successMessage}"></span>
+               <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+               <i class="bi bi-exclamation-triangle-fill me-2"></i>
+               <span th:text="${errorMessage}"></span>
+               <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+
+          <div class="row justify-content-center">
+               <div class="col-md-8">
+                    <div class="card shadow-sm border-0">
+                         <div
+                              class="card-header py-3"
+                              style="background: linear-gradient(135deg, #263238 0%, #37474f 100%)"
+                         >
+                              <h5 class="text-white mb-0">
+                                   <i class="bi bi-building me-2"></i>
+                                   Thông tin thanh toán
+                              </h5>
+                         </div>
+                         <div class="card-body p-4">
+                              <form th:action="@{/warehouse/debt-report/pay}" method="post">
+                                   <input
+                                        type="hidden"
+                                        name="supplierId"
+                                        th:value="${supplierId}"
+                                   />
+
+                                   <div class="mb-4">
+                                        <label class="form-label fw-semibold text-muted small"
+                                             >Nhà cung cấp</label
+                                        >
+                                        <input
+                                             type="text"
+                                             class="form-control form-control-lg"
+                                             th:value="${supplierName}"
+                                             readonly
+                                        />
+                                   </div>
+
+                                   <div class="mb-4">
+                                        <label class="form-label fw-semibold text-muted small"
+                                             >Công nợ hiện tại</label
+                                        >
+                                        <div class="input-group input-group-lg">
+                                             <input
+                                                  type="text"
+                                                  class="form-control fw-bold text-danger"
+                                                  th:value="${#numbers.formatDecimal(debt, 0, 'POINT', 0, 'COMMA')}"
+                                                  readonly
+                                             />
+                                             <span
+                                                  class="input-group-text bg-danger text-white fw-bold"
+                                                  >₫</span
+                                             >
+                                        </div>
+                                   </div>
+
+                                   <div class="mb-4">
+                                        <label class="form-label fw-semibold">
+                                             Số tiền thanh toán <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                             <input
+                                                  type="number"
+                                                  name="paymentAmount"
+                                                  class="form-control"
+                                                  min="1"
+                                                  step="1"
+                                                  required
+                                                  placeholder="Nhập số tiền thanh toán"
+                                             />
+                                             <span class="input-group-text">₫</span>
+                                        </div>
+                                        <div class="form-text">
+                                             Số tiền không được vượt quá công nợ hiện tại
+                                        </div>
+                                   </div>
+
+                                   <div class="mb-4">
+                                        <label class="form-label fw-semibold"
+                                             >Hình thức thanh toán</label
+                                        >
+                                        <select
+                                             name="paymentMethod"
+                                             class="form-select form-select-lg"
+                                        >
+                                             <option value="Tiền mặt">Tiền mặt</option>
+                                             <option value="Chuyển khoản" selected>
+                                                  Chuyển khoản
+                                             </option>
+                                             <option value="Thẻ tín dụng">Thẻ tín dụng</option>
+                                        </select>
+                                   </div>
+
+                                   <div class="mb-4">
+                                        <label class="form-label fw-semibold"
+                                             >Nhân viên xử lý</label
+                                        >
+                                        <select
+                                             name="employeeName"
+                                             class="form-select form-select-lg"
+                                             required
+                                        >
+                                             <option value="">-- Chọn nhân viên --</option>
+                                             <option
+                                                  th:each="emp : ${employees}"
+                                                  th:value="${emp.name}"
+                                                  th:text="${emp.name + ' (' + emp.role + ')'}"
+                                             ></option>
+                                        </select>
+                                   </div>
+
+                                   <div class="mb-4">
+                                        <label class="form-label fw-semibold">Ghi chú</label>
+                                        <textarea
+                                             name="note"
+                                             class="form-control"
+                                             rows="3"
+                                             placeholder="Ghi chú thêm (nếu có)"
+                                        ></textarea>
+                                   </div>
+
+                                   <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-success btn-lg">
+                                             <i class="bi bi-check-circle me-2"></i> Xác nhận thanh
+                                             toán
+                                        </button>
+                                        <a
+                                             th:href="@{/warehouse/debt-report}"
+                                             class="btn btn-outline-secondary btn-lg"
+                                        >
+                                             <i class="bi bi-x-circle me-2"></i> Hủy
+                                        </a>
+                                   </div>
+                              </form>
+                         </div>
+                    </div>
+               </div>
+          </div>
+     </div>
+</html>

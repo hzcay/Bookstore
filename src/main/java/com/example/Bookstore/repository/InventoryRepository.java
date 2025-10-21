@@ -44,11 +44,11 @@ public interface InventoryRepository extends JpaRepository<Inventory, String> {
                                   @Param("to") LocalDateTime to,
                                   Pageable pageable);
     
-    // Alternative method with native query for better SQL Server compatibility
+    // Alternative method with native query for better PostgreSQL compatibility
     @Query(value = """
         SELECT * FROM inventory i
-        WHERE (:from IS NULL OR i.import_date >= :from)
-        AND (:to IS NULL OR i.import_date < :to)
+        WHERE (:#{#from == null} OR i.import_date >= :from)
+        AND (:#{#to == null} OR i.import_date < :to)
         ORDER BY i.import_date DESC
         """, nativeQuery = true)
     Page<Inventory> findByDateRangeNative(@Param("from") LocalDateTime from,
@@ -74,7 +74,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, String> {
         String getTitle();
         Long getStock();
     }
-    
+
     // Simple date range methods to avoid IS NULL issues
     Page<Inventory> findByImportDateBefore(LocalDateTime to, Pageable pageable);
     Page<Inventory> findByImportDateAfter(LocalDateTime from, Pageable pageable);

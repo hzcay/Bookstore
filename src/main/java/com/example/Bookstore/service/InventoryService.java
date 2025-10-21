@@ -14,7 +14,8 @@ public interface InventoryService {
 	Page<Inventory> listReceipts(LocalDateTime from, LocalDateTime to, Pageable pageable);
 
 	Page<InventoryStockDTO> listStock(String keyword, Pageable pageable);
-
+	List<Inventory> listReceiptsForExport(LocalDateTime from, LocalDateTime to);
+	
 	Inventory createReceipt(CreateReceiptRequest req);
 
 	List<LowStockDTO> lowStock(Integer threshold);

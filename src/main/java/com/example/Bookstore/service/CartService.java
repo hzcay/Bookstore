@@ -3,6 +3,7 @@ package com.example.Bookstore.service;
 import com.example.Bookstore.dto.CartDTO;
 
 import jakarta.servlet.http.HttpSession;
+import java.util.Set;
 
 public interface CartService {
     CartDTO getCart(HttpSession session);
@@ -13,6 +14,9 @@ public interface CartService {
 
     CartDTO remove(HttpSession session, String bookId);
 
+    void removeItems(HttpSession session, Set<String> bookIds);
+
     void clear(HttpSession session);
+
 }
 

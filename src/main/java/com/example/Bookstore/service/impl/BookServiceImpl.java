@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.jpa.domain.Specification;
+import com.example.Bookstore.repository.spec.BookSpecifications;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,17 +41,56 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public Page<BookDTO> getAllBooks(Pageable pageable) {
+        // Customer: chỉ xem sách active và còn hàng
+        Specification<Book> spec = BookSpecifications.active()
+                .and(BookSpecifications.inStock(true));
+        
+        return bookRepository.findAll(spec, pageable)
+                .map(this::convertToDTO);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BookDTO> getAllBooksForAdmin(Pageable pageable) {
+        // Admin: xem tất cả sách (kể cả status=0 và quantity=0) - quyền cao nhất
         return bookRepository.findAll(pageable)
                 .map(this::convertToDTO);
     }
     
     @Override
     @Transactional(readOnly = true)
-    public Page<BookDTO> searchBooks(String title, String categoryId, String authorId, 
-                                     String publisherId, Double minPrice, Double maxPrice, 
+    public Page<BookDTO> searchBooks(String title, String categoryId, String authorId,
+                                     String publisherId, Double minPrice, Double maxPrice,
                                      Pageable pageable) {
-        return bookRepository.searchBooks(title, categoryId, authorId, publisherId, 
-                                        minPrice, maxPrice, pageable)
+
+        Specification<Book> spec = BookSpecifications.active()
+                .and(BookSpecifications.titleLike(title))
+                .and(BookSpecifications.categoryIdEquals(categoryId))
+                .and(BookSpecifications.authorIdEquals(authorId))
+                .and(BookSpecifications.publisherIdEquals(publisherId))
+                .and(BookSpecifications.priceGte(minPrice))
+                .and(BookSpecifications.priceLte(maxPrice))
+                .and(BookSpecifications.inStock(true)); // Customer chỉ xem sách còn hàng
+
+        return bookRepository.findAll(spec, pageable)
+                .map(this::convertToDTO); // dùng method thường, tránh lỗi method-ref
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BookDTO> searchBooksForAdmin(String title, String categoryId, String authorId,
+                                             String publisherId, Double minPrice, Double maxPrice,
+                                             Pageable pageable) {
+
+        Specification<Book> spec = BookSpecifications.titleLike(title)
+                .and(BookSpecifications.categoryIdEquals(categoryId))
+                .and(BookSpecifications.authorIdEquals(authorId))
+                .and(BookSpecifications.publisherIdEquals(publisherId))
+                .and(BookSpecifications.priceGte(minPrice))
+                .and(BookSpecifications.priceLte(maxPrice));
+                // Admin xem tất cả sách (không filter status và stock)
+
+        return bookRepository.findAll(spec, pageable)
                 .map(this::convertToDTO);
     }
     
@@ -68,6 +109,7 @@ public class BookServiceImpl implements BookService {
         book.setSalePrice(bookDTO.getSalePrice());
         book.setQuantity(bookDTO.getQuantity() != null ? bookDTO.getQuantity() : 0);
         book.setStatus(1);
+        book.setThumbnail(bookDTO.getThumbnail());
         
         if (bookDTO.getCategoryId() != null && !bookDTO.getCategoryId().isEmpty()) {
             Category category = categoryRepository.findById(bookDTO.getCategoryId()).orElse(null);
@@ -147,6 +189,7 @@ public class BookServiceImpl implements BookService {
         dto.setCreateAt(book.getCreateAt());
         dto.setUpdateAt(book.getUpdateAt());
         dto.setStatus(book.getStatus());
+        dto.setThumbnail(book.getThumbnail());
         
         if (book.getCategory() != null) {
             dto.setCategoryId(book.getCategory().getCategoryId());
@@ -174,7 +217,52 @@ public class BookServiceImpl implements BookService {
         book.setSalePrice(dto.getSalePrice());
         book.setQuantity(dto.getQuantity());
         book.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+        book.setThumbnail(dto.getThumbnail());
         return book;
+    }
+
+    private Book toEntity(BookDTO dto) {
+        Book b = new Book();
+        // không set bookId nếu để DB/JPA tự sinh
+        b.setTitle(dto.getTitle());
+        b.setImportPrice(dto.getImportPrice());
+        b.setSalePrice(dto.getSalePrice());
+        b.setQuantity(dto.getQuantity());
+        b.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+        b.setCreateAt(dto.getCreateAt()); // nếu dto có set sẵn
+        b.setUpdateAt(dto.getUpdateAt());
+        dto.setThumbnail(b.getThumbnail());
+
+        // set quan hệ nếu có id
+        if (dto.getCategoryId() != null) {
+            b.setCategory(categoryRepository.getReferenceById(dto.getCategoryId()));
+        }
+        if (dto.getAuthorId() != null) {
+            b.setAuthor(authorRepository.getReferenceById(dto.getAuthorId()));
+        }
+        if (dto.getPublisherId() != null) {
+            b.setPublisher(publisherRepository.getReferenceById(dto.getPublisherId()));
+        }
+        return b;
+    }
+
+    private void updateFromDTO(Book b, BookDTO dto) {
+        if (dto.getTitle() != null) b.setTitle(dto.getTitle());
+        if (dto.getImportPrice() != null) b.setImportPrice(dto.getImportPrice());
+        if (dto.getSalePrice() != null) b.setSalePrice(dto.getSalePrice());
+        if (dto.getQuantity() != null) b.setQuantity(dto.getQuantity());
+        if (dto.getStatus() != null) b.setStatus(dto.getStatus());
+        if (dto.getThumbnail() != null) b.setThumbnail(dto.getThumbnail());
+
+        if (dto.getCategoryId() != null) {
+            b.setCategory(categoryRepository.getReferenceById(dto.getCategoryId()));
+        }
+        if (dto.getAuthorId() != null) {
+            b.setAuthor(authorRepository.getReferenceById(dto.getAuthorId()));
+        }
+        if (dto.getPublisherId() != null) {
+            b.setPublisher(publisherRepository.getReferenceById(dto.getPublisherId()));
+        }
     }
     
     private void updateEntityFromDTO(Book book, BookDTO dto) {
@@ -183,6 +271,7 @@ public class BookServiceImpl implements BookService {
         if (dto.getSalePrice() != null) book.setSalePrice(dto.getSalePrice());
         if (dto.getQuantity() != null) book.setQuantity(dto.getQuantity());
         if (dto.getStatus() != null) book.setStatus(dto.getStatus());
+        if (dto.getThumbnail() != null) book.setThumbnail(dto.getThumbnail());
         
         if (dto.getCategoryId() != null && !dto.getCategoryId().isEmpty()) {
             Category category = categoryRepository.findById(dto.getCategoryId()).orElse(null);
@@ -205,4 +294,5 @@ public class BookServiceImpl implements BookService {
             book.setPublisher(null);
         }
     }
+
 }

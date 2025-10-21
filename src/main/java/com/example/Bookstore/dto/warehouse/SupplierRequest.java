@@ -7,4 +7,3 @@ public record SupplierRequest(
   String address,
   String phone
 ) {}
-

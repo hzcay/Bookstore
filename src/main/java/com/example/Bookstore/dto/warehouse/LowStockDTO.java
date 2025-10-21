@@ -5,4 +5,3 @@ public record LowStockDTO(
   String title,
   Long stock
 ) {}
-

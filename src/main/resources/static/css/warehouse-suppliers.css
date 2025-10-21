@@ -1,35 +1,232 @@
-.page-suppliers .gradient-header {
-	background: linear-gradient(90deg, #4f46e5, #6366f1);
+/* ========================================
+   SUPPLIER MANAGEMENT - PROFESSIONAL THEME
+   Color Scheme: Teal/Green for supplier management
+   ======================================== */
+
+/* Page Background */
+.page-suppliers {
+     background: linear-gradient(135deg, #e0f2f1 0%, #f5f5f5 100%);
+     min-height: 100vh;
+     padding: 1.5rem 2rem;
 }
 
-.page-suppliers .form-control, .page-suppliers .form-select,
-	.page-suppliers textarea {
-	border-radius: 12px;
+/* Warehouse Header Animation */
+.page-suppliers .warehouse-header .card {
+     overflow: hidden;
+     position: relative;
 }
 
-.page-suppliers .btn-ghost {
-	border: none;
-	background: transparent;
-	color: #64748b;
+.page-suppliers .warehouse-header .card::before {
+     content: "";
+     position: absolute;
+     top: -50%;
+     right: -50%;
+     bottom: -50%;
+     left: -50%;
+     background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+     transform: rotate(45deg);
+     animation: shimmer 3s infinite;
 }
 
-.page-suppliers .btn-ghost:hover {
-	color: #111827;
+@keyframes shimmer {
+     0% {
+          transform: translateX(-100%) translateY(-100%) rotate(45deg);
+     }
+     100% {
+          transform: translateX(100%) translateY(100%) rotate(45deg);
+     }
+}
+
+/* Form Styling */
+.page-suppliers .form-control,
+.page-suppliers .form-select,
+.page-suppliers textarea {
+     border-radius: 8px;
+     border: 2px solid #e0e0e0;
+     padding: 0.75rem 1rem;
+     transition: all 0.3s ease;
+}
+
+.page-suppliers .form-control:focus,
+.page-suppliers .form-select:focus,
+.page-suppliers textarea:focus {
+     border-color: #00897b;
+     box-shadow: 0 0 0 4px rgba(0, 137, 123, 0.1);
+     transform: translateY(-1px);
+}
+
+.page-suppliers .form-control-lg {
+     font-size: 1rem;
+}
+
+/* Search Bar */
+.page-suppliers .input-group.search {
+     border-radius: 8px;
+     overflow: hidden;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .page-suppliers .input-group.search .input-group-text {
-	background: #fff;
-	border-right: 0;
-	border-radius: 12px 0 0 12px;
+     background: #fff;
+     border: 2px solid #e0e0e0;
+     border-right: 0;
+     color: #00897b;
+     font-size: 1.1rem;
 }
 
 .page-suppliers .input-group.search .form-control {
-	border-left: 0;
-	border-radius: 0 12px 12px 0;
+     border: 2px solid #e0e0e0;
+     border-left: 0;
+}
+
+.page-suppliers .input-group.search .form-control:focus {
+     box-shadow: none;
+     border-color: #00897b;
+}
+
+.page-suppliers .input-group.search .input-group-text {
+     border-color: #00897b;
+}
+
+/* Table Styling */
+.page-suppliers .table {
+     font-size: 0.95rem;
 }
 
 .page-suppliers .table thead th {
-	color: #64748b;
-	font-weight: 600;
-	border-bottom: 1px solid #eef2f7;
+     color: white;
+     font-weight: 600;
+     border: none;
+     padding: 1.25rem 1rem;
+     text-transform: uppercase;
+     font-size: 0.8rem;
+     letter-spacing: 0.8px;
+}
+
+.page-suppliers .table tbody tr.supplier-row {
+     transition: all 0.2s ease;
+     border-bottom: 1px solid #eceff1;
+}
+
+.page-suppliers .table tbody tr.supplier-row:hover {
+     background: linear-gradient(90deg, #e0f2f1 0%, #ffffff 100%);
+     transform: scale(1.002);
+     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.page-suppliers .table td {
+     padding: 1.25rem 1rem;
+     vertical-align: middle;
+}
+
+/* Supplier Icon */
+.page-suppliers .supplier-icon {
+     width: 40px;
+     height: 40px;
+     background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+     border-radius: 10px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     color: #00897b;
+     font-size: 1.25rem;
+}
+
+/* Button Styling */
+.page-suppliers .btn-outline-primary {
+     color: #00897b;
+     border-color: #00897b;
+     transition: all 0.3s ease;
+}
+
+.page-suppliers .btn-outline-primary:hover {
+     background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+     border-color: transparent;
+     color: white;
+     transform: translateY(-2px);
+     box-shadow: 0 4px 12px rgba(0, 137, 123, 0.3);
+}
+
+.page-suppliers .btn-outline-danger {
+     transition: all 0.3s ease;
+}
+
+.page-suppliers .btn-outline-danger:hover {
+     background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+     border-color: transparent;
+     transform: translateY(-2px);
+     box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.page-suppliers .btn-outline-secondary:hover {
+     background: #546e7a;
+     border-color: #546e7a;
+     transform: translateY(-2px);
+}
+
+/* Badge Styling */
+.page-suppliers .badge.bg-light {
+     padding: 0.5rem 0.75rem;
+     font-weight: 500;
+     border: 1px solid #e0e0e0;
+     border-radius: 6px;
+}
+
+/* Empty State */
+.page-suppliers .text-muted .bi-inbox {
+     color: #cfd8dc;
+}
+
+/* ========================================
+   DEBT REPORT PAGE - REUSE SUPPLIER THEME
+   ======================================== */
+
+.page-debt-report {
+     background: linear-gradient(135deg, #e0f2f1 0%, #f5f5f5 100%);
+     min-height: 100vh;
+     padding: 1.5rem 2rem;
+}
+
+/* Warehouse Header Animation for Debt Report */
+.page-debt-report .warehouse-header .card {
+     overflow: hidden;
+     position: relative;
+}
+
+.page-debt-report .warehouse-header .card::before {
+     content: "";
+     position: absolute;
+     top: -50%;
+     right: -50%;
+     bottom: -50%;
+     left: -50%;
+     background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+     transform: rotate(45deg);
+     animation: shimmer 3s infinite;
+}
+
+/* Supplier row hover effect */
+.page-debt-report .supplier-row {
+     transition: all 0.3s ease;
+     cursor: pointer;
+}
+
+.page-debt-report .supplier-row:hover {
+     background: linear-gradient(90deg, rgba(0, 137, 123, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
+     transform: translateX(5px);
+     box-shadow: 0 4px 15px rgba(0, 137, 123, 0.1);
+     border-left: 4px solid #00897b;
+}
+
+/* Icon styling */
+.page-debt-report .supplier-icon {
+     width: 40px;
+     height: 40px;
+     border-radius: 8px;
+     background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     color: #00897b;
+     font-size: 1.2rem;
 }

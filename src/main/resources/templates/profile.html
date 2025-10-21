@@ -1,85 +1,209 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(~{::content}, 'Profile – Bookstore')}">
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  lang="vi"
+  th:replace="~{layout :: layout(~{::content}, 'Profile – Bookstore VIP')}"
+>
+  <div th:fragment="content" class="container-narrow section-lg">
+    <!-- CARD WRAPPER -->
+    <!-- THÊM profile-scope ở đây -->
+    <section class="card profile-card profile-scope">
+      <!-- HEADER -->
+      <header class="profile-head">
+        <div class="head-left">
+          <!-- Avatar initials (placeholder) -->
+          <div class="avatar-initials" id="avatarInitials">U</div>
 
-<div th:fragment="content" class="container-narrow section-lg card">
+          <div class="head-meta">
+            <h2
+              class="title"
+              th:text="${form.name != null ? form.name : 'Người dùng VIP'}"
+            >
+              Người dùng VIP
+            </h2>
+            <div class="meta-row">
+              <span class="badge">Points: <b th:text="${points}">0</b></span>
+              <span class="muted dot">•</span>
+              <span class="muted" th:text="${form.email}"
+                >email@example.com</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="head-right">
+          <a class="btn ghost" th:href="@{/homePage}">← Trang chủ</a>
+        </div>
+      </header>
 
-  <header class="section-head row space" style="align-items:center">
-    <div>
-      <h2 style="margin:0">Thông tin cá nhân</h2>
-    </div>
-    <!-- chỉ là text, không phải input -->
-    <span class="badge">Points: <b th:text="${points}">0</b></span>
-  </header>
+      <!-- FLASH -->
+      <div th:if="${success}" class="alert success" th:text="${success}"></div>
+      <div th:if="${error}" class="alert danger" th:text="${error}"></div>
 
-  <div th:if="${success}" class="alert success" th:text="${success}"></div>
-  <div th:if="${error}" class="alert danger" th:text="${error}"></div>
+      <!-- FORM -->
+      <form
+        id="profileForm"
+        th:action="@{/profile}"
+        th:object="${form}"
+        method="post"
+        class="form-grid"
+      >
+        <!-- Cột trái -->
+        <div class="col">
+          <div class="group" id="basicInfo"><!-- optional id để chỉnh height riêng -->
+            <h3 class="group-title">Thông tin cơ bản</h3>
 
-  <form th:action="@{/profile}" method="post" class="form-grid">
+            <label class="input">
+              <span>Họ tên <b class="req">*</b></span>
+              <input
+                th:field="*{name}"
+                required
+                maxlength="100"
+                placeholder="Ví dụ: Nguyễn Văn A"
+              />
+              <small class="muted"
+                >Thíc đổi tên như nào thì đổi!!</small
+              >
+            </label>
 
-    <!-- Họ tên -->
-    <label class="input col-4">
-      <span>Họ tên</span>
-      <input name="name" th:value="${form.name}" required>
-    </label>
+            <label class="input">
+              <span>Email</span>
+              <input
+                th:field="*{email}"
+                type="email"
+                placeholder="email@example.com"
+                readonly
+              />
+              <small class="muted"
+                >Email cố định cho tài khoản. Liên hệ CS nếu muốn đổi.</small
+              >
+            </label>
 
-    <!-- Email -->
-    <label class="input col-4">
-      <span>Email</span>
-      <input name="email" th:value="${form.email}" required>
-    </label>
+            <label class="input">
+              <span>SĐT</span>
+              <input
+                th:field="*{phone}"
+                inputmode="tel"
+                pattern="^(0|\\+?84)[0-9]{8,10}$"
+                placeholder="09xxxxxxxx hoặc +84xxxxxxxx"
+              />
+              <small class="muted">Chỉ số và bắt đầu 0 / +84.</small>
+            </label>
 
-    <!-- SĐT -->
-    <label class="input col-4">
-      <span>SĐT</span>
-      <input name="phone" th:value="${form.phone}" placeholder="09xxxxxxxx">
-    </label>
+            <label class="input">
+              <span>Địa chỉ</span>
+              <input
+                th:field="*{address}"
+                maxlength="200"
+                placeholder="Số nhà, đường, phường/xã, quận/huyện"
+              />
+            </label>
+          </div>
 
-    <!-- Địa chỉ -->
-    <label class="input col-span-3">
-      <span>Địa chỉ</span>
-      <input name="address" th:value="${form.address}" placeholder="Số nhà, đường, phường/xã, quận/huyện">
-    </label>
+          <div class="group">
+            <h3 class="group-title">Sở thích (optional)</h3>
+            <label class="input">
+              <span>Thể loại ưa thích</span>
+              <input
+                th:field="*{favoriteGenres}"
+                placeholder="Fantasy, Self-help, Kinh doanh..."
+              />
+            </label>
+            <label class="input">
+              <span>Nhà xuất bản ưa thích</span>
+              <input
+                th:field="*{favoritePublishers}"
+                placeholder="Kim Đồng, NXB Trẻ..."
+              />
+            </label>
+          </div>
+        </div>
 
-    <!-- Chỉ là nhãn chia section, KHÔNG input -->
-    <div class="label-only col-span-3">Đổi mật khẩu (tuỳ chọn)</div>
+        <!-- Cột phải -->
+        <div class="col">
+          <div class="group">
+            <h3 class="group-title">Bảo mật</h3>
 
-    <!-- Mật khẩu mới -->
-    <label class="input col-span-3">
-      <span>Mật khẩu mới</span>
-      <input name="password" type="password" placeholder="Để trống nếu không đổi">
-    </label>
+            <details class="accordion" open>
+              <summary>Đổi mật khẩu</summary>
 
-    <div class="actions col-span-3" style="margin-top:12px">
-      <button class="btn primary" type="submit">Lưu thay đổi</button>
-      <a class="btn" th:href="@{/homePage}">Về trang chủ</a>
-    </div>
-  </form>
-</div>
+              <label class="input">
+                <span>Mật khẩu mới</span>
+                <div class="pw-wrap">
+                  <input
+                    id="pw1"
+                    name="password"
+                    type="password"
+                    placeholder="Để trống nếu không đổi"
+                    autocomplete="new-password"
+                  />
+                  <button
+                    class="icon-btn"
+                    type="button"
+                    data-toggle="pw1"
+                    aria-label="Hiện/ẩn mật khẩu"
+                  >
+                    <svg viewBox="0 0 24 24">
+                      <path
+                        d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div class="pw-meter" id="pwMeter">
+                  <span></span>
+                </div>
+                <small class="muted"
+                  >Ít nhất 8 ký tự, nên có chữ HOA, số và ký tự đặc biệt.</small
+                >
+              </label>
 
-<style>
-  /* chỉ là text label, không có ô */
-  .label-only{
-    font-weight:600;
-    color:#111827;
-    padding:6px 2px;
-    margin-top:6px;
-  }
+              <label class="input">
+                <span>Nhập lại mật khẩu</span>
+                <div class="pw-wrap">
+                  <input
+                    id="pw2"
+                    type="password"
+                    placeholder="Xác nhận mật khẩu"
+                  />
+                  <button
+                    class="icon-btn"
+                    type="button"
+                    data-toggle="pw2"
+                    aria-label="Hiện/ẩn mật khẩu"
+                  >
+                    <svg viewBox="0 0 24 24">
+                      <path
+                        d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <small id="pwMatch" class="muted"></small>
+              </label>
+            </details>
+          </div>
 
-  /* nếu cần chỉnh lại grid cho cân hơn */
-  .form-grid{
-    display:grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap:12px;
-  }
-  .col-4{ grid-column: span 4 / span 4; }
-  .col-span-3{ grid-column: 1 / -1; } /* full width */
-  .input{ display:flex; flex-direction:column; gap:6px; }
-  .input > span{ font-size:13px; color:#6b7280; }
-  .input > input{
-    height:44px; padding:10px 12px;
-    border:1px solid #e5e7eb; border-radius:10px; background:#fff;
-  }
-</style>
+          <div class="group">
+            <h3 class="group-title">Tùy chọn</h3>
+            <label class="switch">
+              <input type="checkbox" th:field="*{emailNotify}" />
+              <span>Bật email thông báo khuyến mãi</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" th:field="*{smsNotify}" />
+              <span>Bật SMS giao hàng</span>
+            </label>
+          </div>
 
+          <div class="actions">
+            <button class="btn primary" type="submit">Lưu thay đổi</button>
+            <button class="btn ghost" type="reset">Hoàn tác</button>
+            <form method="post" action="/api/v1/auth/logout" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn đăng xuất?')">
+              <button type="submit" class="btn danger">Đăng xuất</button>
+            </form>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
 </html>

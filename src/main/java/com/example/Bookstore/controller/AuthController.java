@@ -260,8 +260,14 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session) {
-        session.invalidate();
-        return ResponseEntity.ok("Đăng xuất thành công");
+        try {
+            if (session != null) {
+                session.invalidate();
+            }
+            return ResponseEntity.ok(Map.of("message", "Đăng xuất thành công"));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("message", "Đăng xuất thành công"));
+        }
     }
 
     @GetMapping("/session")
@@ -319,6 +325,7 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return Map.of(
                 "customerId", c.getCustomerId(),
+                "id", c.getCustomerId(), // alias cho JavaScript
                 "name", c.getName(),
                 "email", c.getEmail(),
                 "phone", c.getPhone() != null ? c.getPhone() : "",

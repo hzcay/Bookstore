@@ -1,0 +1,398 @@
+﻿<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']}, null)}"
+>
+     <!-- CSS riêng -->
+     <link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-suppliers.css}" />
+
+     <div data-content class="page-payment-history px-3">
+          <!-- Header -->
+          <div class="warehouse-header mb-4">
+               <div
+                    class="card border-0 shadow-lg"
+                    style="
+                         background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+                         border-radius: 15px;
+                    "
+               >
+                    <div class="card-body p-4">
+                         <div class="row align-items-center">
+                              <div class="col-md-8">
+                                   <div class="d-flex align-items-center mb-2">
+                                        <div
+                                             class="icon-box me-3"
+                                             style="
+                                                  background: rgba(255, 255, 255, 0.2);
+                                                  padding: 15px;
+                                                  border-radius: 12px;
+                                             "
+                                        >
+                                             <i
+                                                  class="bi bi-clock-history"
+                                                  style="font-size: 2.5rem; color: white"
+                                             ></i>
+                                        </div>
+                                        <div>
+                                             <h2 class="text-white mb-1 fw-bold">
+                                                  <i class="bi bi-receipt"></i> LỊCH SỬ THANH TOÁN
+                                             </h2>
+                                             <p class="text-white mb-0 opacity-75">
+                                                  <i class="bi bi-building"></i>
+                                                  <span th:text="${supplier.name}"
+                                                       >Công ty ABC</span
+                                                  >
+                                                  &nbsp;|&nbsp;
+                                                  <i class="bi bi-telephone"></i>
+                                                  <span th:text="${supplier.phone}"
+                                                       >0123456789</span
+                                                  >
+                                             </p>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="col-md-4 text-end">
+                                   <a
+                                        th:href="@{/warehouse/debt-report}"
+                                        class="btn btn-light btn-lg shadow-sm"
+                                   >
+                                        <i class="bi bi-arrow-left"></i> Quay lại
+                                   </a>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <!-- Thông tin công nợ hiện tại -->
+          <div class="row g-3 mb-4">
+               <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                         <div class="card-body">
+                              <div class="d-flex align-items-center">
+                                   <div
+                                        class="icon-box me-3"
+                                        style="
+                                             background: linear-gradient(
+                                                  135deg,
+                                                  #e53935 0%,
+                                                  #c62828 100%
+                                             );
+                                             padding: 15px;
+                                             border-radius: 12px;
+                                        "
+                                   >
+                                        <i class="bi bi-exclamation-triangle text-white fs-3"></i>
+                                   </div>
+                                   <div>
+                                        <div class="text-muted small">CÔNG NỢ HIỆN TẠI</div>
+                                        <div class="fw-bold fs-4" style="color: #e53935">
+                                             <span
+                                                  th:text="${#numbers.formatDecimal(supplier.debt != null ? supplier.debt : 0, 0, 'POINT', 0, 'COMMA')}"
+                                                  >0</span
+                                             >
+                                             ₫
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+               <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                         <div class="card-body">
+                              <div class="d-flex align-items-center">
+                                   <div
+                                        class="icon-box me-3"
+                                        style="
+                                             background: linear-gradient(
+                                                  135deg,
+                                                  #43a047 0%,
+                                                  #2e7d32 100%
+                                             );
+                                             padding: 15px;
+                                             border-radius: 12px;
+                                        "
+                                   >
+                                        <i class="bi bi-cash-stack text-white fs-3"></i>
+                                   </div>
+                                   <div>
+                                        <div class="text-muted small">TỔNG ĐÃ THANH TOÁN</div>
+                                        <div class="fw-bold fs-4" style="color: #43a047">
+                                             <span th:text="${totalPaidFmt}">0</span> ₫
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <!-- Bộ lọc theo tháng -->
+          <div
+               class="card shadow-sm border-0 mb-4"
+               style="border-left: 4px solid #00897b !important"
+          >
+               <div
+                    class="card-header py-3 text-white d-flex align-items-center gap-2"
+                    style="background: linear-gradient(135deg, #00897b 0%, #00695c 100%)"
+               >
+                    <i class="bi bi-funnel fs-5"></i>
+                    <div>
+                         <div class="fw-semibold fs-6">LỌC THEO THÁNG</div>
+                         <div class="small opacity-75">
+                              Chọn tháng và năm để xem lịch sử thanh toán
+                         </div>
+                    </div>
+               </div>
+               <div class="card-body p-4">
+                    <form
+                         method="get"
+                         th:action="@{'/warehouse/debt-report/history/' + ${supplier.supplierId}}"
+                    >
+                         <div class="row g-3 align-items-end">
+                              <div class="col-md-4">
+                                   <label class="form-label fw-semibold mb-2">
+                                        <i class="bi bi-calendar-month me-1 text-primary"></i>
+                                        Chọn tháng <span class="text-danger">*</span>
+                                   </label>
+                                   <select
+                                        name="month"
+                                        class="form-select form-select-lg shadow-sm"
+                                        required
+                                        th:value="${selectedMonth}"
+                                   >
+                                        <option
+                                             th:each="m : ${months}"
+                                             th:value="${m}"
+                                             th:text="|Tháng ${m}|"
+                                             th:selected="${m == selectedMonth}"
+                                        ></option>
+                                   </select>
+                              </div>
+                              <div class="col-md-4">
+                                   <label class="form-label fw-semibold mb-2">
+                                        <i class="bi bi-calendar-range me-1 text-success"></i>
+                                        Chọn năm <span class="text-danger">*</span>
+                                   </label>
+                                   <select
+                                        name="year"
+                                        class="form-select form-select-lg shadow-sm"
+                                        required
+                                        th:value="${selectedYear}"
+                                   >
+                                        <option
+                                             th:each="y : ${years}"
+                                             th:value="${y}"
+                                             th:text="${y}"
+                                             th:selected="${y == selectedYear}"
+                                        ></option>
+                                   </select>
+                              </div>
+                              <div class="col-md-3">
+                                   <button
+                                        type="submit"
+                                        class="btn btn-lg w-100 shadow-sm"
+                                        style="
+                                             background: linear-gradient(
+                                                  135deg,
+                                                  #00897b 0%,
+                                                  #00695c 100%
+                                             );
+                                             border: none;
+                                             color: white;
+                                             height: 48px;
+                                             transition: all 0.3s ease;
+                                        "
+                                        onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0, 137, 123, 0.4)';"
+                                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='';"
+                                   >
+                                        <i class="bi bi-search me-2"></i>
+                                        <span class="fw-bold">XEM LỊCH SỬ</span>
+                                   </button>
+                              </div>
+                              <div class="col-md-1">
+                                   <a
+                                        th:href="@{'/warehouse/debt-report/history/' + ${supplier.supplierId}}"
+                                        class="btn btn-outline-secondary btn-lg w-100"
+                                        style="height: 48px"
+                                        title="Xóa bộ lọc"
+                                   >
+                                        <i class="bi bi-arrow-clockwise fs-5"></i>
+                                   </a>
+                              </div>
+                         </div>
+
+                         <!-- Hiển thị thông tin tháng đang xem -->
+                         <div
+                              class="alert alert-info border-0 mt-3 mb-0 d-flex align-items-center"
+                              style="background: #e0f2f1"
+                         >
+                              <i class="bi bi-info-circle-fill me-2 text-info"></i>
+                              <small class="mb-0">
+                                   <strong>Đang xem:</strong> Lịch sử thanh toán trong
+                                   <strong
+                                        >Tháng <span th:text="${selectedMonth}">10</span>/
+                                        <span th:text="${selectedYear}">2025</span></strong
+                                   >
+                                   - Tổng:
+                                   <strong th:text="${#lists.size(paymentHistory)}">0</strong>
+                                   giao dịch
+                              </small>
+                         </div>
+                    </form>
+               </div>
+          </div>
+
+          <!-- Danh sách lịch sử thanh toán -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+               <h5 class="m-0 fw-bold" style="color: #263238">
+                    <i class="bi bi-list-ul me-2"></i>DANH SÁCH GIAO DỊCH
+               </h5>
+          </div>
+
+          <div class="card shadow-sm border-0" style="border-left: 4px solid #00897b !important">
+               <div class="table-responsive">
+                    <table class="table align-middle mb-0" style="font-size: 1.15rem">
+                         <thead style="background-color: #f8f9fa">
+                              <tr>
+                                   <th class="text-dark fw-bold text-nowrap">
+                                        <i class="bi bi-hash me-1 text-primary"></i>MÃ GD
+                                   </th>
+                                   <th class="text-dark fw-bold text-nowrap">
+                                        <i class="bi bi-building me-1 text-success"></i>NHÀ CUNG CẤP
+                                   </th>
+                                   <th class="text-dark fw-bold text-nowrap">
+                                        <i class="bi bi-calendar3 me-1 text-info"></i>NGÀY GIỜ
+                                   </th>
+                                   <th class="text-dark fw-bold text-end text-nowrap">
+                                        <i class="bi bi-cash-coin me-1 text-success"></i>SỐ TIỀN
+                                   </th>
+                                   <th class="text-dark fw-bold text-center text-nowrap">
+                                        <i class="bi bi-credit-card me-1 text-primary"></i>PHƯƠNG
+                                        THỨC
+                                   </th>
+                                   <th class="text-dark fw-bold text-end text-nowrap">
+                                        <i class="bi bi-exclamation-triangle me-1 text-warning"></i
+                                        >CÒN LẠI
+                                   </th>
+                                   <th class="text-dark fw-bold text-nowrap">
+                                        <i class="bi bi-person me-1 text-primary"></i>NHÂN VIÊN
+                                   </th>
+                                   <th class="text-dark fw-bold text-nowrap">
+                                        <i class="bi bi-chat-left-text me-1 text-secondary"></i>GHI
+                                        CHÚ
+                                   </th>
+                              </tr>
+                         </thead>
+                         <tbody>
+                              <tr th:each="p : ${paymentHistory}" class="supplier-row">
+                                   <td>
+                                        <span
+                                             class="badge bg-light text-dark small"
+                                             th:text="${p.paymentId}"
+                                        >
+                                             PAY-001
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <div>
+                                             <strong th:text="${p.supplier.name}"
+                                                  >Công ty ABC</strong
+                                             >
+                                             <div class="small text-muted">
+                                                  <i class="bi bi-telephone me-1"></i>
+                                                  <span th:text="${p.supplier.phone}"
+                                                       >0123456789</span
+                                                  >
+                                             </div>
+                                        </div>
+                                   </td>
+                                   <td>
+                                        <div>
+                                             <div class="fw-semibold">
+                                                  <span
+                                                       th:text="${#temporals.format(p.paymentDate, 'dd/MM/yyyy')}"
+                                                  >
+                                                       18/10/2025
+                                                  </span>
+                                             </div>
+                                             <div class="small text-muted">
+                                                  <i class="bi bi-clock me-1"></i>
+                                                  <span
+                                                       th:text="${#temporals.format(p.paymentDate, 'HH:mm')}"
+                                                  >
+                                                       14:30
+                                                  </span>
+                                             </div>
+                                        </div>
+                                   </td>
+                                   <td class="text-end">
+                                        <span
+                                             class="badge bg-success px-3 py-2"
+                                             style="font-size: 0.95rem"
+                                        >
+                                             <span
+                                                  th:text="${#numbers.formatDecimal(p.paymentAmount != null ? p.paymentAmount : 0, 0, 'POINT', 0, 'COMMA')}"
+                                             >
+                                                  0
+                                             </span>
+                                             ₫
+                                        </span>
+                                   </td>
+                                   <td class="text-center">
+                                        <span
+                                             class="badge bg-info text-dark px-3 py-2"
+                                             style="font-size: 0.95rem"
+                                             th:text="${p.paymentMethod != null ? p.paymentMethod : 'N/A'}"
+                                        >
+                                             Tiền mặt
+                                        </span>
+                                   </td>
+                                   <td class="text-end">
+                                        <span
+                                             class="badge px-3 py-2"
+                                             style="font-size: 0.95rem"
+                                             th:classappend="${p.remainingDebt != null && p.remainingDebt > 0} ? 'bg-warning text-dark' : 'bg-secondary text-white'"
+                                        >
+                                             <span
+                                                  th:text="${#numbers.formatDecimal(p.remainingDebt != null ? p.remainingDebt : 0, 0, 'POINT', 0, 'COMMA')}"
+                                             >
+                                                  0
+                                             </span>
+                                             ₫
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <span
+                                             class="small"
+                                             th:text="${p.employeeName != null ? p.employeeName : 'N/A'}"
+                                        >
+                                             Nguyễn Văn A
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <small
+                                             class="text-muted"
+                                             th:text="${p.note != null && !p.note.isEmpty() ? p.note : '—'}"
+                                        >
+                                             Ghi chú
+                                        </small>
+                                   </td>
+                              </tr>
+                              <tr th:if="${#lists.isEmpty(paymentHistory)}">
+                                   <td class="text-center py-5" colspan="8">
+                                        <div class="text-muted">
+                                             <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                                             <p class="mb-0">
+                                                  Chưa có giao dịch nào trong tháng này
+                                             </p>
+                                        </div>
+                                   </td>
+                              </tr>
+                         </tbody>
+                    </table>
+               </div>
+          </div>
+     </div>
+</html>

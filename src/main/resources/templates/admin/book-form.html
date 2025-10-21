@@ -15,12 +15,68 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/admin/books/save}" th:object="${book}" method="post">
+                        <form th:action="@{/admin/books/save}" th:object="${book}" method="post" 
+                              enctype="multipart/form-data">
                             <input type="hidden" th:field="*{bookId}">
                             
                             <div class="mb-3">
                                 <label class="form-label">Tên sách <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" th:field="*{title}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Ảnh bìa sách</label>
+                                
+                                <!-- Tab chọn cách upload -->
+                                <ul class="nav nav-tabs mb-3" id="imageTab" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="file-tab" data-bs-toggle="tab" 
+                                                data-bs-target="#file-pane" type="button" role="tab">
+                                            <i class="bi bi-upload"></i> Upload từ máy
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="url-tab" data-bs-toggle="tab" 
+                                                data-bs-target="#url-pane" type="button" role="tab">
+                                            <i class="bi bi-link-45deg"></i> Dùng URL
+                                        </button>
+                                    </li>
+                                </ul>
+                                
+                                <div class="tab-content" id="imageTabContent">
+                                    <!-- Upload file -->
+                                    <div class="tab-pane fade show active" id="file-pane" role="tabpanel">
+                                        <input type="file" class="form-control" name="imageFile" 
+                                               accept="image/*" id="imageFileInput">
+                                        <small class="text-muted">Chọn ảnh từ máy tính (jpg, png, gif...)</small>
+                                    </div>
+                                    
+                                    <!-- URL -->
+                                    <div class="tab-pane fade" id="url-pane" role="tabpanel">
+                                        <input type="text" class="form-control" th:field="*{thumbnail}" 
+                                               id="thumbnailUrlInput"
+                                               placeholder="https://example.com/image.jpg">
+                                        <small class="text-muted">Hoặc nhập URL ảnh từ internet</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preview ảnh -->
+                                <div class="mt-3" id="imagePreview" style="display: none;">
+                                    <label class="form-label">Xem trước:</label>
+                                    <div>
+                                        <img id="previewImg" src="" alt="Preview" 
+                                             style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Ảnh hiện tại (khi edit) -->
+                                <div class="mt-3" th:if="${book.thumbnail != null and !#strings.isEmpty(book.thumbnail)}">
+                                    <label class="form-label">Ảnh hiện tại:</label>
+                                    <div>
+                                        <img th:src="${book.thumbnail}" alt="Current thumbnail" 
+                                             style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                                    </div>
+                                </div>
                             </div>
                             
                             <div class="row">
@@ -88,6 +144,69 @@
                 </div>
             </div>
         </div>
+        
+        <script>
+            const previewImg = document.getElementById('previewImg');
+            const imagePreview = document.getElementById('imagePreview');
+            const imageFileInput = document.getElementById('imageFileInput');
+            const thumbnailUrlInput = document.getElementById('thumbnailUrlInput');
+            
+            // Preview ảnh khi chọn file
+            imageFileInput?.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Kiểm tra định dạng file
+                    if (!file.type.startsWith('image/')) {
+                        alert('Vui lòng chọn file ảnh!');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        previewImg.src = event.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                    // Clear URL input khi chọn file
+                    thumbnailUrlInput.value = '';
+                }
+            });
+            
+            // Preview ảnh khi nhập URL
+            thumbnailUrlInput?.addEventListener('input', function(e) {
+                const url = e.target.value.trim();
+                if (url) {
+                    // Tạo image mới để test URL
+                    const testImg = new Image();
+                    testImg.onload = function() {
+                        previewImg.src = url;
+                        imagePreview.style.display = 'block';
+                    };
+                    testImg.onerror = function() {
+                        // Vẫn hiển thị để user thấy, nhưng sẽ có icon broken image
+                        previewImg.src = url;
+                        imagePreview.style.display = 'block';
+                    };
+                    testImg.src = url;
+                    
+                    // Clear file input khi nhập URL
+                    imageFileInput.value = '';
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+            });
+            
+            // Preview ảnh hiện tại khi load trang (edit mode)
+            window.addEventListener('DOMContentLoaded', function() {
+                const currentThumb = document.querySelector('img[alt="Current thumbnail"]');
+                if (currentThumb && currentThumb.src) {
+                    thumbnailUrlInput.value = currentThumb.src;
+                    previewImg.src = currentThumb.src;
+                    imagePreview.style.display = 'block';
+                }
+            });
+        </script>
     </div>
 </body>
 </html>

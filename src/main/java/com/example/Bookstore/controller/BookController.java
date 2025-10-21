@@ -10,6 +10,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.ui.Model;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +24,9 @@ public class BookController {
     
     @Autowired
     private BookService bookService;
+    
+    @Value("${app.api-base:/api/v1}")
+    private String apiBase;
     
     @GetMapping
     public ResponseEntity<Page<BookDTO>> getAllBooks(
@@ -33,6 +40,21 @@ public class BookController {
         Pageable pageable = PageRequest.of(page, size, sort);
         
         Page<BookDTO> books = bookService.getAllBooks(pageable);
+        return ResponseEntity.ok(books);
+    }
+    
+    @GetMapping("/admin")
+    public ResponseEntity<Page<BookDTO>> getAllBooksForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? 
+                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        
+        Page<BookDTO> books = bookService.getAllBooksForAdmin(pageable);
         return ResponseEntity.ok(books);
     }
     
@@ -108,4 +130,45 @@ public class BookController {
         boolean available = bookService.checkStockAvailability(id, quantity);
         return ResponseEntity.ok(available);
     }
+
+    @GetMapping({ "/homePage" }) // <- tên mới
+    public String homePage(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", "/homePage"); // để highlight menu
+        model.addAttribute("apiBase", apiBase);
+        return "index"; // vẫn dùng templates/index.html để render danh sách
+    }
+
+    // ========== Home Page /List ==========
+    @GetMapping({ "/browse", "/books" })
+    public String browse(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", req.getRequestURI()); // để highlight menu
+        model.addAttribute("apiBase", apiBase); // để layout -> window.API_BASE
+        return "index"; // templates/index.html
+    }
+
+    // ========== Product Detail ==========
+    @GetMapping("/book/{id}")
+    public String bookDetail(@PathVariable String id, Model model, HttpServletRequest req) {
+        model.addAttribute("uri", "/homePage"); // vẫn highlight Browse
+        model.addAttribute("apiBase", apiBase);
+        model.addAttribute("bookId", id); // nếu cần dùng trong JS
+        return "book"; // templates/book.html (đã tạo theo hướng dẫn)
+    }
+
+    // ========== Cart ==========
+    @GetMapping("/cart")
+    public String cart(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", req.getRequestURI());
+        model.addAttribute("apiBase", apiBase);
+        return "cart";
+    }
+
+    // ========== Checkout ==========
+    @GetMapping("/checkout")
+    public String checkout(Model model, HttpServletRequest req) {
+        model.addAttribute("uri", req.getRequestURI());
+        model.addAttribute("apiBase", apiBase);
+        return "checkout";
+    }
+
 }

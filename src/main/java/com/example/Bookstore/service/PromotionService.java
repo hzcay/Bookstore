@@ -16,5 +16,7 @@ public interface PromotionService {
     void deletePromotion(String id);
     List<PromotionDTO> getActivePromotions();
     void checkAndExpirePromotions();
+    List<PromotionDTO> listActive(Double subtotal);
+    Optional<PromotionDTO> validate(String code, Double subtotal);
 }
 

@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi"
-      th:replace="~{layout :: layout(~{::content}, 'Đơn hàng của tôi – Bookstore VIP')}">
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  lang="vi"
+  th:replace="~{layout :: layout(~{::content}, 'Đơn hàng của tôi – Bookstore VIP')}"
+>
   <div th:fragment="content">
     <nav class="breadcrumb muted" style="margin: 8px 0 14px">
       <a th:href="@{/}">Home</a><span>›</span><span>Orders</span>
@@ -11,6 +14,125 @@
         <h2>Đơn hàng của tôi</h2>
         <span class="muted">Xem trạng thái & chi tiết các đơn bạn đã đặt</span>
       </header>
+
+      <!-- ===== FILTER (new) ===== -->
+      <form id="orderFilter" class="filter-card">
+        <!-- Segmented control -->
+        <div class="segmented">
+          <label class="seg">
+            <input type="radio" name="mode" value="range" checked />
+            <span>Khoảng ngày</span>
+          </label>
+          <label class="seg">
+            <input type="radio" name="mode" value="month" />
+            <span>Tháng</span>
+          </label>
+          <label class="seg">
+            <input type="radio" name="mode" value="year" />
+            <span>Năm</span>
+          </label>
+        </div>
+
+        <div class="filter-row">
+          <!-- RANGE -->
+          <div class="mode mode-range">
+            <div class="field">
+              <label for="fromDate">Từ ngày</label>
+              <div class="input-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12 8H5v8.5c0 .28.22.5.5.5h13a.5.5 0 0 0 .5-.5V10ZM5 8h14V6.5a.5.5 0 0 0-.5-.5h-1.5v1a1 1 0 1 1-2 0V6H8v1a1 1 0 0 1-2 0V6H4.5a.5.5 0 0 0-.5.5V8Z"
+                  />
+                </svg>
+                <input id="fromDate" type="date" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="toDate">Đến ngày</label>
+              <div class="input-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12 8H5v8.5c0 .28.22.5.5.5h13a.5.5 0 0 0 .5-.5V10ZM5 8h14V6.5a.5.5 0 0 0-.5-.5h-1.5v1a1 1 0 1 1-2 0V6H8v1a1 1 0 0 1-2 0V6H4.5a.5.5 0 0 0-.5.5V8Z"
+                  />
+                </svg>
+                <input id="toDate" type="date" />
+              </div>
+            </div>
+
+            <!-- Quick chips -->
+            <div class="chips">
+              <button type="button" class="chip" data-range="7">7 ngày</button>
+              <button type="button" class="chip" data-range="30">
+                30 ngày
+              </button>
+              <button type="button" class="chip" data-range="90">
+                3 tháng
+              </button>
+              <button type="button" class="chip" data-range="365">
+                12 tháng
+              </button>
+            </div>
+          </div>
+
+          <!-- MONTH -->
+          <div class="mode mode-month hidden">
+            <div class="field">
+              <label for="monthPick">Chọn tháng</label>
+              <div class="select-wrap">
+                <input id="monthPick" type="month" />
+              </div>
+              <span class="muted tip">Tự set khoảng ngày đầu/cuối tháng</span>
+            </div>
+          </div>
+
+          <!-- YEAR -->
+          <div class="mode mode-year hidden">
+            <div class="field">
+              <label for="yearPick">Chọn năm</label>
+              <div class="input-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 11h18v2H3z" />
+                </svg>
+                <input
+                  id="yearPick"
+                  type="number"
+                  min="2000"
+                  max="2100"
+                  placeholder="YYYY"
+                />
+              </div>
+              <span class="muted tip">Tự set 01/01 → 31/12</span>
+            </div>
+          </div>
+
+          <!-- STATUS (luôn hiện) -->
+          <div class="field">
+            <label for="statusSel">Trạng thái</label>
+            <div class="select-wrap">
+              <select id="statusSel">
+                <option value="">Tất cả</option>
+                <option value="PENDING">PENDING</option>
+                <option value="PROCESSING">PROCESSING</option>
+                <option value="SHIPPING">SHIPPING</option>
+                <option value="DELIVERED">DELIVERED</option>
+                <option value="CANCELED">CANCELED</option>
+              </select>
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">Lọc</button>
+          <button class="btn ghost" type="button" id="btnResetFilter">
+            Reset
+          </button>
+        </div>
+      </form>
+      <!-- ===== /FILTER ===== -->
 
       <!-- list sẽ render vào đây -->
       <div id="myOrdersBox" class="track-result">

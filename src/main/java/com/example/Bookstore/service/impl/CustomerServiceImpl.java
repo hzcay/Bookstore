@@ -233,8 +233,8 @@ public class CustomerServiceImpl implements CustomerService {
         c.setPhone(req.getPhone());
         c.setAddress(req.getAddress());
 
-        if (req.getNewPassword() != null && !req.getNewPassword().isBlank()) {
-            c.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        if (req.getPassword() != null && !req.getPassword().isBlank()) {
+            c.setPassword(passwordEncoder.encode(req.getPassword()));
         }
 
         customerRepository.save(c);

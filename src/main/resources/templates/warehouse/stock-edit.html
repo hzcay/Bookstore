@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']}, null)}"
+>
+     <link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-stock.css}" />
+
+     <div data-content class="page-stock">
+          <!-- Breadcrumb đẹp -->
+          <nav aria-label="breadcrumb" class="mb-4">
+               <ol class="breadcrumb bg-light p-3 rounded shadow-sm">
+                    <li class="breadcrumb-item">
+                         <a th:href="@{/warehouse/stock}" class="text-decoration-none">
+                              <i class="bi bi-house-door"></i> Quản lý tồn kho
+                         </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                         <i class="bi bi-pencil-square"></i> Sửa thông tin sách
+                    </li>
+               </ol>
+          </nav>
+
+          <!-- Form sửa với design đẹp -->
+          <div class="card shadow-lg border-0 rounded-3 overflow-hidden">
+               <!-- Header gradient -->
+               <div class="card-header bg-gradient text-white p-4" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h3 class="mb-1 fw-bold">
+                         <i class="bi bi-pencil-square"></i> Chỉnh sửa thông tin sách
+                    </h3>
+                    <p class="mb-0 opacity-75">Cập nhật thông tin chi tiết về sách trong kho</p>
+               </div>
+
+               <div class="card-body p-4">
+                    <form th:action="@{/warehouse/stock/edit/{id}(id=${book.bookId})}" method="post" class="needs-validation" novalidate>
+                         <!-- Section 1: Thông tin cơ bản -->
+                         <div class="col-12 mb-3">
+                              <div class="alert alert-info border-0 shadow-sm">
+                                   <i class="bi bi-info-circle-fill"></i> 
+                                   <strong>Thông tin cơ bản</strong> - Các trường có dấu <span class="text-danger">*</span> là bắt buộc
+                              </div>
+                         </div>
+
+                         <div class="col-md-6">
+                              <div class="form-floating mb-3">
+                                   <input class="form-control bg-light" th:value="${book.bookId}" disabled id="bookId">
+                                   <label for="bookId">
+                                        <i class="bi bi-upc-scan text-muted"></i> Mã sách
+                                   </label>
+                              </div>
+                              <small class="text-muted"><i class="bi bi-lock-fill"></i> Mã sách không thể thay đổi</small>
+                         </div>
+
+                         <div class="col-md-6">
+                              <div class="form-floating">
+                                   <input class="form-control shadow-sm" name="title" th:value="${book.title}" required id="title">
+                                   <label for="title">
+                                        <i class="bi bi-book-fill text-primary"></i> Tên sách <span class="text-danger">*</span>
+                                   </label>
+                              </div>
+                         </div>
+
+                         <div class="col-md-4">
+                              <div class="form-floating">
+                                   <select class="form-select shadow-sm" name="categoryId" required id="category">
+                                        <option value="">-- Chọn thể loại --</option>
+                                        <option th:each="c : ${categories}" 
+                                                th:value="${c.categoryId}" 
+                                                th:text="${c.name}"
+                                                th:selected="${c.categoryId == book.category?.categoryId}"></option>
+                                   </select>
+                                   <label for="category">
+                                        <i class="bi bi-bookmark-fill text-warning"></i> Thể loại <span class="text-danger">*</span>
+                                   </label>
+                              </div>
+                         </div>
+
+                         <div class="col-md-4">
+                              <div class="form-floating">
+                                   <select class="form-select shadow-sm" name="authorId" required id="author">
+                                        <option value="">-- Chọn tác giả --</option>
+                                        <option th:each="a : ${authors}" 
+                                                th:value="${a.authorId}" 
+                                                th:text="${a.name}"
+                                                th:selected="${a.authorId == book.author?.authorId}"></option>
+                                   </select>
+                                   <label for="author">
+                                        <i class="bi bi-person-fill text-info"></i> Tác giả <span class="text-danger">*</span>
+                                   </label>
+                              </div>
+                         </div>
+
+                         <div class="col-md-4">
+                              <div class="form-floating">
+                                   <select class="form-select shadow-sm" name="publisherId" required id="publisher">
+                                        <option value="">-- Chọn NXB --</option>
+                                        <option th:each="p : ${publishers}" 
+                                                th:value="${p.publisherId}" 
+                                                th:text="${p.name}"
+                                                th:selected="${p.publisherId == book.publisher?.publisherId}"></option>
+                                   </select>
+                                   <label for="publisher">
+                                        <i class="bi bi-building text-danger"></i> Nhà xuất bản <span class="text-danger">*</span>
+                                   </label>
+                              </div>
+                         </div>
+
+                         <!-- Section 2: Giá và tồn kho -->
+                         <div class="col-12 mt-4 mb-3">
+                              <div class="alert alert-warning border-0 shadow-sm">
+                                   <i class="bi bi-exclamation-triangle-fill"></i> 
+                                   <strong>Thông tin giá và tồn kho</strong>
+                                   <p class="mb-0 mt-2 small">
+                                        <i class="bi bi-info-circle"></i> 
+                                        <strong>Lưu ý:</strong> Chỉ Admin mới được phép sửa số lượng tồn kho để điều chỉnh khi có sai lệch. 
+                                        Số lượng thực tế sẽ tự động cập nhật khi nhập/xuất hàng.
+                                   </p>
+                              </div>
+                         </div>
+
+                         <div class="col-md-4">
+                              <div class="form-floating">
+                                   <input class="form-control shadow-sm border-warning" 
+                                          type="number" 
+                                          name="quantity" 
+                                          th:value="${book.quantity}" 
+                                          min="0"
+                                          step="1"
+                                          id="quantity"
+                                          placeholder="Số lượng tồn">
+                                   <label for="quantity">
+                                        <i class="bi bi-box-seam text-warning"></i> Số lượng tồn (có thể sửa)
+                                   </label>
+                              </div>
+                              <small class="text-warning fw-semibold">
+                                   <i class="bi bi-shield-fill-check"></i> Quyền Admin: Có thể điều chỉnh số lượng tồn kho
+                              </small>
+                         </div>
+
+                         <div class="col-md-4">
+                              <div class="input-group shadow-sm">
+                                   <div class="form-floating">
+                                        <input class="form-control" 
+                                               type="number" 
+                                               name="importPrice" 
+                                               th:value="${book.importPrice}" 
+                                               min="0" 
+                                               step="1000"
+                                               id="importPrice">
+                                        <label for="importPrice">
+                                             <i class="bi bi-cash-coin text-success"></i> Giá nhập
+                                        </label>
+                                   </div>
+                                   <span class="input-group-text">VNĐ</span>
+                              </div>
+                         </div>
+
+                         <div class="col-md-4">
+                              <div class="input-group shadow-sm">
+                                   <div class="form-floating">
+                                        <input class="form-control" 
+                                               type="number" 
+                                               name="salePrice" 
+                                               th:value="${book.salePrice}" 
+                                               min="0" 
+                                               step="1000"
+                                               id="salePrice">
+                                        <label for="salePrice">
+                                             <i class="bi bi-tag-fill text-danger"></i> Giá bán
+                                        </label>
+                                   </div>
+                                   <span class="input-group-text">VNĐ</span>
+                              </div>
+                         </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                         <a th:href="@{/warehouse/stock}" class="btn btn-outline-secondary btn-lg px-4 shadow-sm">
+                              <i class="bi bi-x-circle"></i> Hủy bỏ
+                         </a>
+                         <button type="submit" class="btn btn-primary btn-lg px-5 shadow">
+                              <i class="bi bi-check-circle-fill"></i> Lưu thay đổi
+                         </button>
+                    </div>
+               </form>
+               </div>
+          </div>
+     </div>
+
+     <!-- Custom CSS cho form đẹp hơn -->
+     <style>
+          .form-control, .form-select {
+               border-radius: 10px;
+               border: 2px solid #e0e0e0;
+               transition: all 0.3s ease;
+          }
+          .form-control:focus, .form-select:focus {
+               border-color: #667eea;
+               box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+               transform: translateY(-2px);
+          }
+          .form-floating > label {
+               padding-left: 1.5rem;
+          }
+          .btn {
+               border-radius: 10px;
+               transition: all 0.3s ease;
+          }
+          .btn:hover {
+               transform: translateY(-2px);
+               box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+          }
+          .input-group-text {
+               border-radius: 0 10px 10px 0;
+               border: 2px solid #e0e0e0;
+               border-left: none;
+               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+               color: white;
+               font-weight: bold;
+          }
+          .alert {
+               border-radius: 10px;
+               border-left: 4px solid;
+          }
+          .alert-info {
+               border-left-color: #17a2b8;
+          }
+          .alert-warning {
+               border-left-color: #ffc107;
+          }
+     </style>
+</html>

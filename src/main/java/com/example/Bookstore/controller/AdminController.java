@@ -12,9 +12,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpSession;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -119,9 +121,9 @@ public class AdminController {
         Pageable pageable = PageRequest.of(page, size, Sort.by("title").ascending());
         Page<BookDTO> books;
         if (search != null && !search.trim().isEmpty()) {
-            books = bookService.searchBooks(search, null, null, null, null, null, pageable);
+            books = bookService.searchBooksForAdmin(search, null, null, null, null, null, pageable);
         } else {
-            books = bookService.getAllBooks(pageable);
+            books = bookService.getAllBooksForAdmin(pageable); // Admin dùng method riêng
         }
         
         model.addAttribute("books", books);
@@ -166,7 +168,8 @@ public class AdminController {
     }
 
     @PostMapping("/books/save")
-    public String saveBook(@ModelAttribute("book") BookDTO bookDTO, 
+    public String saveBook(@ModelAttribute("book") BookDTO bookDTO,
+                          @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                           BindingResult result,
                           RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
@@ -174,6 +177,27 @@ public class AdminController {
         }
         
         try {
+            // Xử lý upload ảnh nếu có file được chọn
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String uploadDir = "src/main/resources/static/img/books/";
+                File directory = new File(uploadDir);
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                }
+                
+                // Tạo tên file unique
+                String originalFilename = imageFile.getOriginalFilename();
+                String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                String newFilename = System.currentTimeMillis() + fileExtension;
+                
+                // Lưu file
+                File destinationFile = new File(directory, newFilename);
+                imageFile.transferTo(destinationFile);
+                
+                // Set đường dẫn vào BookDTO
+                bookDTO.setThumbnail("/img/books/" + newFilename);
+            }
+            
             if (bookDTO.getBookId() != null && !bookDTO.getBookId().isEmpty()) {
                 bookService.updateBook(bookDTO.getBookId(), bookDTO);
                 redirectAttributes.addFlashAttribute("success", "Cập nhật sách thành công!");

@@ -46,4 +46,5 @@ public interface SupplierRepository extends JpaRepository<Supplier, String> {
            "((:hasDebt = true AND s.debt > 0) OR (:hasDebt = false AND s.debt = 0))")
     Page<Supplier> findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCaseAndDebtCondition(
         String name, String phone, Boolean hasDebt, Pageable pageable);
+
 }

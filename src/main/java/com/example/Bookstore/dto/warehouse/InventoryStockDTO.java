@@ -5,4 +5,3 @@ public record InventoryStockDTO(
   String title,
   Long stock
 ) {}
-

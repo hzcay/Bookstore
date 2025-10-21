@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.ui.Model;
+import com.example.Bookstore.entity.Supplier;
 
 import java.util.List;
 import java.util.Optional;
@@ -99,5 +101,30 @@ public class SupplierController {
             this.debt = debt;
         }
     }
+
+    @PostMapping("/warehouse")
+	public String create(@RequestParam String name, @RequestParam(required = false) String address,
+			@RequestParam(required = false) String phone) {
+		supplierService.create(name, address, phone);
+		return "redirect:/warehouse/suppliers";
+	}
+
+	// Xóa mềm NCC
+	@PostMapping("/{id}/delete")
+	public String delete(@PathVariable("id") String id) {
+		supplierService.delete(id);
+		return "redirect:/warehouse/suppliers";
+	}
+
+	// (tuỳ chọn) trang sửa
+	@GetMapping("/{id}/edit")
+	public String edit(@PathVariable("id") String id, Model model) {
+		Supplier s = supplierService.findById(id);
+		model.addAttribute("pageTitle", "Sửa NCC");
+		model.addAttribute("active", "suppliers");
+		model.addAttribute("suppliers", supplierService.findAll());
+		model.addAttribute("supplierForm", s);
+		return "warehouse/suppliers";
+	}
 }
 

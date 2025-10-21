@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -174,12 +175,27 @@ public class ShipmentServiceImpl implements ShipmentService {
 	    ShipmentDTO dto = new ShipmentDTO();
 	    dto.setShipmentId(s.getShipmentId());
 	    dto.setOrderId(s.getOrder() != null ? s.getOrder().getOrderId() : null);
-	    dto.setShipperId(s.getShipper() != null ? s.getShipper().getEmployeeId() : null);
-	    dto.setShipperName(s.getShipper() != null ? s.getShipper().getName() : null);
-
-	    // Lấy tên khách hàng từ Order → Customer
-	    if (s.getOrder() != null && s.getOrder().getCustomer() != null) {
-	        dto.setCustomerName(s.getOrder().getCustomer().getName());
+	    
+	    // Thông tin Order
+	    if (s.getOrder() != null) {
+	        if (s.getOrder().getCustomer() != null) {
+	            dto.setOrderCustomerName(s.getOrder().getCustomer().getName());
+	            dto.setCustomerName(s.getOrder().getCustomer().getName()); // Tương thích
+	        }
+	        dto.setOrderTotal(s.getOrder().getTotal() - s.getOrder().getDiscount() + s.getOrder().getShippingFee());
+	        dto.setOrderStatus(s.getOrder().getStatus());
+	        dto.setCreateAt(s.getOrder().getCreateAt()); // Sử dụng ngày tạo của Order
+	        
+	        // Payment method
+	        if (s.getOrder().getPaymentMethod() != null) {
+	            dto.setPaymentMethod(s.getOrder().getPaymentMethod().name());
+	        }
+	    }
+	    
+	    // Thông tin Shipper
+	    if (s.getShipper() != null) {
+	        dto.setShipperId(s.getShipper().getEmployeeId());
+	        dto.setShipperName(s.getShipper().getName());
 	    }
 
 	    dto.setDeliveryAddress(s.getDeliveryAddress());
@@ -187,11 +203,6 @@ public class ShipmentServiceImpl implements ShipmentService {
 	    dto.setDeliveryTime(s.getDeliveryTime());
 	    dto.setStatus(s.getStatus());
 	    dto.setCodAmount(s.getCodAmount());
-
-	    // Lấy paymentMethod từ Order
-	    if (s.getOrder() != null && s.getOrder().getPaymentMethod() != null) {
-	        dto.setPaymentMethod(s.getOrder().getPaymentMethod().name());
-	    }
 
 	    return dto;
 	}
@@ -223,6 +234,78 @@ public class ShipmentServiceImpl implements ShipmentService {
 	public long countFailedBetween(String shipperId, LocalDate from, LocalDate to) {
 	    return shipmentRepository.countByShipper_EmployeeIdAndStatusAndPickupTimeBetween(
 	            shipperId, Shipment.ShipmentStatus.FAILED, from.atStartOfDay(), to.atTime(23, 59));
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public List<ShipmentDTO> getAllShipments() {
+		List<Shipment> shipments = shipmentRepository.findAllWithDetails();
+		return shipments.stream()
+				.map(this::convertToDTO)
+				.collect(java.util.stream.Collectors.toList());
+	}
+	
+	@Override
+	@Transactional
+	public void syncOrderStatusWithShipments() {
+		System.out.println("=== ĐỒNG BỘ ORDER STATUS VỚI SHIPMENT ===");
+		
+		// Lấy tất cả shipments
+		List<Shipment> shipments = shipmentRepository.findAll();
+		int updatedCount = 0;
+		
+		for (Shipment shipment : shipments) {
+			Order order = shipment.getOrder();
+			if (order == null) continue;
+			
+			boolean needUpdate = false;
+			Order.OrderStatus newStatus = order.getStatus();
+			
+			// Logic đồng bộ
+			switch (shipment.getStatus()) {
+				case OUT_FOR_DELIVERY:
+					// Nếu shipment đang giao mà order không phải SHIPPING → cập nhật
+					if (order.getStatus() != Order.OrderStatus.SHIPPING) {
+						newStatus = Order.OrderStatus.SHIPPING;
+						needUpdate = true;
+					}
+					break;
+					
+				case DELIVERED:
+					// Nếu shipment đã giao mà order không phải DELIVERED → cập nhật
+					if (order.getStatus() != Order.OrderStatus.DELIVERED) {
+						newStatus = Order.OrderStatus.DELIVERED;
+						// Nếu COD thì cập nhật payment status
+						if (order.getPaymentMethod() == Order.PaymentMethod.COD) {
+							order.setPaymentStatus(1);
+						}
+						needUpdate = true;
+					}
+					break;
+					
+				case PICKING:
+					// Shipment PICKING → Order nên ở PROCESSING
+					if (order.getStatus() != Order.OrderStatus.PROCESSING) {
+						newStatus = Order.OrderStatus.PROCESSING;
+						needUpdate = true;
+					}
+					break;
+					
+				default:
+					break;
+			}
+			
+			if (needUpdate) {
+				order.setStatus(newStatus);
+				orderRepository.save(order);
+				updatedCount++;
+				System.out.println("✅ Đã cập nhật Order " + order.getOrderId() + 
+								 " từ status cũ → " + newStatus + 
+								 " (Shipment: " + shipment.getStatus() + ")");
+			}
+		}
+		
+		System.out.println("=== HOÀN TẤT ĐỒNG BỘ: Đã cập nhật " + updatedCount + " orders ===");
 	}
 }
 

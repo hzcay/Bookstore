@@ -10,25 +10,34 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
+import com.example.Bookstore.repository.PaymentHistoryRepository;
+import com.example.Bookstore.entity.PaymentHistory;
+import com.example.Bookstore.dto.warehouse.PayDebtRequest;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class SupplierServiceImpl implements SupplierService {
 
     @Autowired
-    private SupplierRepository supplierRepository;
+    private SupplierRepository supplierRepo;
+
+    @Autowired
+    private PaymentHistoryRepository paymentHistoryRepo;
 
     @Override
     public Page<SupplierDTO> getAllSuppliers(String searchTerm, Pageable pageable) {
         Page<Supplier> suppliers;
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            suppliers = supplierRepository.findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCase(
+            suppliers = supplierRepo.findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCase(
                 searchTerm, searchTerm, pageable);
         } else {
-            suppliers = supplierRepository.findAll(pageable);
+            suppliers = supplierRepo.findAll(pageable);
         }
         return suppliers.map(this::convertToDTO);
     }
@@ -41,13 +50,13 @@ public class SupplierServiceImpl implements SupplierService {
         
         Page<Supplier> suppliers;
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            suppliers = supplierRepository.findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCaseAndDebtCondition(
+            suppliers = supplierRepo.findByNameContainingIgnoreCaseOrPhoneContainingIgnoreCaseAndDebtCondition(
                 searchTerm, searchTerm, hasDebt, pageable);
         } else {
             if (hasDebt) {
-                suppliers = supplierRepository.findByDebtGreaterThan(0.0, pageable);
+                suppliers = supplierRepo.findByDebtGreaterThan(0.0, pageable);
             } else {
-                suppliers = supplierRepository.findByDebtEquals(0.0, pageable);
+                suppliers = supplierRepo.findByDebtEquals(0.0, pageable);
             }
         }
         
@@ -56,20 +65,20 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public Optional<SupplierDTO> getSupplierById(String id) {
-        return supplierRepository.findById(id).map(this::convertToDTO);
+        return supplierRepo.findById(id).map(this::convertToDTO);
     }
 
     @Override
     public SupplierDTO createSupplier(SupplierDTO supplierDTO) {
         Supplier supplier = convertToEntity(supplierDTO);
         supplier.setSupplierId(null);
-        Supplier savedSupplier = supplierRepository.save(supplier);
+        Supplier savedSupplier = supplierRepo.save(supplier);
         return convertToDTO(savedSupplier);
     }
 
     @Override
     public SupplierDTO updateSupplier(String id, SupplierDTO supplierDTO) {
-        Supplier supplier = supplierRepository.findById(id)
+        Supplier supplier = supplierRepo.findById(id)
             .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + id));
         
         supplier.setName(supplierDTO.getName());
@@ -78,26 +87,26 @@ public class SupplierServiceImpl implements SupplierService {
         supplier.setDebt(supplierDTO.getDebt());
         supplier.setStatus(supplierDTO.getStatus());
         
-        Supplier updatedSupplier = supplierRepository.save(supplier);
+        Supplier updatedSupplier = supplierRepo.save(supplier);
         return convertToDTO(updatedSupplier);
     }
 
     @Override
     public void deleteSupplier(String id) {
-        supplierRepository.deleteById(id);
+        supplierRepo.deleteById(id);
     }
 
     @Override
     public void updateSupplierDebt(String id, Double debt) {
-        Supplier supplier = supplierRepository.findById(id)
+        Supplier supplier = supplierRepo.findById(id)
             .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + id));
         supplier.setDebt(debt);
-        supplierRepository.save(supplier);
+        supplierRepo.save(supplier);
     }
 
     @Override
     public List<SupplierDTO> getActiveSuppliers() {
-        return supplierRepository.findByStatus(1).stream()
+        return supplierRepo.findByStatus(1).stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
     }
@@ -129,8 +138,8 @@ public class SupplierServiceImpl implements SupplierService {
     @Transactional(readOnly = true)
     public Page<Supplier> list(String keyword, Pageable pageable) {
         return (keyword == null || keyword.isBlank())
-            ? supplierRepository.findAll(pageable)
-            : supplierRepository.findByNameContainingIgnoreCase(keyword, pageable);
+            ? supplierRepo.findAll(pageable)
+            : supplierRepo.findByNameContainingIgnoreCase(keyword, pageable);
     }
     
     @Override
@@ -141,35 +150,87 @@ public class SupplierServiceImpl implements SupplierService {
         s.setPhone(phone);
         s.setDebt(0.0);
         s.setStatus(1);
-        return supplierRepository.save(s);
+        return supplierRepo.save(s);
     }
     
     @Override
     public Supplier update(String id, String name, String address, String phone) {
-        Supplier s = supplierRepository.findById(id)
+        Supplier s = supplierRepo.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Supplier not found"));
         s.setName(name);
         s.setAddress(address);
         s.setPhone(phone);
-        return supplierRepository.save(s);
+        return supplierRepo.save(s);
     }
     
     @Override
     public void delete(String id) {
-        supplierRepository.deleteById(id);
+        supplierRepo.deleteById(id);
     }
     
     @Override
     @Transactional(readOnly = true)
     public List<Supplier> findAll() {
-        return supplierRepository.findAll();
+        return supplierRepo.findAll();
     }
     
     @Override
     @Transactional(readOnly = true)
     public Supplier findById(String id) {
-        return supplierRepository.findById(id)
+        return supplierRepo.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Supplier not found"));
     }
+    
+    @Override
+  public PaymentHistory payDebt(PayDebtRequest request) {
+    Supplier supplier = supplierRepo.findById(request.supplierId())
+      .orElseThrow(() -> new IllegalArgumentException("Supplier not found: " + request.supplierId()));
+    
+    if (request.paymentAmount() <= 0) {
+      throw new IllegalArgumentException("Payment amount must be greater than 0");
+    }
+    
+    Double currentDebt = supplier.getDebt() != null ? supplier.getDebt() : 0.0;
+    
+    if (request.paymentAmount() > currentDebt) {
+      throw new IllegalArgumentException("Payment amount cannot exceed current debt: " + currentDebt);
+    }
+    
+    // Tạo lịch sử thanh toán
+    PaymentHistory payment = new PaymentHistory();
+    payment.setSupplier(supplier);
+    payment.setPaymentAmount(request.paymentAmount());
+    payment.setPaymentDate(LocalDateTime.now());
+    payment.setPaymentMethod(request.paymentMethod());
+    payment.setNote(request.note());
+    payment.setEmployeeName(request.employeeName());
+    payment.setRemainingDebt(currentDebt - request.paymentAmount());
+    payment.setStatus(1);
+    paymentHistoryRepo.save(payment);
+    
+    // Cập nhật công nợ NCC
+    supplier.setDebt(currentDebt - request.paymentAmount());
+    supplierRepo.save(supplier);
+    
+    return payment;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<PaymentHistory> getPaymentHistory(String supplierId, Pageable pageable) {
+    return paymentHistoryRepo.findBySupplierId(supplierId, pageable);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<PaymentHistory> getPaymentHistoryByDateRange(LocalDateTime from, LocalDateTime to, Pageable pageable) {
+    return paymentHistoryRepo.findByDateRange(from, to, pageable);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<PaymentHistory> getAllPaymentHistoryForExport() {
+    return paymentHistoryRepo.findAllForExport();
+  }
 }
 

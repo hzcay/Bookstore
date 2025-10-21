@@ -20,6 +20,8 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     
     List<Order> findByCustomerCustomerIdAndStatus(String customerId, Order.OrderStatus status);
     
+    List<Order> findByCustomerCustomerId(String customerId);
+    
     Optional<Order> findByOrderIdAndStatus(String orderId, Order.OrderStatus status);
     
     // For shipper: get orders by status
@@ -40,4 +42,17 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     
     // Lấy đơn hàng theo khoảng thời gian và status
     List<Order> findByCreateAtBetweenAndStatus(LocalDateTime fromDate, LocalDateTime toDate, Order.OrderStatus status);
+
+    @Query("SELECT o FROM Order o WHERE " +
+           "(:customerId IS NULL OR o.customer.customerId = :customerId) AND " +
+           "(:status IS NULL OR o.status = :status) AND " +
+           "(:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus) AND " +
+           "(:dateFrom IS NULL OR o.createAt >= :dateFrom) AND " +
+           "(:dateTo IS NULL OR o.createAt <= :dateTo)")
+    Page<Order> searchOrders(@Param("customerId") String customerId,
+                            @Param("status") Order.OrderStatus status,
+                            @Param("paymentStatus") Integer paymentStatus,
+                            @Param("dateFrom") LocalDateTime dateFrom,
+                            @Param("dateTo") LocalDateTime dateTo,
+                            Pageable pageable);
 }

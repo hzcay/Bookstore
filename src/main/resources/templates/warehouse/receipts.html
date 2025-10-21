@@ -1,161 +1,675 @@
-<!doctype html>
-<html xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']})}">
+<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']}, ~{::script[@data-extra='js']})}"
+>
+     <!-- CSS riêng của trang nhập sách -->
+     <link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-receipts.css}" />
 
-<!-- CSS riêng của trang nhập sách -->
-<link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-receipts.css}" />
+     <!-- JavaScript cho xuất Excel và load employee name -->
+     <script data-extra="js" th:src="@{/js/receipts-export.js}"></script>
+     <script data-extra="js">
+          // Load employee name into page header
+          document.addEventListener('DOMContentLoaded', async function() {
+               try {
+                    const response = await fetch('/api/v1/auth/session');
+                    const data = await response.json();
+                    if (data.authenticated && data.userName) {
+                         const headerNameEl = document.getElementById('header-employee-name');
+                         if (headerNameEl) {
+                              headerNameEl.textContent = data.userName;
+                         }
+                    }
+               } catch (error) {
+                    console.error('Error loading employee name:', error);
+               }
+          });
+     </script>
 
-<div data-content class="page-receipts">
-	<!-- Card: Form nhập sách -->
-	<div class="card shadow-sm border-0 mb-4">
-		<div class="card-header py-3 gradient-header text-white d-flex align-items-center gap-2">
-			<i class="bi bi-plus-lg"></i>
-			<div>
-				<div class="fw-semibold">Nhập sách mới</div>
-				<div class="small opacity-75">Thêm sách vào kho từ nhà cung cấp</div>
-			</div>
-		</div>
+     <div data-content class="page-receipts">
+          <!-- Professional Warehouse Header for Receipts -->
+          <div class="warehouse-header mb-4">
+               <div
+                    class="card border-0 shadow-lg"
+                    style="
+                         background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
+                         border-radius: 15px;
+                    "
+               >
+                    <div class="card-body p-4">
+                         <div class="row align-items-center">
+                              <div class="col-md-8">
+                                   <div class="d-flex align-items-center mb-2">
+                                        <div
+                                             class="icon-box me-3"
+                                             style="
+                                                  background: rgba(255, 255, 255, 0.2);
+                                                  padding: 15px;
+                                                  border-radius: 12px;
+                                             "
+                                        >
+                                             <i
+                                                  class="bi bi-inbox-fill"
+                                                  style="font-size: 2.5rem; color: white"
+                                             ></i>
+                                        </div>
+                                        <div>
+                                             <h2 class="text-white mb-1 fw-bold">
+                                                  <i class="bi bi-clipboard-check"></i> QUẢN LÝ
+                                                  PHIẾU NHẬP KHO
+                                             </h2>
+                                             <p class="text-white mb-0 opacity-75">
+                                                  <i class="bi bi-calendar3"></i>
+                                                  <span
+                                                       th:text="${#temporals.format(#temporals.createNow(), 'EEEE, dd/MM/yyyy', new java.util.Locale('vi'))}"
+                                                       >Thứ Sáu, 18/10/2025</span
+                                                  >
+                                                  &nbsp;|&nbsp;
+                                                  <i class="bi bi-person-badge"></i> <span id="header-employee-name">Nhân viên kho</span>
+                                             </p>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="col-md-4 text-end">
+                                   <button
+                                        class="btn btn-light btn-lg shadow-sm"
+                                        onclick="document.getElementById('receiptForm').scrollIntoView({behavior: 'smooth'})"
+                                   >
+                                        <i class="bi bi-plus-circle-fill"></i> Tạo phiếu nhập
+                                   </button>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
 
-		<form class="card-body" th:action="@{/warehouse/receipts}" method="post">
-			<div class="row g-3">
-				<div class="col-md-4">
-					<label class="form-label"><i class="bi bi-book me-1"></i> Chọn sách</label>
-					<select name="bookId" class="form-select" required>
-						<option value="">-- Chọn sách --</option>
-						<option th:each="book : ${books}" th:value="${book.bookId}" th:text="${book.title}"></option>
-					</select>
-				</div>
-				<div class="col-md-4">
-					<label class="form-label"><i class="bi bi-people me-1"></i> Nhà cung cấp</label>
-					<select name="supplierId" class="form-select" required>
-						<option value="">-- Chọn NCC --</option>
-						<option th:each="supplier : ${suppliers}" th:value="${supplier.supplierId}" th:text="${supplier.name}"></option>
-					</select>
-				</div>
-				<div class="col-md-2">
-					<label class="form-label"><i class="bi bi-123 me-1"></i> Số lượng</label>
-					<input class="form-control" type="number" min="1" name="quantity" value="1" required/>
-				</div>
-				<div class="col-md-2 d-flex align-items-end">
-					<button type="submit" class="btn btn-primary w-100">
-						<i class="bi bi-plus-lg me-1"></i> Nhập sách
-					</button>
-				</div>
-			</div>
-		</form>
-	</div>
+          <!-- Card: Form nhập sách -->
+          <div
+               id="receiptForm"
+               class="card shadow-sm border-0 mb-4"
+               style="border-left: 4px solid #f57c00 !important"
+          >
+               <div
+                    class="card-header py-3 text-white d-flex align-items-center gap-2"
+                    style="background: linear-gradient(135deg, #263238 0%, #37474f 100%)"
+               >
+                    <i class="bi bi-plus-lg fs-5"></i>
+                    <div>
+                         <div class="fw-semibold fs-5">TẠO PHIẾU NHẬP SÁCH MỚI</div>
+                         <div class="small opacity-75">Thêm sách vào kho từ nhà cung cấp</div>
+                    </div>
+               </div>
 
-	<!-- Thống kê nhanh -->
-	<div class="row mb-4">
-		<div class="col-md-3">
-			<div class="card bg-primary text-white">
-				<div class="card-body">
-					<div class="d-flex justify-content-between">
-						<div>
-							<div class="h4 mb-0" th:text="${totalReceipts}">0</div>
-							<div class="small">Tổng phiếu nhập</div>
-						</div>
-						<i class="bi bi-file-text fs-1 opacity-50"></i>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="card bg-success text-white">
-				<div class="card-body">
-					<div class="d-flex justify-content-between">
-						<div>
-							<div class="h4 mb-0" th:text="${totalBooks}">0</div>
-							<div class="small">Tổng sách nhập</div>
-						</div>
-						<i class="bi bi-book fs-1 opacity-50"></i>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="card bg-info text-white">
-				<div class="card-body">
-					<div class="d-flex justify-content-between">
-						<div>
-							<div class="h4 mb-0" th:text="${totalSuppliers}">0</div>
-							<div class="small">NCC hoạt động</div>
-						</div>
-						<i class="bi bi-people fs-1 opacity-50"></i>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="card bg-warning text-white">
-				<div class="card-body">
-					<div class="d-flex justify-content-between">
-						<div>
-							<div class="h4 mb-0" th:text="${lowStockCount}">0</div>
-							<div class="small">Sách sắp hết</div>
-						</div>
-						<i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+               <form class="card-body p-4" th:action="@{/warehouse/receipts}" method="post">
+                    <div class="row g-3 align-items-end">
+                         <div class="col-md-4">
+                              <label class="form-label fw-semibold mb-2">
+                                   <i class="bi bi-book me-1 text-primary"></i> Chọn sách
+                                   <span class="text-danger">*</span>
+                              </label>
+                              <select
+                                   name="bookId"
+                                   class="form-select form-select-lg shadow-sm"
+                                   required
+                              >
+                                   <option value="">-- Chọn sách cần nhập --</option>
+                                   <option
+                                        th:each="book : ${books}"
+                                        th:value="${book.bookId}"
+                                        th:text="${book.title}"
+                                   ></option>
+                              </select>
+                         </div>
+                         <div class="col-md-3">
+                              <label class="form-label fw-semibold mb-2">
+                                   <i class="bi bi-truck me-1 text-success"></i> Nhà cung cấp
+                                   <span class="text-danger">*</span>
+                              </label>
+                              <select
+                                   name="supplierId"
+                                   class="form-select form-select-lg shadow-sm"
+                                   required
+                              >
+                                   <option value="">-- Chọn nhà cung cấp --</option>
+                                   <option
+                                        th:each="supplier : ${suppliers}"
+                                        th:value="${supplier.supplierId}"
+                                        th:text="${supplier.name}"
+                                   ></option>
+                              </select>
+                         </div>
+                         <div class="col-md-2">
+                              <label class="form-label fw-semibold mb-2">
+                                   <i class="bi bi-123 me-1 text-info"></i> Số lượng
+                                   <span class="text-danger">*</span>
+                              </label>
+                              <input
+                                   class="form-control form-control-lg shadow-sm text-center fw-bold"
+                                   type="number"
+                                   min="1"
+                                   name="quantity"
+                                   value="1"
+                                   required
+                              />
+                         </div>
+                         <div class="col-md-2">
+                              <label class="form-label fw-semibold mb-2">
+                                   <i class="bi bi-cash-coin me-1 text-warning"></i> Giá nhập/cuốn
+                                   <span class="text-danger">*</span>
+                              </label>
+                              <input
+                                   class="form-control form-control-lg shadow-sm text-end fw-bold"
+                                   type="number"
+                                   min="0"
+                                   step="1000"
+                                   name="importPrice"
+                                   placeholder="0"
+                                   required
+                              />
+                         </div>
+                         <div class="col-md-1">
+                              <button
+                                   type="submit"
+                                   class="btn btn-lg w-100 shadow-sm"
+                                   style="
+                                        background: linear-gradient(
+                                             135deg,
+                                             #f57c00 0%,
+                                             #e65100 100%
+                                        );
+                                        border: none;
+                                        color: white;
+                                        height: 48px;
+                                        transition: all 0.3s ease;
+                                   "
+                                   title="Nhập sách"
+                                   onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(245, 124, 0, 0.4)';"
+                                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='';"
+                              >
+                                   <i class="bi bi-plus-circle-fill fs-5"></i>
+                              </button>
+                         </div>
+                    </div>
 
-	<!-- Lịch sử nhập sách -->
-	<div class="card shadow-sm border-0">
-		<div class="card-header d-flex justify-content-between align-items-center">
-			<h6 class="m-0">Lịch sử nhập sách</h6>
-			<div class="d-flex gap-2">
-				<button class="btn btn-outline-secondary btn-sm">
-					<i class="bi bi-download me-1"></i> Xuất Excel
-				</button>
-				<button class="btn btn-outline-primary btn-sm">
-					<i class="bi bi-funnel me-1"></i> Lọc
-				</button>
-			</div>
-		</div>
-		<div class="table-responsive">
-			<table class="table align-middle mb-0">
-				<thead>
-					<tr>
-						<th>Mã phiếu</th>
-						<th>Tên sách</th>
-						<th>Nhà cung cấp</th>
-						<th class="text-center">Số lượng</th>
-						<th class="text-center">Ngày nhập</th>
-						<th class="text-center">Trạng thái</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr th:each="i : ${receipts}">
-						<td>
-							<span class="badge bg-light text-dark" th:text="${i.inventoryId}"></span>
-						</td>
-						<td>
-							<div class="fw-semibold" th:text="${i.book.title}"></div>
-							<div class="small text-muted" th:text="${i.book.author?.name ?: 'N/A'}"></div>
-						</td>
-						<td>
-							<div th:text="${i.supplier.name}"></div>
-							<div class="small text-muted" th:text="${i.supplier.phone}"></div>
-						</td>
-						<td class="text-center">
-							<span class="badge bg-success" th:text="${i.quantity}"></span>
-						</td>
-						<td class="text-center">
-							<span th:text="${#temporals.format(i.importDate, 'dd/MM/yyyy HH:mm')}"></span>
-						</td>
-						<td class="text-center">
-							<span class="badge bg-success" th:if="${i.status == 1}">Hoàn thành</span>
-							<span class="badge bg-warning" th:if="${i.status == 0}">Đang xử lý</span>
-						</td>
-					</tr>
-					<tr th:if="${#lists.isEmpty(receipts)}">
-						<td class="text-center py-4" colspan="6">Chưa có phiếu nhập nào</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-</div>
+                    <!-- Ghi chú hướng dẫn -->
+                    <div
+                         class="alert alert-info border-0 mt-3 mb-0 d-flex align-items-center"
+                         style="background: #e3f2fd"
+                    >
+                         <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+                         <small class="mb-0">
+                              <strong>Lưu ý:</strong> Giá nhập lưu riêng cho từng phiếu nhập. Tổng
+                              tiền (Số lượng × Giá nhập) sẽ được cộng vào công nợ NCC.
+                         </small>
+                    </div>
+               </form>
+          </div>
+
+          <!-- Thống kê nhanh - KPI Cards -->
+          <div class="row mb-4 g-3">
+               <div class="col-md-3">
+                    <div
+                         class="card card-kpi"
+                         style="transition: all 0.3s ease; cursor: pointer"
+                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.15)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';"
+                    >
+                         <div class="card-body">
+                              <div class="d-flex justify-content-between align-items-start">
+                                   <div class="flex-grow-1">
+                                        <div class="text-muted mb-2 small">
+                                             <i class="bi bi-receipt me-1"></i> TỔNG PHIẾU NHẬP
+                                        </div>
+                                        <h4 class="mb-2" th:text="${totalBooks} ?: 0">0</h4>
+                                        <div class="small text-success">
+                                             <i class="bi bi-arrow-up-circle"></i> Đầu sách
+                                        </div>
+                                   </div>
+                                   <div
+                                        class="kpi-icon"
+                                        style="
+                                             background: linear-gradient(
+                                                  135deg,
+                                                  #ff9800 0%,
+                                                  #ff6f00 100%
+                                             );
+                                             color: white;
+                                        "
+                                   >
+                                        <i class="bi bi-receipt-cutoff"></i>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+               <div class="col-md-3">
+                    <div
+                         class="card card-kpi"
+                         style="transition: all 0.3s ease; cursor: pointer"
+                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.15)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';"
+                    >
+                         <div class="card-body">
+                              <div class="d-flex justify-content-between align-items-start">
+                                   <div class="flex-grow-1">
+                                        <div class="text-muted mb-2 small">
+                                             <i class="bi bi-box-seam me-1"></i> TỔNG SÁCH NHẬP
+                                        </div>
+                                        <h4 class="mb-2" th:text="${totalQuantity} ?: 0">0</h4>
+                                        <div class="small text-primary">
+                                             <i class="bi bi-box"></i> Quyển sách
+                                        </div>
+                                   </div>
+                                   <div
+                                        class="kpi-icon"
+                                        style="
+                                             background: linear-gradient(
+                                                  135deg,
+                                                  #ff5722 0%,
+                                                  #e64a19 100%
+                                             );
+                                             color: white;
+                                        "
+                                   >
+                                        <i class="bi bi-boxes"></i>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+               <div class="col-md-3">
+                    <div
+                         class="card card-kpi"
+                         style="transition: all 0.3s ease; cursor: pointer"
+                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.15)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';"
+                    >
+                         <div class="card-body">
+                              <div class="d-flex justify-content-between align-items-start">
+                                   <div class="flex-grow-1">
+                                        <div class="text-muted mb-2 small">
+                                             <i class="bi bi-people me-1"></i> SỐ NHÀ CUNG CẤP
+                                        </div>
+                                        <h4 class="mb-2" th:text="${totalSuppliers} ?: 0">0</h4>
+                                        <div class="small text-info">
+                                             <i class="bi bi-building"></i> Đối tác
+                                        </div>
+                                   </div>
+                                   <div
+                                        class="kpi-icon"
+                                        style="
+                                             background: linear-gradient(
+                                                  135deg,
+                                                  #fb8c00 0%,
+                                                  #f57c00 100%
+                                             );
+                                             color: white;
+                                        "
+                                   >
+                                        <i class="bi bi-people-fill"></i>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+               <div class="col-md-3">
+                    <div
+                         class="card card-kpi"
+                         style="transition: all 0.3s ease; cursor: pointer"
+                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.15)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';"
+                    >
+                         <div class="card-body">
+                              <div class="d-flex justify-content-between align-items-start">
+                                   <div class="flex-grow-1">
+                                        <div class="text-muted mb-2 small">
+                                             <i class="bi bi-exclamation-triangle me-1"></i> SÁCH
+                                             SẮP HẾT
+                                        </div>
+                                        <h4 class="mb-2" th:text="${lowStockCount} ?: 0">0</h4>
+                                        <div
+                                             class="small"
+                                             th:classappend="${lowStockCount > 0} ? 'text-danger' : 'text-success'"
+                                        >
+                                             <i
+                                                  th:class="${lowStockCount > 0} ? 'bi bi-arrow-down-circle' : 'bi bi-check-circle'"
+                                             ></i>
+                                             <span
+                                                  th:text="${lowStockCount > 0} ? 'Cần nhập thêm' : 'Kho ổn định'"
+                                                  >Cần nhập thêm</span
+                                             >
+                                        </div>
+                                   </div>
+                                   <div
+                                        class="kpi-icon"
+                                        style="
+                                             background: linear-gradient(
+                                                  135deg,
+                                                  #ff6f00 0%,
+                                                  #e65100 100%
+                                             );
+                                             color: white;
+                                        "
+                                   >
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <!-- BỘ LỌC XUẤT EXCEL -->
+          <div
+               class="card shadow-sm border-0 mb-4"
+               style="border-left: 4px solid #4caf50 !important"
+          >
+               <div
+                    class="card-header"
+                    style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%)"
+               >
+                    <h5 class="mb-0 text-white fw-bold">
+                         <i class="bi bi-file-earmark-excel me-2"></i>XUẤT BÁO CÁO EXCEL
+                    </h5>
+               </div>
+               <div class="card-body p-4">
+                    <div class="row g-3">
+                         <!-- Chọn nhanh theo preset -->
+                         <div class="col-12">
+                              <label class="form-label fw-semibold">
+                                   <i class="bi bi-calendar3 me-1 text-success"></i>Chọn nhanh
+                                   khoảng thời gian
+                              </label>
+                              <div class="btn-group w-100" role="group">
+                                   <button
+                                        type="button"
+                                        class="btn btn-outline-success"
+                                        onclick="setDatePreset('today')"
+                                   >
+                                        <i class="bi bi-calendar-day"></i> Hôm nay
+                                   </button>
+                                   <button
+                                        type="button"
+                                        class="btn btn-outline-success"
+                                        onclick="setDatePreset('thisWeek')"
+                                   >
+                                        <i class="bi bi-calendar-week"></i> Tuần này
+                                   </button>
+                                   <button
+                                        type="button"
+                                        class="btn btn-outline-success"
+                                        onclick="setDatePreset('thisMonth')"
+                                   >
+                                        <i class="bi bi-calendar-month"></i> Tháng này
+                                   </button>
+                                   <button
+                                        type="button"
+                                        class="btn btn-outline-success"
+                                        onclick="setDatePreset('thisYear')"
+                                   >
+                                        <i class="bi bi-calendar-range"></i> Năm nay
+                                   </button>
+                                   <button
+                                        type="button"
+                                        class="btn btn-outline-secondary"
+                                        onclick="clearDateFilter()"
+                                   >
+                                        <i class="bi bi-x-circle"></i> Tất cả
+                                   </button>
+                              </div>
+                         </div>
+
+                         <!-- Hoặc chọn tùy chỉnh -->
+                         <div class="col-md-6">
+                              <label class="form-label fw-semibold">
+                                   <i class="bi bi-calendar-check me-1 text-primary"></i>Từ ngày
+                              </label>
+                              <input
+                                   type="datetime-local"
+                                   id="filterFrom"
+                                   class="form-control form-control-lg shadow-sm"
+                              />
+                         </div>
+                         <div class="col-md-6">
+                              <label class="form-label fw-semibold">
+                                   <i class="bi bi-calendar-x me-1 text-danger"></i>Đến ngày
+                              </label>
+                              <input
+                                   type="datetime-local"
+                                   id="filterTo"
+                                   class="form-control form-control-lg shadow-sm"
+                              />
+                         </div>
+
+                         <!-- Nút xuất -->
+                         <div class="col-12">
+                              <button
+                                   class="btn btn-lg w-100 shadow"
+                                   style="
+                                        background: linear-gradient(
+                                             135deg,
+                                             #4caf50 0%,
+                                             #388e3c 100%
+                                        );
+                                        border: none;
+                                        color: white;
+                                        height: 50px;
+                                        transition: all 0.3s ease;
+                                   "
+                                   onclick="exportExcelWithFilter()"
+                                   onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(76, 175, 80, 0.4)';"
+                                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='';"
+                              >
+                                   <i class="bi bi-file-earmark-excel-fill fs-5 me-2"></i>
+                                   <span class="fw-bold">XUẤT BÁO CÁO EXCEL</span>
+                              </button>
+                         </div>
+
+                         <!-- Hướng dẫn -->
+                         <div class="col-12">
+                              <div
+                                   class="alert alert-info border-0 mb-0 d-flex align-items-center"
+                                   style="background: #e3f2fd"
+                              >
+                                   <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+                                   <small class="mb-0">
+                                        <strong>Ghi chú:</strong> Báo cáo Excel bao gồm
+                                        <strong>thống kê tổng hợp</strong> (số phiếu, tổng số lượng,
+                                        tổng giá trị, giá nhập trung bình) và
+                                        <strong>chi tiết từng phiếu nhập</strong> (mã phiếu, ngày,
+                                        sách, NCC, số lượng, giá nhập, thành tiền).
+                                   </small>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <!-- Lịch sử nhập sách -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+               <h5 class="m-0 fw-bold" style="color: #263238">
+                    <i class="bi bi-clock-history me-2"></i>LỊCH SỬ NHẬP SÁCH
+               </h5>
+          </div>
+
+          <!-- Bộ lọc theo tháng -->
+          <div
+               class="card shadow-sm border-0 mb-4"
+               style="border-left: 4px solid #f57c00 !important"
+          >
+               <div
+                    class="card-header py-3 text-white d-flex align-items-center gap-2"
+                    style="background: linear-gradient(135deg, #f57c00 0%, #e65100 100%)"
+               >
+                    <i class="bi bi-funnel fs-5"></i>
+                    <div>
+                         <div class="fw-semibold fs-6">LỌC THEO THÁNG</div>
+                         <div class="small opacity-75">
+                              Chọn tháng và năm để xem lịch sử nhập sách
+                         </div>
+                    </div>
+               </div>
+               <div class="card-body p-4">
+                    <form method="get" th:action="@{/warehouse/receipts}">
+                         <div class="row g-3 align-items-end">
+                              <div class="col-md-4">
+                                   <label class="form-label fw-semibold mb-2">
+                                        <i class="bi bi-calendar-month me-1 text-warning"></i>
+                                        Chọn tháng <span class="text-danger">*</span>
+                                   </label>
+                                   <select
+                                        name="month"
+                                        class="form-select form-select-lg shadow-sm"
+                                        required
+                                        th:value="${selectedMonth}"
+                                   >
+                                        <option
+                                             th:each="m : ${months}"
+                                             th:value="${m}"
+                                             th:text="|Tháng ${m}|"
+                                             th:selected="${m == selectedMonth}"
+                                        ></option>
+                                   </select>
+                              </div>
+                              <div class="col-md-4">
+                                   <label class="form-label fw-semibold mb-2">
+                                        <i class="bi bi-calendar-range me-1 text-warning"></i>
+                                        Chọn năm <span class="text-danger">*</span>
+                                   </label>
+                                   <select
+                                        name="year"
+                                        class="form-select form-select-lg shadow-sm"
+                                        required
+                                        th:value="${selectedYear}"
+                                   >
+                                        <option
+                                             th:each="y : ${years}"
+                                             th:value="${y}"
+                                             th:text="${y}"
+                                             th:selected="${y == selectedYear}"
+                                        ></option>
+                                   </select>
+                              </div>
+                              <div class="col-md-3">
+                                   <button
+                                        type="submit"
+                                        class="btn btn-lg w-100 shadow-sm"
+                                        style="
+                                             background: linear-gradient(
+                                                  135deg,
+                                                  #f57c00 0%,
+                                                  #e65100 100%
+                                             );
+                                             border: none;
+                                             color: white;
+                                             height: 48px;
+                                             transition: all 0.3s ease;
+                                        "
+                                        onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(245, 124, 0, 0.4)';"
+                                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='';"
+                                   >
+                                        <i class="bi bi-search me-2"></i>
+                                        <span class="fw-bold">XEM LỊCH SỬ</span>
+                                   </button>
+                              </div>
+                              <div class="col-md-1">
+                                   <a
+                                        th:href="@{/warehouse/receipts}"
+                                        class="btn btn-outline-secondary btn-lg w-100"
+                                        style="height: 48px"
+                                        title="Xóa bộ lọc"
+                                   >
+                                        <i class="bi bi-arrow-clockwise fs-5"></i>
+                                   </a>
+                              </div>
+                         </div>
+
+                         <!-- Hiển thị thông tin tháng đang xem -->
+                         <div
+                              class="alert alert-warning border-0 mt-3 mb-0 d-flex align-items-center"
+                              style="background: #fff3e0"
+                         >
+                              <i class="bi bi-info-circle-fill me-2 text-warning"></i>
+                              <small class="mb-0">
+                                   <strong>Đang xem:</strong> Lịch sử nhập sách trong
+                                   <strong
+                                        >Tháng <span th:text="${selectedMonth}">10</span>/
+                                        <span th:text="${selectedYear}">2025</span></strong
+                                   >
+                                   - Tổng: <strong th:text="${#lists.size(receipts)}">0</strong>
+                                   phiếu nhập
+                              </small>
+                         </div>
+                    </form>
+               </div>
+          </div>
+
+          <div class="card shadow-sm border-0" style="border-left: 4px solid #f57c00 !important">
+               <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                         <thead
+                              style="background: linear-gradient(135deg, #263238 0%, #37474f 100%)"
+                         >
+                              <tr>
+                                   <th class="text-dark fw-bold fs-6">Mã phiếu</th>
+                                   <th class="text-dark fw-bold fs-6">Tên sách</th>
+                                   <th class="text-dark fw-bold fs-6">Nhà cung cấp</th>
+                                   <th class="text-center text-dark fw-bold fs-6">Số lượng</th>
+                                   <th class="text-center text-dark fw-bold fs-6">Ngày nhập</th>
+                                   <th class="text-center text-dark fw-bold fs-6">Trạng thái</th>
+                              </tr>
+                         </thead>
+
+                         <tbody>
+                              <tr th:each="i : ${receipts}">
+                                   <td>
+                                        <span
+                                             class="badge bg-light text-dark"
+                                             th:text="${i.inventoryId}"
+                                        ></span>
+                                   </td>
+                                   <td>
+                                        <div class="fw-semibold" th:text="${i.book.title}"></div>
+                                        <div
+                                             class="small text-muted"
+                                             th:text="${i.book.author?.name ?: 'N/A'}"
+                                        ></div>
+                                   </td>
+                                   <td>
+                                        <div th:text="${i.supplier.name}"></div>
+                                        <div
+                                             class="small text-muted"
+                                             th:text="${i.supplier.phone}"
+                                        ></div>
+                                   </td>
+                                   <td class="text-center">
+                                        <span
+                                             class="badge bg-success"
+                                             th:text="${i.quantity}"
+                                        ></span>
+                                   </td>
+                                   <td class="text-center">
+                                        <span
+                                             th:text="${#temporals.format(i.importDate, 'dd/MM/yyyy HH:mm')}"
+                                        ></span>
+                                   </td>
+                                   <td class="text-center">
+                                        <span class="badge bg-success" th:if="${i.status == 1}"
+                                             >Hoàn thành</span
+                                        >
+                                        <span class="badge bg-warning" th:if="${i.status == 0}"
+                                             >Đang xử lý</span
+                                        >
+                                   </td>
+                              </tr>
+                              <tr th:if="${#lists.isEmpty(receipts)}">
+                                   <td class="text-center py-4" colspan="6">
+                                        Chưa có phiếu nhập nào
+                                   </td>
+                              </tr>
+                         </tbody>
+                    </table>
+               </div>
+          </div>
+     </div>
 </html>

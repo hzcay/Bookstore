@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.Bookstore.repository.OrderItemRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,9 @@ public class OrderServiceImpl implements OrderService {
     
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired  
+    private OrderItemRepository orderItemRepository;
     
     @Autowired
     private BookRepository bookRepository;
@@ -50,6 +54,16 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public Page<OrderDTO> getAllOrders(Pageable pageable) {
         return orderRepository.searchOrders(pageable)
+                .map(this::convertToDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OrderDTO> getAllOrders(String customerId, Order.OrderStatus status,
+            Integer paymentStatus, LocalDateTime dateFrom,
+            LocalDateTime dateTo, Pageable pageable) {
+        return orderRepository.searchOrders(customerId, status, paymentStatus,
+                dateFrom, dateTo, pageable)
                 .map(this::convertToDTO);
     }
     
@@ -152,7 +166,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public List<OrderDTO> getOrdersByCustomer(String customerId) {
-        return orderRepository.findByCustomerCustomerIdAndStatus(customerId, Order.OrderStatus.DELIVERED)
+        return orderRepository.findByCustomerCustomerId(customerId)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -280,6 +294,29 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("Cart is empty");
         }
 
+        // 1.1) Lọc theo selectedIds nếu có
+        java.util.Set<String> selectedSet = new java.util.HashSet<>();
+        if (req.getSelectedIds() != null) {
+            req.getSelectedIds().stream()
+                    .filter(java.util.Objects::nonNull)
+                    .map(String::valueOf)
+                    .forEach(selectedSet::add);
+        }
+
+        java.util.Collection<CartItemDTO> effectiveItems;
+        if (selectedSet.isEmpty()) {
+            // không gửi selectedIds -> thanh toán toàn bộ cart (giữ tương thích cũ)
+            effectiveItems = cart.getItems().values();
+        } else {
+            effectiveItems = cart.getItems().entrySet().stream()
+                    .filter(e -> selectedSet.contains(String.valueOf(e.getKey())))
+                    .map(java.util.Map.Entry::getValue)
+                    .toList();
+            if (effectiveItems.isEmpty()) {
+                throw new IllegalStateException("No selected items to checkout");
+            }
+        }
+
         // 2) Subtotal
         double subtotal = cart.getItems().values().stream()
                 .mapToDouble(it -> nz(it.getPrice()) * it.getQty())
@@ -312,10 +349,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 5) Tạo Order
         Order order = new Order();
-        order.setOrderId(com.example.Bookstore.util.IDGenerator.generateOrderId());
 
         // (Optional) nếu đã login thì gắn customer
-        Object uidObj = session.getAttribute(AuthController.SESSION_UID);
+        Object uidObj = session.getAttribute(com.example.Bookstore.controller.AuthController.SESSION_UID);
         if (uidObj instanceof String uid && !uid.isBlank()) {
             customerRepository.findByCustomerIdAndStatus(uid, 1).ifPresent(order::setCustomer);
         } else {
@@ -341,19 +377,20 @@ public class OrderServiceImpl implements OrderService {
             oi.setOrder(order);
             oi.setBook(book);
             oi.setQuantity(it.getQty());
-            oi.setPrice(roundVND(nz(it.getPrice()))); // snapshot giá tại thời điểm đặt
+            oi.setPrice(roundVND(nz(it.getPrice())));
             items.add(oi);
-
-            // (Optional) trừ tồn kho
-            // Integer cur = book.getQuantity() == null ? 0 : book.getQuantity();
-            // book.setQuantity(Math.max(0, cur - it.getQty()));
-            // bookRepository.save(book);
         }
         order.setOrderItems(items); // Cascade.ALL sẽ lo lưu
 
-        // 7) Lưu order + clear cart
+        // 7) Lưu order + clear đúng phần đã checkout
         orderRepository.save(order);
-        cartService.clear(session);
+        if (!selectedSet.isEmpty()) {
+            // chỉ remove các item đã thanh toán, phần còn lại giữ trong giỏ
+            cartService.removeItems(session, selectedSet);
+        } else {
+            // không có selected -> thanh toán toàn bộ
+            cartService.clear(session);
+        }
 
         // 8) Trả về DTO
         return OrderPlacedDTO.builder()
@@ -380,11 +417,11 @@ public class OrderServiceImpl implements OrderService {
         }
     }
     
-    private static double nz(Object v) {
-        return toDouble(v);
-    }
-    
+    private static double nz(Double v) {
+        return v == null ? 0d : v;
+    } 
+
     private static double roundVND(double v) {
-        return Math.round(v / 1_000d) * 1_000d;
-    }
+        return Math.round(v);
+    } 
 }

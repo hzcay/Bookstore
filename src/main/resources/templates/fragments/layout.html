@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi"
-	th:fragment="base(content, extraHead)">
+	th:fragment="base(content, extraHead, extraScripts)">
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -22,48 +22,199 @@
 <body>
 	<!-- FRAGMENT CHÍNH -->
 	<!-- <div th:fragment="base(content)"> -->
-		<!-- Sidebar -->
+		<!-- Sidebar - Professional Warehouse Theme -->
 		<aside class="sidebar">
+			<!-- Brand Logo with Animation -->
 			<div class="brand">
-				<i class="bi bi-journal-bookmark"></i> BookStore
+				<div class="brand-icon">
+					<i class="bi bi-boxes"></i>
+				</div>
+				<div class="brand-text">
+					<div class="brand-title">BookStore</div>
+					<div class="brand-subtitle">Warehouse System</div>
+				</div>
 			</div>
-			<div class="mb-3 small text-muted">
-				Nguyễn Văn A<br /> <span class="text-secondary">Quản lý kho</span>
+			
+			<!-- User Profile Card -->
+			<div class="user-card">
+				<div class="user-avatar">
+					<i class="bi bi-person-circle"></i>
+				</div>
+				<div class="user-info">
+					<div class="user-name" id="sidebar-user-name">Đang tải...</div>
+					<div class="user-role" id="sidebar-user-role">
+						<i class="bi bi-shield-check"></i> <span id="sidebar-role-text">Đang tải...</span>
+					</div>
+				</div>
 			</div>
-			<nav class="nav flex-column gap-1">
-				<a th:classappend="${active}=='stock' ? ' active'" class="nav-link"
-					th:href="@{/warehouse/stock}"> <i
-					class="bi bi-box-seam me-2"></i> Quản lý tồn kho
-				</a> <a th:classappend="${active}=='receipts' ? ' active'"
-					class="nav-link" th:href="@{/warehouse/receipts}">
-					<i class="bi bi-truck me-2"></i> Quản lý nhập sách
-				</a> <a th:classappend="${active}=='suppliers' ? ' active'"
-					class="nav-link" th:href="@{/warehouse/suppliers}">
-					<i class="bi bi-people me-2"></i> Quản lý NCC
-				</a>
 
+			<!-- Navigation Menu -->
+			<nav class="nav flex-column gap-2">
+				<div class="nav-section-title">
+					<i class="bi bi-grid-3x3-gap"></i> QUẢN LÝ
+				</div>
+				<a th:classappend="${active}=='stock' ? ' active'" 
+				   class="nav-link" th:href="@{/warehouse/stock}">
+					<div class="nav-icon">
+						<i class="bi bi-box-seam"></i>
+					</div>
+					<span>Tồn kho</span>
+					<i class="bi bi-chevron-right nav-arrow"></i>
+				</a>
+				<a th:classappend="${active}=='receipts' ? ' active'"
+				   class="nav-link" th:href="@{/warehouse/receipts}">
+					<div class="nav-icon">
+						<i class="bi bi-inbox"></i>
+					</div>
+					<span>Nhập sách</span>
+					<i class="bi bi-chevron-right nav-arrow"></i>
+				</a>
+				<a th:classappend="${active}=='suppliers' ? ' active'"
+				   class="nav-link" th:href="@{/warehouse/suppliers}">
+					<div class="nav-icon">
+						<i class="bi bi-truck"></i>
+					</div>
+					<span>Nhà cung cấp</span>
+					<i class="bi bi-chevron-right nav-arrow"></i>
+				</a>
+				<a th:classappend="${active}=='debt-report' ? ' active'"
+				   class="nav-link" th:href="@{/warehouse/debt-report}">
+					<div class="nav-icon">
+						<i class="bi bi-cash-coin"></i>
+					</div>
+					<span>Công nợ NCC</span>
+					<i class="bi bi-chevron-right nav-arrow"></i>
+				</a>
+				
+				<div class="nav-section-title mt-3">
+					<i class="bi bi-gear"></i> HỆ THỐNG
+				</div>
+				<a class="nav-link" href="#">
+					<div class="nav-icon">
+						<i class="bi bi-bell"></i>
+					</div>
+					<span>Thông báo</span>
+					<span class="badge bg-danger rounded-pill">3</span>
+				</a>
+				<a class="nav-link" href="#">
+					<div class="nav-icon">
+						<i class="bi bi-gear-fill"></i>
+					</div>
+					<span>Cài đặt</span>
+					<i class="bi bi-chevron-right nav-arrow"></i>
+				</a>
 			</nav>
+			
+			<!-- Logout Button -->
+			<div class="sidebar-footer">
+				<a href="#" class="btn-logout" onclick="event.preventDefault(); logout();">
+					<i class="bi bi-box-arrow-right"></i>
+					<span>Đăng xuất</span>
+				</a>
+			</div>
 		</aside>
 
 		<!-- Main -->
 		<main class="main">
+			<!-- Modern Topbar -->
 			<div class="topbar">
-				<div>
-					<h4 th:text="${pageTitle} ?: 'Quản lý tồn kho'">Quản lý tồn
-						kho</h4>
-					<div class="text-muted">Theo dõi và quản lý số lượng sách
-						trong kho</div>
+				<div class="topbar-left">
+					<button class="btn-menu-toggle">
+						<i class="bi bi-list"></i>
+					</button>
+					<div class="topbar-breadcrumb">
+						<i class="bi bi-house-door"></i>
+						<span class="breadcrumb-separator">/</span>
+						<span th:text="${pageTitle} ?: 'Quản lý tồn kho'">Quản lý tồn kho</span>
+					</div>
 				</div>
-				<div>
-					<a th:href="@{/warehouse/receipts}" class="btn btn-primary"> <i
-						class="bi bi-plus-lg me-1"></i> Thêm sách mới
-					</a>
+				<div class="topbar-right">
+					<div class="topbar-search">
+						<i class="bi bi-search"></i>
+						<input type="text" placeholder="Tìm kiếm...">
+					</div>
+					<button class="topbar-icon-btn">
+						<i class="bi bi-bell-fill"></i>
+						<span class="notification-badge">3</span>
+					</button>
+					<button class="topbar-icon-btn">
+						<i class="bi bi-gear-fill"></i>
+					</button>
+					<div class="topbar-user">
+						<img id="topbar-user-avatar" src="https://ui-avatars.com/api/?name=User&background=1976d2&color=fff" 
+							 alt="User" class="topbar-user-avatar">
+						<div class="topbar-user-info">
+							<div class="topbar-user-name" id="topbar-user-name">Đang tải...</div>
+							<div class="topbar-user-role" id="topbar-user-role">Đang tải...</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
-		<!-- NỘI DUNG TRANG CON -->
-		<div th:replace="${content}"></div>
-	</main>
+			<!-- NỘI DUNG TRANG CON -->
+			<div th:replace="${content}"></div>
+		</main>
+	</div>
+	
+	<!-- Bootstrap JS -->
 	<script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+	
+	<!-- User Session Management -->
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			loadUserSession();
+		});
+
+		async function loadUserSession() {
+			try {
+				const response = await fetch('/api/v1/auth/session');
+				const data = await response.json();
+				
+				if (!data.authenticated) {
+					window.location.href = '/login';
+					return;
+				}
+
+				// Update sidebar user info
+				document.getElementById('sidebar-user-name').textContent = data.userName || 'User';
+				document.getElementById('sidebar-role-text').textContent = getRoleDisplayName(data.role);
+				
+				// Update topbar user info
+				document.getElementById('topbar-user-name').textContent = data.userName || 'User';
+				document.getElementById('topbar-user-role').textContent = getRoleDisplayName(data.role);
+				
+				// Update avatar
+				const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.userName || 'User')}&background=1976d2&color=fff`;
+				document.getElementById('topbar-user-avatar').src = avatarUrl;
+				
+			} catch (error) {
+				console.error('Error loading session:', error);
+				window.location.href = '/login';
+			}
+		}
+
+		function getRoleDisplayName(role) {
+			const roleMap = {
+				'ADMIN': 'Quản trị viên',
+				'CASHIER': 'Nhân viên bán hàng',
+				'WAREHOUSE': 'Quản lý kho',
+				'SHIPPER': 'Nhân viên giao hàng'
+			};
+			return roleMap[role] || 'Người dùng';
+		}
+
+		async function logout() {
+			try {
+				await fetch('/api/v1/auth/logout', { method: 'POST' });
+				window.location.href = '/login';
+			} catch (error) {
+				console.error('Error logging out:', error);
+				window.location.href = '/login';
+			}
+		}
+	</script>
+	
+	<!-- Slot: JavaScript riêng của từng trang (optional) -->
+	<th:block th:if="${extraScripts != null and extraScripts != ''}" th:replace="${extraScripts}"></th:block>
 </body>
 </html>

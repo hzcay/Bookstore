@@ -1,173 +1,226 @@
-/* CSS riêng cho trang quản lý nhập sách */
+/* ========================================
+   RECEIPTS MANAGEMENT - PROFESSIONAL THEME
+   Color Scheme: Orange for receipts/import management
+   ======================================== */
 
+/* Page Background */
 .page-receipts {
-  padding: 1.5rem;
+     background: transparent;
+     padding: 1.5rem 2rem;
 }
 
-.gradient-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Warehouse Header for Receipts */
+.page-receipts .warehouse-header .card {
+     background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
+     border: none;
+     overflow: hidden;
+     position: relative;
 }
 
-.card {
-  border-radius: 0.75rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+.page-receipts .warehouse-header .card::before {
+     content: "";
+     position: absolute;
+     top: -50%;
+     right: -50%;
+     bottom: -50%;
+     left: -50%;
+     background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+     transform: rotate(45deg);
+     animation: shimmer 3s infinite;
 }
 
-.card-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-  background-color: rgba(0, 0, 0, 0.03);
+@keyframes shimmer {
+     0% {
+          transform: translateX(-100%) translateY(-100%) rotate(45deg);
+     }
+     100% {
+          transform: translateX(100%) translateY(100%) rotate(45deg);
+     }
 }
 
-/* Form styling */
-.form-label {
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 0.5rem;
+/* Form Styling - Orange Theme */
+.page-receipts .form-control,
+.page-receipts .form-select {
+     border-radius: 10px;
+     border: 2px solid #e0e0e0;
+     padding: 0.75rem 1rem;
+     transition: all 0.3s ease;
+     font-weight: 500;
 }
 
-.form-select, .form-control {
-  border-radius: 0.5rem;
-  border: 1px solid #ced4da;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+.page-receipts .form-control:focus,
+.page-receipts .form-select:focus {
+     border-color: #f57c00;
+     box-shadow: 0 0 0 4px rgba(245, 124, 0, 0.15);
+     transform: translateY(-2px);
 }
 
-.form-select:focus, .form-control:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+.page-receipts .form-label {
+     font-weight: 600;
+     color: #263238;
+     margin-bottom: 0.5rem;
 }
 
-/* Button styling */
-.btn {
-  border-radius: 0.5rem;
-  font-weight: 500;
-  transition: all 0.15s ease-in-out;
+/* KPI Cards with Hover Effect */
+.page-receipts .kpi-card {
+     transition: all 0.3s ease;
+     border-radius: 12px;
+     overflow: hidden;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+.page-receipts .kpi-card:hover {
+     transform: translateY(-8px);
+     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
 }
 
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 0.25rem 0.5rem rgba(102, 126, 234, 0.3);
+.page-receipts .kpi-icon {
+     width: 50px;
+     height: 50px;
+     border-radius: 12px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     font-size: 1.5rem;
+     transition: all 0.3s ease;
 }
 
-/* Statistics cards */
-.card.bg-primary, .card.bg-success, .card.bg-info, .card.bg-warning {
-  border: none;
-  border-radius: 0.75rem;
-  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+.page-receipts .kpi-card:hover .kpi-icon {
+     transform: scale(1.15) rotate(-8deg);
 }
 
-.card.bg-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+/* Table Styling - Professional Look */
+.page-receipts .table {
+     margin-bottom: 0;
 }
 
-.card.bg-success {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%) !important;
+.page-receipts .table thead th {
+     color: white;
+     font-weight: 600;
+     border: none;
+     padding: 1.25rem 1rem;
+     text-transform: uppercase;
+     font-size: 0.8rem;
+     letter-spacing: 0.8px;
 }
 
-.card.bg-info {
-  background: linear-gradient(135deg, #3498db 0%, #85c1e9 100%) !important;
+.page-receipts .table tbody tr {
+     transition: all 0.25s ease;
+     border-bottom: 1px solid #eceff1;
 }
 
-.card.bg-warning {
-  background: linear-gradient(135deg, #f39c12 0%, #f7dc6f 100%) !important;
+.page-receipts .table tbody tr:hover {
+     background: linear-gradient(90deg, rgba(245, 124, 0, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
+     transform: translateX(5px);
+     box-shadow: 0 4px 15px rgba(245, 124, 0, 0.1);
+     border-left: 4px solid #f57c00;
 }
 
-/* Table styling */
-.table {
-  border-radius: 0.5rem;
-  overflow: hidden;
+.page-receipts .table td {
+     padding: 1.25rem 1rem;
+     vertical-align: middle;
+     font-weight: 500;
+     color: #455a64;
 }
 
-.table thead th {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
-  font-weight: 600;
-  color: #495057;
-  padding: 1rem 0.75rem;
+/* Badge Styling */
+.page-receipts .badge {
+     padding: 0.5rem 1rem;
+     font-weight: 600;
+     font-size: 0.85rem;
+     border-radius: 8px;
 }
 
-.table tbody td {
-  padding: 0.75rem;
-  vertical-align: middle;
-  border-bottom: 1px solid #f1f3f4;
+/* Button Styling */
+.page-receipts .btn-outline-secondary:hover {
+     background: #546e7a;
+     border-color: #546e7a;
+     color: white;
+     transform: translateY(-2px);
+     box-shadow: 0 4px 12px rgba(84, 110, 122, 0.3);
 }
 
-.table tbody tr:hover {
-  background-color: #f8f9fa;
+.page-receipts .btn-outline-primary:hover {
+     background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
+     border-color: transparent;
+     color: white;
+     transform: translateY(-2px);
+     box-shadow: 0 4px 12px rgba(245, 124, 0, 0.3);
 }
 
 /* Badge styling */
 .badge {
-  font-size: 0.75rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.375rem;
+     font-size: 0.75rem;
+     padding: 0.375rem 0.75rem;
+     border-radius: 0.375rem;
 }
 
 .badge.bg-success {
-  background-color: #28a745 !important;
+     background-color: #28a745 !important;
 }
 
 .badge.bg-warning {
-  background-color: #ffc107 !important;
-  color: #212529 !important;
+     background-color: #ffc107 !important;
+     color: #212529 !important;
 }
 
 .badge.bg-light {
-  background-color: #f8f9fa !important;
-  color: #495057 !important;
-  border: 1px solid #dee2e6;
+     background-color: #f8f9fa !important;
+     color: #495057 !important;
+     border: 1px solid #dee2e6;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .page-receipts {
-    padding: 1rem;
-  }
-  
-  .card-body {
-    padding: 1rem;
-  }
-  
-  .table-responsive {
-    font-size: 0.875rem;
-  }
+     .page-receipts {
+          padding: 1rem;
+     }
+
+     .card-body {
+          padding: 1rem;
+     }
+
+     .table-responsive {
+          font-size: 0.875rem;
+     }
 }
 
 /* Animation for form submission */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+     from {
+          opacity: 0;
+          transform: translateY(10px);
+     }
+     to {
+          opacity: 1;
+          transform: translateY(0);
+     }
 }
 
 .card {
-  animation: fadeIn 0.3s ease-out;
+     animation: fadeIn 0.3s ease-out;
 }
 
 /* Loading state */
 .btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+     opacity: 0.6;
+     cursor: not-allowed;
 }
 
 /* Custom scrollbar for table */
 .table-responsive::-webkit-scrollbar {
-  height: 8px;
+     height: 8px;
 }
 
 .table-responsive::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+     background: #f1f1f1;
+     border-radius: 4px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+     background: #c1c1c1;
+     border-radius: 4px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+     background: #a8a8a8;
 }

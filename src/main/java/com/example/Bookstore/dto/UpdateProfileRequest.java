@@ -6,16 +6,26 @@ import lombok.Data;
 
 @Data
 public class UpdateProfileRequest {
-    @NotBlank(message = "Tên không được để trống")
+
+    @NotBlank
     private String name;
 
-    @Email(message = "Email không hợp lệ")
-    @NotBlank(message = "Email không được để trống")
+    @Email @NotBlank
     private String email;
 
     private String phone;
     private String address;
-    private String oldPassword;
-    private String newPassword;
+
+    // để trống nếu không đổi
+    private String password;
+
+    // --- match các th:field trong profile.html ---
+    private String favoriteGenres;       // th:field="*{favoriteGenres}"
+    private String favoritePublishers;   // th:field="*{favoritePublishers}"
+    private Boolean emailNotify;         // th:field="*{emailNotify}"
+    private Boolean smsNotify;           // th:field="*{smsNotify}"
+
+    // Avatar "tượng trưng"
+    private String avatarUrl;            // dùng cho th:src ở avatarPreview
 }
 

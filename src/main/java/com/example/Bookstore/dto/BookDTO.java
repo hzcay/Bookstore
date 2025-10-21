@@ -26,4 +26,5 @@ public class BookDTO {
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
     private Integer status;
+    private String thumbnail;
 }

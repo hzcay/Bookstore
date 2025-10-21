@@ -18,18 +18,22 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label">Mã code <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" th:field="*{code}" required>
+                            <input type="text" class="form-control" th:field="*{code}" required
+                                   placeholder="VD: SUMMER2025">
+                            <small class="text-muted">Mã code không có khoảng trắng, viết hoa</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Giảm giá (%) <span class="text-danger">*</span></label>
+                            <label class="form-label">Giảm giá (VNĐ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" th:field="*{discount}" 
-                                   min="0" max="100" step="0.01" required>
+                                   min="0" step="1000" required
+                                   placeholder="VD: 50000">
+                            <small class="text-muted">Số tiền giảm giá (VNĐ)</small>
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">

@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']}, ~{::script[@data-extra='js']})}"
+>
+     <!-- CSS riêng -->
+     <link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-suppliers.css}" />
+     
+     <!-- JavaScript riêng của trang -->
+     <script data-extra="js">
+          // Load employee name into page header
+          document.addEventListener('DOMContentLoaded', async function() {
+               try {
+                    const response = await fetch('/api/v1/auth/session');
+                    const data = await response.json();
+                    if (data.authenticated && data.userName) {
+                         const headerNameEl = document.getElementById('header-employee-name');
+                         if (headerNameEl) {
+                              headerNameEl.textContent = data.userName;
+                         }
+                    }
+               } catch (error) {
+                    console.error('Error loading employee name:', error);
+               }
+          });
+     </script>
+
+     <div data-content class="page-debt-report">
+          
+          <!-- Header -->
+          <div class="warehouse-header mb-4">
+               <div
+                    class="card border-0 shadow-lg"
+                    style="
+                         background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+                         border-radius: 15px;
+                    "
+               >
+                    <div class="card-body p-4">
+                         <div class="row align-items-center">
+                              <div class="col-md-8">
+                                   <div class="d-flex align-items-center mb-2">
+                                        <div
+                                             class="icon-box me-3"
+                                             style="
+                                                  background: rgba(255, 255, 255, 0.2);
+                                                  padding: 15px;
+                                                  border-radius: 12px;
+                                             "
+                                        >
+                                             <i
+                                                  class="bi bi-cash-coin"
+                                                  style="font-size: 2.5rem; color: white"
+                                             ></i>
+                                        </div>
+                                        <div>
+                                             <h2 class="text-white mb-1 fw-bold">
+                                                  <i class="bi bi-file-earmark-bar-graph"></i> BÁO CÁO CÔNG NỢ NHÀ CUNG CẤP
+                                             </h2>
+                                             <p class="text-white mb-0 opacity-75">
+                                                  <i class="bi bi-calendar3"></i>
+                                                  <span
+                                                       th:text="${#temporals.format(#temporals.createNow(), 'EEEE, dd/MM/yyyy', new java.util.Locale('vi'))}"
+                                                       >Thứ Sáu, 18/10/2025</span
+                                                  >
+                                                  &nbsp;|&nbsp;
+                                                  <i class="bi bi-person-badge"></i> <span id="header-employee-name">Nhân viên kho</span>
+                                             </p>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="col-md-4 text-end">
+                                   <a
+                                        th:href="@{/api/warehouse/debt-report/export}"
+                                        class="btn btn-light btn-lg shadow-sm"
+                                   >
+                                        <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+                                   </a>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <!-- Thông báo -->
+          <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+               <i class="bi bi-check-circle-fill me-2"></i>
+               <span th:text="${successMessage}"></span>
+               <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+               <i class="bi bi-exclamation-triangle-fill me-2"></i>
+               <span th:text="${errorMessage}"></span>
+               <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+
+          <!-- Thống kê tổng quan -->
+          <div class="row g-3 mb-4">
+               <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                         <div class="card-body">
+                              <div class="d-flex align-items-center">
+                                   <div
+                                        class="icon-box me-3"
+                                        style="
+                                             background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+                                             padding: 15px;
+                                             border-radius: 12px;
+                                        "
+                                   >
+                                        <i class="bi bi-exclamation-triangle text-white fs-3"></i>
+                                   </div>
+                                   <div>
+                                        <div class="text-muted small">TỔNG CÔNG NỢ</div>
+                                        <div class="fw-bold fs-4" style="color: #e53935">
+                                             <span th:text="${totalDebt}">0</span> ₫
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+               <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                         <div class="card-body">
+                              <div class="d-flex align-items-center">
+                                   <div
+                                        class="icon-box me-3"
+                                        style="
+                                             background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+                                             padding: 15px;
+                                             border-radius: 12px;
+                                        "
+                                   >
+                                        <i class="bi bi-building text-white fs-3"></i>
+                                   </div>
+                                   <div>
+                                        <div class="text-muted small">NHÀ CUNG CẤP CÓ NỢ</div>
+                                        <div class="fw-bold fs-4" style="color: #00897b">
+                                             <span th:text="${suppliersWithDebt}">0</span> NCC
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+               <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                         <div class="card-body">
+                              <div class="d-flex align-items-center">
+                                   <div
+                                        class="icon-box me-3"
+                                        style="
+                                             background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+                                             padding: 15px;
+                                             border-radius: 12px;
+                                        "
+                                   >
+                                        <i class="bi bi-clock-history text-white fs-3"></i>
+                                   </div>
+                                   <div>
+                                        <div class="text-muted small">LỊCH SỬ THANH TOÁN</div>
+                                        <div class="fw-bold fs-4" style="color: #1e88e5">
+                                             <span th:text="${paymentHistoryCount}">0</span> giao dịch
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <!-- Danh sách NCC có nợ -->
+          <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #00897b !important">
+               <div
+                    class="card-header py-3 text-white d-flex align-items-center justify-content-between"
+                    style="background: linear-gradient(135deg, #263238 0%, #37474f 100%)"
+               >
+                    <div class="d-flex align-items-center gap-2">
+                         <i class="bi bi-building fs-5"></i>
+                         <div class="fw-semibold fs-5">DANH SÁCH NHÀ CUNG CẤP CÓ CÔNG NỢ</div>
+                    </div>
+               </div>
+
+               <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                         <thead style="background-color: #f5f5f5">
+                              <tr>
+                                   <th><i class="bi bi-building me-2"></i>NHÀ CUNG CẤP</th>
+                                   <th style="width: 180px"><i class="bi bi-telephone me-2"></i>SỐ ĐIỆN THOẠI</th>
+                                   <th class="text-end" style="width: 200px">
+                                        <i class="bi bi-cash-coin me-2"></i>CÔNG NỢ
+                                   </th>
+                                   <th class="text-center" style="width: 150px">
+                                        <i class="bi bi-gear me-2"></i>THAO TÁC
+                                   </th>
+                              </tr>
+                         </thead>
+                         <tbody>
+                              <tr th:each="s : ${suppliersWithDebtList}" class="supplier-row">
+                                   <td>
+                                        <div class="d-flex align-items-center">
+                                             <div class="supplier-icon me-2">
+                                                  <i class="bi bi-shop"></i>
+                                             </div>
+                                             <strong th:text="${s.name}">Công ty ABC</strong>
+                                        </div>
+                                   </td>
+                                   <td>
+                                        <span class="badge bg-light text-dark">
+                                             <i class="bi bi-phone"></i>
+                                             <span th:text="${s.phone}">0123456789</span>
+                                        </span>
+                                   </td>
+                                   <td class="text-end">
+                                        <span class="badge bg-danger fs-6 px-3 py-2">
+                                             <i class="bi bi-currency-dollar me-1"></i>
+                                             <span
+                                                  th:text="${#numbers.formatDecimal(s.debt != null ? s.debt : 0, 0, 'POINT', 0, 'COMMA')}"
+                                                  >0</span
+                                             >
+                                             ₫
+                                        </span>
+                                   </td>
+                                   <td class="text-center">
+                                        <a
+                                             th:href="@{/warehouse/debt-report/pay(supplierId=${s.supplierId},supplierName=${s.name},debt=${s.debt})}"
+                                             class="btn btn-sm btn-success"
+                                             title="Thanh toán công nợ"
+                                        >
+                                             <i class="bi bi-cash-stack"></i> Thanh toán
+                                        </a>
+                                        <a
+                                             th:href="@{'/warehouse/debt-report/history/' + ${s.supplierId}}"
+                                             class="btn btn-sm btn-outline-info"
+                                             title="Xem lịch sử"
+                                        >
+                                             <i class="bi bi-clock-history"></i>
+                                        </a>
+                                   </td>
+                              </tr>
+                              <tr th:if="${#lists.isEmpty(suppliersWithDebtList)}">
+                                   <td class="text-center py-5" colspan="4">
+                                        <div class="text-muted">
+                                             <i class="bi bi-check-circle display-4 d-block mb-2 text-success"></i>
+                                             <p class="mb-0">Không có công nợ nào</p>
+                                        </div>
+                                   </td>
+                              </tr>
+                         </tbody>
+                    </table>
+               </div>
+          </div>
+     </div>
+
+     <!-- Modal Thanh toán -->
+     <div class="modal fade" id="payModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="payModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+               <div class="modal-content">
+                    <form th:action="@{/warehouse/debt-report/pay}" method="post" id="paymentForm">
+                         <div class="modal-header" style="background: linear-gradient(135deg, #00897b 0%, #00695c 100%)">
+                              <h5 class="modal-title text-white" id="payModalLabel">
+                                   <i class="bi bi-cash-stack me-2"></i>THANH TOÁN CÔNG NỢ
+                              </h5>
+                              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                         </div>
+                         <div class="modal-body">
+                              <input type="hidden" name="supplierId" id="supplierIdInput" />
+                              
+                              <div class="mb-3">
+                                   <label class="form-label fw-semibold">Nhà cung cấp</label>
+                                   <input type="text" class="form-control" id="supplierNameInput" readonly />
+                              </div>
+
+                              <div class="mb-3">
+                                   <label class="form-label fw-semibold">Công nợ hiện tại</label>
+                                   <input type="text" class="form-control" id="currentDebtInput" readonly />
+                              </div>
+
+                              <div class="mb-3">
+                                   <label class="form-label fw-semibold">
+                                        Số tiền thanh toán <span class="text-danger">*</span>
+                                   </label>
+                                   <input
+                                        type="number"
+                                        name="paymentAmount"
+                                        class="form-control form-control-lg"
+                                        min="1"
+                                        step="1000"
+                                        required
+                                   />
+                              </div>
+
+                              <div class="mb-3">
+                                   <label class="form-label fw-semibold">Hình thức thanh toán</label>
+                                   <select name="paymentMethod" class="form-select">
+                                        <option value="Tiền mặt">Tiền mặt</option>
+                                        <option value="Chuyển khoản">Chuyển khoản</option>
+                                        <option value="Thẻ tín dụng">Thẻ tín dụng</option>
+                                   </select>
+                              </div>
+
+                              <div class="mb-3">
+                                   <label class="form-label fw-semibold">Nhân viên xử lý</label>
+                                   <input type="text" name="employeeName" class="form-control" placeholder="Nhập tên nhân viên" />
+                              </div>
+
+                              <div class="mb-3">
+                                   <label class="form-label fw-semibold">Ghi chú</label>
+                                   <textarea name="note" class="form-control" rows="3" placeholder="Ghi chú thêm (nếu có)"></textarea>
+                              </div>
+                         </div>
+                         <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                              <button type="submit" class="btn btn-success">
+                                   <i class="bi bi-check-circle me-1"></i> Xác nhận thanh toán
+                              </button>
+                         </div>
+                    </form>
+               </div>
+          </div>
+     </div>
+
+     <script th:inline="javascript">
+     //<![CDATA[
+     (function() {
+          console.log('[DEBT] Script executing...');
+          
+          setTimeout(function() {
+               console.log('[DEBT] Init after 500ms');
+               
+               if (typeof bootstrap === 'undefined') {
+                    console.error('[DEBT] Bootstrap not found!');
+                    alert('Lỗi: Bootstrap chưa load');
+                    return;
+               }
+               
+               var modalEl = document.getElementById('payModal');
+               if (!modalEl) {
+                    console.error('[DEBT] Modal not found!');
+                    return;
+               }
+               
+               var payModal = new bootstrap.Modal(modalEl);
+               var buttons = document.querySelectorAll('.btn-pay');
+               
+               console.log('[DEBT] Ready! Buttons:', buttons.length);
+               
+               buttons.forEach(function(btn) {
+                    btn.onclick = function(e) {
+                         e.preventDefault();
+                         console.log('[DEBT] Click!');
+                         document.getElementById('supplierIdInput').value = this.getAttribute('data-supplier-id');
+                         document.getElementById('supplierNameInput').value = this.getAttribute('data-supplier-name');
+                         document.getElementById('currentDebtInput').value = new Intl.NumberFormat('vi-VN').format(this.getAttribute('data-debt')) + ' ₫';
+                         payModal.show();
+                    };
+               });
+          }, 500);
+     })();
+     //]]>
+     </script>
+
+     </div>
+</html>

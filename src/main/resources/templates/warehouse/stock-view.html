@@ -1,0 +1,435 @@
+﻿<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']}, null)}"
+>
+     <link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-stock.css}" />
+
+     <div data-content class="page-stock">
+          <!-- Breadcrumb với style đẹp hơn -->
+          <nav aria-label="breadcrumb" class="mb-4">
+               <ol class="breadcrumb bg-light p-3 rounded shadow-sm">
+                    <li class="breadcrumb-item">
+                         <a th:href="@{/warehouse/stock}" class="text-decoration-none">
+                              <i class="bi bi-house-door"></i> Quản lý tồn kho
+                         </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                         <i class="bi bi-book"></i> Chi tiết sách
+                    </li>
+               </ol>
+          </nav>
+
+          <!-- Card chi tiết với gradient header -->
+          <div class="card shadow-lg border-0 rounded-3 overflow-hidden">
+               <!-- Header với gradient -->
+               <div
+                    class="card-header bg-gradient text-white p-4"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+               >
+                    <div class="d-flex justify-content-between align-items-center">
+                         <div>
+                              <h3 class="mb-1 fw-bold">
+                                   <i class="bi bi-info-circle-fill"></i> Thông tin chi tiết sách
+                              </h3>
+                              <p class="mb-0 opacity-75">Xem đầy đủ thông tin về sách trong kho</p>
+                         </div>
+                         <div>
+                              <a th:href="@{/warehouse/stock}" class="btn btn-light btn-lg shadow">
+                                   <i class="bi bi-arrow-left-circle"></i> Quay lại
+                              </a>
+                         </div>
+                    </div>
+               </div>
+
+               <div class="card-body p-4">
+                    <div class="row g-4">
+                         <!-- Cột trái: Thông tin cơ bản với icon đẹp -->
+                         <div class="col-lg-6">
+                              <div class="card border-0 shadow-sm h-100">
+                                   <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                             <i class="bi bi-info-circle"></i> Thông tin cơ bản
+                                        </h5>
+                                   </div>
+                                   <div class="card-body">
+                                        <table class="table table-hover">
+                                             <tr>
+                                                  <td
+                                                       class="text-muted fw-semibold"
+                                                       style="width: 40%"
+                                                  >
+                                                       <i class="bi bi-upc-scan text-primary"></i>
+                                                       Mã sách
+                                                  </td>
+                                                  <td>
+                                                       <span
+                                                            class="badge bg-secondary"
+                                                            th:text="${book.bookId}"
+                                                            >BK001</span
+                                                       >
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td class="text-muted fw-semibold">
+                                                       <i class="bi bi-book-fill text-success"></i>
+                                                       Tên sách
+                                                  </td>
+                                                  <td>
+                                                       <strong
+                                                            th:text="${book.title}"
+                                                            class="text-dark"
+                                                            >Đắc Nhân Tâm</strong
+                                                       >
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td class="text-muted fw-semibold">
+                                                       <i class="bi bi-person-fill text-info"></i>
+                                                       Tác giả
+                                                  </td>
+                                                  <td th:text="${book.author?.name} ?: '—'">
+                                                       Dale Carnegie
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td class="text-muted fw-semibold">
+                                                       <i
+                                                            class="bi bi-bookmark-fill text-warning"
+                                                       ></i>
+                                                       Thể loại
+                                                  </td>
+                                                  <td>
+                                                       <span
+                                                            class="badge rounded-pill"
+                                                            style="
+                                                                 background: linear-gradient(
+                                                                      135deg,
+                                                                      #f093fb 0%,
+                                                                      #f5576c 100%
+                                                                 );
+                                                            "
+                                                            th:text="${book.category?.name} ?: '—'"
+                                                            >Kỹ năng sống</span
+                                                       >
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td class="text-muted fw-semibold">
+                                                       <i class="bi bi-building text-danger"></i>
+                                                       Nhà xuất bản
+                                                  </td>
+                                                  <td th:text="${book.publisher?.name} ?: '—'">
+                                                       NXB Trẻ
+                                                  </td>
+                                             </tr>
+                                        </table>
+                                   </div>
+                              </div>
+                         </div>
+
+                         <!-- Cột phải: Giá và tồn kho với stats cards -->
+                         <div class="col-lg-6">
+                              <div class="row g-3">
+                                   <!-- Giá nhập -->
+                                   <div class="col-6">
+                                        <div
+                                             class="card border-0 shadow-sm"
+                                             style="
+                                                  background: linear-gradient(
+                                                       135deg,
+                                                       #a8edea 0%,
+                                                       #fed6e3 100%
+                                                  );
+                                             "
+                                        >
+                                             <div class="card-body text-center">
+                                                  <i
+                                                       class="bi bi-cash-coin display-4 text-primary mb-2"
+                                                  ></i>
+                                                  <p class="text-muted small mb-1">Giá nhập</p>
+                                                  <h4 class="mb-0 fw-bold text-dark">
+                                                       <span
+                                                            th:if="${book.importPrice != null}"
+                                                            th:text="${#numbers.formatDecimal(book.importPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                                                            >50,000 đ</span
+                                                       >
+                                                       <span
+                                                            th:if="${book.importPrice == null}"
+                                                            class="text-muted"
+                                                            >—</span
+                                                       >
+                                                  </h4>
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   <!-- Giá bán -->
+                                   <div class="col-6">
+                                        <div
+                                             class="card border-0 shadow-sm"
+                                             style="
+                                                  background: linear-gradient(
+                                                       135deg,
+                                                       #fa709a 0%,
+                                                       #fee140 100%
+                                                  );
+                                             "
+                                        >
+                                             <div class="card-body text-center">
+                                                  <i
+                                                       class="bi bi-currency-dollar display-4 text-success mb-2"
+                                                  ></i>
+                                                  <p class="text-muted small mb-1">Giá bán</p>
+                                                  <h4 class="mb-0 fw-bold text-dark">
+                                                       <span
+                                                            th:if="${book.salePrice != null}"
+                                                            th:text="${#numbers.formatDecimal(book.salePrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                                                            >86,000 đ</span
+                                                       >
+                                                       <span
+                                                            th:if="${book.salePrice == null}"
+                                                            class="text-muted"
+                                                            >—</span
+                                                       >
+                                                  </h4>
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   <!-- Số lượng tồn - CÓ FORM CHỈNH SỬA (CHỈ ADMIN) -->
+                                   <div class="col-6">
+                                        <div
+                                             class="card border-0 shadow-sm"
+                                             style="
+                                                  background: linear-gradient(
+                                                       135deg,
+                                                       #667eea 0%,
+                                                       #764ba2 100%
+                                                  );
+                                             "
+                                        >
+                                             <div class="card-body text-center text-white">
+                                                  <i class="bi bi-box-seam display-4 mb-2"></i>
+                                                  <p class="small mb-2 opacity-75">Số lượng tồn</p>
+
+                                                  <!-- ADMIN: Form sửa số lượng -->
+                                                  <div th:if="${isAdmin}">
+                                                       <form
+                                                            method="post"
+                                                            th:action="@{/warehouse/stock/update-quantity/{id}(id=${book.bookId})}"
+                                                            class="d-inline-block"
+                                                       >
+                                                            <div class="input-group input-group-lg">
+                                                                 <button
+                                                                      class="btn btn-light btn-sm"
+                                                                      type="button"
+                                                                      onclick="this.nextElementSibling.stepDown()"
+                                                                 >
+                                                                      <i
+                                                                           class="bi bi-dash-circle-fill text-danger"
+                                                                      ></i>
+                                                                 </button>
+                                                                 <input
+                                                                      type="number"
+                                                                      class="form-control text-center fw-bold fs-3"
+                                                                      name="quantity"
+                                                                      th:value="${book.quantity}"
+                                                                      min="0"
+                                                                      step="1"
+                                                                      style="
+                                                                           max-width: 120px;
+                                                                           background: rgba(
+                                                                                255,
+                                                                                255,
+                                                                                255,
+                                                                                0.9
+                                                                           );
+                                                                           color: #667eea;
+                                                                      "
+                                                                      required
+                                                                 />
+                                                                 <button
+                                                                      class="btn btn-light btn-sm"
+                                                                      type="button"
+                                                                      onclick="this.previousElementSibling.stepUp()"
+                                                                 >
+                                                                      <i
+                                                                           class="bi bi-plus-circle-fill text-success"
+                                                                      ></i>
+                                                                 </button>
+                                                            </div>
+                                                            <small class="d-block mt-2 opacity-75"
+                                                                 >quyển</small
+                                                            >
+                                                            <button
+                                                                 type="submit"
+                                                                 class="btn btn-warning btn-sm mt-2 fw-semibold shadow"
+                                                            >
+                                                                 <i class="bi bi-save"></i> Lưu thay
+                                                                 đổi
+                                                            </button>
+                                                       </form>
+                                                  </div>
+
+                                                  <!-- NHÂN VIÊN: Chỉ hiển thị -->
+                                                  <div th:unless="${isAdmin}">
+                                                       <h2 class="mb-0 fw-bold">
+                                                            <span th:text="${book.quantity} ?: 0"
+                                                                 >150</span
+                                                            >
+                                                       </h2>
+                                                       <small>quyển</small>
+                                                  </div>
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   <!-- Trạng thái -->
+                                   <div class="col-6">
+                                        <div
+                                             class="card border-0 shadow-sm"
+                                             style="
+                                                  background: linear-gradient(
+                                                       135deg,
+                                                       #ffecd2 0%,
+                                                       #fcb69f 100%
+                                                  );
+                                             "
+                                        >
+                                             <div class="card-body text-center">
+                                                  <i
+                                                       class="bi bi-shield-check display-4 text-success mb-2"
+                                                  ></i>
+                                                  <p class="text-muted small mb-2">Trạng thái</p>
+                                                  <div>
+                                                       <span
+                                                            th:if="${book.quantity > 10}"
+                                                            class="badge bg-success fs-6 px-3 py-2"
+                                                       >
+                                                            <i class="bi bi-check-circle-fill"></i>
+                                                            Còn hàng
+                                                       </span>
+                                                       <span
+                                                            th:if="${book.quantity <= 10 && book.quantity > 0}"
+                                                            class="badge bg-warning fs-6 px-3 py-2"
+                                                       >
+                                                            <i
+                                                                 class="bi bi-exclamation-triangle-fill"
+                                                            ></i>
+                                                            Sắp hết
+                                                       </span>
+                                                       <span
+                                                            th:if="${book.quantity <= 0}"
+                                                            class="badge bg-danger fs-6 px-3 py-2"
+                                                       >
+                                                            <i class="bi bi-x-circle-fill"></i> Hết
+                                                            hàng
+                                                       </span>
+                                                  </div>
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   <!-- Giá trị tồn kho -->
+                                   <div class="col-12">
+                                        <div
+                                             class="card border-0 shadow-sm"
+                                             style="
+                                                  background: linear-gradient(
+                                                       135deg,
+                                                       #4facfe 0%,
+                                                       #00f2fe 100%
+                                                  );
+                                             "
+                                        >
+                                             <div class="card-body text-center text-white">
+                                                  <i class="bi bi-wallet2 display-5 mb-2"></i>
+                                                  <p class="small mb-1 opacity-75">
+                                                       Tổng giá trị tồn kho
+                                                  </p>
+                                                  <h3 class="mb-0 fw-bold">
+                                                       <span
+                                                            th:if="${book.salePrice != null && book.quantity != null}"
+                                                            th:text="${#numbers.formatDecimal(book.salePrice * book.quantity, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                                                            >12,900,000 đ</span
+                                                       >
+                                                       <span
+                                                            th:if="${book.salePrice == null || book.quantity == null}"
+                                                            >—</span
+                                                       >
+                                                  </h3>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+
+                    <!-- Thông tin hệ thống với style đẹp -->
+                    <hr class="my-4 opacity-25" />
+                    <div class="row text-center">
+                         <div class="col-md-6">
+                              <div class="p-3 bg-light rounded">
+                                   <i class="bi bi-calendar-plus text-primary"></i>
+                                   <small class="text-muted d-block">Ngày tạo</small>
+                                   <strong
+                                        th:text="${#temporals.format(book.createAt, 'dd/MM/yyyy HH:mm')}"
+                                        >18/10/2025 14:30</strong
+                                   >
+                              </div>
+                         </div>
+                         <div class="col-md-6">
+                              <div class="p-3 bg-light rounded">
+                                   <i class="bi bi-calendar-check text-success"></i>
+                                   <small class="text-muted d-block">Lần cập nhật cuối</small>
+                                   <strong
+                                        th:text="${#temporals.format(book.updateAt, 'dd/MM/yyyy HH:mm')}"
+                                        >18/10/2025 15:45</strong
+                                   >
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+     </div>
+
+     <!-- Custom styles -->
+     <style>
+          .bg-gradient {
+               position: relative;
+               overflow: hidden;
+          }
+          .bg-gradient::before {
+               content: "";
+               position: absolute;
+               top: -50%;
+               right: -50%;
+               bottom: -50%;
+               left: -50%;
+               background: linear-gradient(
+                    45deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.1),
+                    transparent
+               );
+               transform: rotate(45deg);
+               animation: shimmer 3s infinite;
+          }
+          @keyframes shimmer {
+               0% {
+                    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+               }
+               100% {
+                    transform: translateX(100%) translateY(100%) rotate(45deg);
+               }
+          }
+          .card {
+               transition: transform 0.3s ease, box-shadow 0.3s ease;
+          }
+          .card:hover {
+               transform: translateY(-5px);
+               box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+          }
+     </style>
+</html>

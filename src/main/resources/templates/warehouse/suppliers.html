@@ -1,113 +1,294 @@
-<!doctype html>
-<html xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']})}">
+<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     th:replace="~{fragments/layout :: base(~{::div[@data-content]}, ~{::link[@data-extra='css']}, ~{::script[@data-extra='js']})}"
+>
+     <!-- CSS riêng của trang NCC -->
+     <link data-extra="css" rel="stylesheet" th:href="@{/css/warehouse-suppliers.css}" />
+     
+     <!-- JavaScript riêng của trang -->
+     <script data-extra="js">
+          // Load employee name into page header
+          document.addEventListener('DOMContentLoaded', async function() {
+               try {
+                    const response = await fetch('/api/v1/auth/session');
+                    const data = await response.json();
+                    if (data.authenticated && data.userName) {
+                         const headerNameEl = document.getElementById('header-employee-name');
+                         if (headerNameEl) {
+                              headerNameEl.textContent = data.userName;
+                         }
+                    }
+               } catch (error) {
+                    console.error('Error loading employee name:', error);
+               }
+          });
+     </script>
 
-<!-- CSS riêng của trang NCC -->
-<link data-extra="css" rel="stylesheet"
-	th:href="@{/css/warehouse-suppliers.css}" />
+     <div data-content class="page-suppliers">
+          <!-- Professional Warehouse Header for Suppliers -->
+          <div class="warehouse-header mb-4">
+               <div
+                    class="card border-0 shadow-lg"
+                    style="
+                         background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+                         border-radius: 15px;
+                    "
+               >
+                    <div class="card-body p-4">
+                         <div class="row align-items-center">
+                              <div class="col-md-8">
+                                   <div class="d-flex align-items-center mb-2">
+                                        <div
+                                             class="icon-box me-3"
+                                             style="
+                                                  background: rgba(255, 255, 255, 0.2);
+                                                  padding: 15px;
+                                                  border-radius: 12px;
+                                             "
+                                        >
+                                             <i
+                                                  class="bi bi-truck"
+                                                  style="font-size: 2.5rem; color: white"
+                                             ></i>
+                                        </div>
+                                        <div>
+                                             <h2 class="text-white mb-1 fw-bold">
+                                                  <i class="bi bi-building"></i> QUẢN LÝ NHÀ CUNG
+                                                  CẤP
+                                             </h2>
+                                             <p class="text-white mb-0 opacity-75">
+                                                  <i class="bi bi-calendar3"></i>
+                                                  <span
+                                                       th:text="${#temporals.format(#temporals.createNow(), 'EEEE, dd/MM/yyyy', new java.util.Locale('vi'))}"
+                                                       >Thứ Sáu, 18/10/2025</span
+                                                  >
+                                                  &nbsp;|&nbsp;
+                                                  <i class="bi bi-person-badge"></i> <span id="header-employee-name">Nhân viên kho</span>
+                                             </p>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="col-md-4 text-end">
+                                   <button
+                                        class="btn btn-light btn-lg shadow-sm"
+                                        onclick="document.getElementById('supplierForm').scrollIntoView({behavior: 'smooth'})"
+                                   >
+                                        <i class="bi bi-plus-circle-fill"></i> Thêm NCC mới
+                                   </button>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
 
-<div data-content class="page-suppliers">
-	<!-- Card: Form thêm nhà cung cấp -->
-	<div class="card shadow-sm border-0 mb-4">
-		<div
-			class="card-header py-3 gradient-header text-white d-flex align-items-center gap-2">
-			<i class="bi bi-plus-lg"></i>
-			<div>
-				<div class="fw-semibold">Thêm nhà cung cấp mới</div>
-				<div class="small opacity-75">Nhập thông tin chi tiết của nhà
-					cung cấp</div>
-			</div>
-		</div>
+          <!-- Card: Form thêm nhà cung cấp -->
+          <div
+               id="supplierForm"
+               class="card shadow-sm border-0 mb-4"
+               style="border-left: 4px solid #00897b !important"
+          >
+               <div
+                    class="card-header py-3 text-white d-flex align-items-center gap-2"
+                    style="background: linear-gradient(135deg, #263238 0%, #37474f 100%)"
+               >
+                    <i class="bi bi-plus-lg fs-5"></i>
+                    <div>
+                         <div class="fw-semibold fs-5">THÊM NHÀ CUNG CẤP MỚI</div>
+                         <div class="small opacity-75">
+                              Nhập thông tin chi tiết của nhà cung cấp
+                         </div>
+                    </div>
+               </div>
 
-		<form class="card-body" th:action="${supplierForm.supplierId != null ? '/warehouse/suppliers/' + supplierForm.supplierId : '/warehouse/suppliers'}" method="post">
-			<div class="row g-3">
-				<div class="col-md-6">
-					<label class="form-label"><i class="bi bi-building me-1"></i>
-						Tên nhà cung cấp</label> <input name="name" type="text"
-						class="form-control" placeholder="Nhập tên công ty hoặc tổ chức"
-						required
-						th:value="${supplierForm != null ? supplierForm.name : ''}">
-				</div>
-				<div class="col-md-6">
-					<label class="form-label"><i class="bi bi-telephone me-1"></i>
-						Số điện thoại</label> <input name="phone" type="text" class="form-control"
-						placeholder="Nhập số điện thoại liên hệ"
-						th:value="${supplierForm != null ? supplierForm.phone : ''}">
-				</div>
-				<div class="col-12">
-					<label class="form-label"><i class="bi bi-geo-alt me-1"></i>
-						Địa chỉ</label>
-					<textarea name="address" class="form-control" rows="3"
-						placeholder="Nhập địa chỉ chi tiết"
-						th:text="${supplierForm != null ? supplierForm.address : ''}"></textarea>
-				</div>
-			</div>
+               <form
+                    class="card-body p-4"
+                    th:action="${supplierForm.supplierId != null ? '/warehouse/suppliers/' + supplierForm.supplierId : '/warehouse/suppliers'}"
+                    method="post"
+               >
+                    <div class="row g-3">
+                         <div class="col-md-6">
+                              <label class="form-label fw-semibold">
+                                   <i class="bi bi-building me-1 text-primary"></i> Tên nhà cung cấp
+                                   <span class="text-danger">*</span>
+                              </label>
+                              <input
+                                   name="name"
+                                   type="text"
+                                   class="form-control form-control-lg"
+                                   placeholder="Nhập tên công ty hoặc tổ chức"
+                                   required
+                                   th:value="${supplierForm != null ? supplierForm.name : ''}"
+                              />
+                         </div>
+                         <div class="col-md-6">
+                              <label class="form-label fw-semibold">
+                                   <i class="bi bi-telephone me-1 text-success"></i> Số điện thoại
+                              </label>
+                              <input
+                                   name="phone"
+                                   type="text"
+                                   class="form-control form-control-lg"
+                                   placeholder="Nhập số điện thoại liên hệ"
+                                   th:value="${supplierForm != null ? supplierForm.phone : ''}"
+                              />
+                         </div>
+                         <div class="col-12">
+                              <label class="form-label fw-semibold">
+                                   <i class="bi bi-geo-alt me-1 text-info"></i> Địa chỉ
+                              </label>
+                              <textarea
+                                   name="address"
+                                   class="form-control form-control-lg"
+                                   rows="3"
+                                   placeholder="Nhập địa chỉ chi tiết"
+                                   th:text="${supplierForm != null ? supplierForm.address : ''}"
+                              ></textarea>
+                         </div>
+                    </div>
 
-			<div class="mt-3 pt-3 border-top d-flex justify-content-between">
-				<a th:href="@{/warehouse/suppliers}" class="btn btn-light"><i
-					class="bi bi-x-lg me-1"></i> Hủy bỏ</a>
-				<div class="d-flex gap-2">
-					<button type="button" class="btn btn-outline-secondary">
-						<i class="bi bi-floppy me-1"></i> Lưu nháp
-					</button>
-					<button type="submit" class="btn btn-primary">
-						<i class="bi bi-plus-lg me-1" th:if="${supplierForm.supplierId == null}"></i>
-						<i class="bi bi-check-lg me-1" th:if="${supplierForm.supplierId != null}"></i>
-						<span th:text="${supplierForm.supplierId != null ? 'Cập nhật' : 'Thêm nhà cung cấp'}"></span>
-					</button>
-				</div>
-			</div>
-		</form>
-	</div>
+                    <div class="mt-4 pt-4 border-top d-flex justify-content-between">
+                         <button type="reset" class="btn btn-outline-secondary btn-lg">
+                              <i class="bi bi-x-circle me-1"></i> Xóa thông tin
+                         </button>
+                         <div class="d-flex gap-2">
+                              <button
+                                   type="submit"
+                                   class="btn btn-primary btn-lg shadow"
+                                   style="
+                                        background: linear-gradient(
+                                             135deg,
+                                             #00897b 0%,
+                                             #00695c 100%
+                                        );
+                                        border: none;
+                                   "
+                              >
+                                   <i
+                                        class="bi bi-plus-lg me-1"
+                                        th:if="${supplierForm.supplierId == null}"
+                                   ></i>
+                                   <i
+                                        class="bi bi-check-lg me-1"
+                                        th:if="${supplierForm.supplierId != null}"
+                                   ></i>
+                                   <span
+                                        th:text="${supplierForm.supplierId != null ? 'Cập nhật' : 'Thêm nhà cung cấp'}"
+                                   ></span>
+                              </button>
+                         </div>
+                    </div>
+               </form>
+          </div>
 
-	<!-- Danh sách nhà cung cấp -->
-	<div class="d-flex justify-content-between align-items-center mb-2">
-		<h6 class="m-0">Danh sách nhà cung cấp</h6>
-		<form class="d-flex align-items-center gap-2" method="get"
-			th:action="@{/warehouse/suppliers}">
-			<div class="input-group search">
-				<span class="input-group-text"><i class="bi bi-search"></i></span> <input
-					type="text" class="form-control" name="q" th:value="${q}"
-					placeholder="Tìm kiếm nhà cung cấp...">
-			</div>
-			<button class="btn btn-outline-secondary">
-				<i class="bi bi-funnel"></i> Lọc
-			</button>
-		</form>
-	</div>
+          <!-- Danh sách nhà cung cấp -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+               <h5 class="m-0 fw-bold" style="color: #263238">
+                    <i class="bi bi-list-ul me-2"></i>DANH SÁCH NHÀ CUNG CẤP
+               </h5>
+               <form
+                    class="d-flex align-items-center gap-2"
+                    method="get"
+                    th:action="@{/warehouse/suppliers}"
+               >
+                    <div class="input-group search shadow-sm" style="width: 350px">
+                         <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                         <input
+                              type="text"
+                              class="form-control border-start-0"
+                              name="q"
+                              th:value="${q}"
+                              placeholder="Tìm kiếm nhà cung cấp..."
+                         />
+                    </div>
+                    <button class="btn btn-outline-secondary">
+                         <i class="bi bi-funnel me-1"></i> Lọc
+                    </button>
+               </form>
+          </div>
 
-	<div class="card shadow-sm border-0">
-		<div class="table-responsive">
-			<table class="table align-middle mb-0">
-				<thead>
-					<tr>
-						<th>Tên nhà cung cấp</th>
-						<th style="width: 180px">Số điện thoại</th>
-						<th>Địa chỉ</th>
-						<th class="text-center" style="width: 120px">Thao tác</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr th:each="s : ${suppliers}">
-						<td th:text="${s.name}">Công ty TNHH ABC</td>
-						<td th:text="${s.phone}">0123 456 789</td>
-						<td th:text="${s.address}">123 Đường ABC, Quận 1, TP.HCM</td>
-						<td class="text-center"><a
-							th:href="@{'/warehouse/suppliers/' + ${s.supplierId} + '/edit'}"
-							class="btn-ghost" title="Sửa"> <i class="bi bi-pencil"></i>
-						</a> <a
-							th:href="@{'/warehouse/suppliers/' + ${s.supplierId} + '/delete'}"
-							class="btn-ghost text-danger" title="Xóa"
-							onclick="return confirm('Xóa nhà cung cấp này?')"> <i
-								class="bi bi-trash"></i>
-						</a></td>
-					</tr>
-					<tr th:if="${#lists.isEmpty(suppliers)}">
-						<td class="text-center py-4" colspan="4">Không có dữ liệu</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-</div>
+          <div class="card shadow-sm border-0" style="border-left: 4px solid #00897b !important">
+               <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                         <thead>
+                              <tr>
+                                   <th class="text-dark fw-bold fs-6">Tên nhà cung cấp</th>
+                                   <th class="text-dark fw-bold fs-6" style="width: 180px">
+                                        Số điện thoại
+                                   </th>
+                                   <th class="text-dark fw-bold fs-6">Địa chỉ</th>
+                                   <th
+                                        class="text-center text-dark fw-bold fs-6"
+                                        style="width: 180px"
+                                   >
+                                        Công nợ
+                                   </th>
+                                   <th
+                                        class="text-center text-dark fw-bold fs-6"
+                                        style="width: 150px"
+                                   >
+                                        Thao tác
+                                   </th>
+                              </tr>
+                         </thead>
+                         <tbody>
+                              <tr th:each="s : ${suppliers}" class="supplier-row">
+                                   <td>
+                                        <div class="d-flex align-items-center">
+                                             <div class="supplier-icon me-2">
+                                                  <i class="bi bi-shop"></i>
+                                             </div>
+                                             <strong th:text="${s.name}">Công ty TNHH ABC</strong>
+                                        </div>
+                                   </td>
+                                   <td>
+                                        <span class="badge bg-light text-dark">
+                                             <i class="bi bi-phone"></i>
+                                             <span th:text="${s.phone}">0123 456 789</span>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <small class="text-muted">
+                                             <i class="bi bi-pin-map"></i>
+                                             <span th:text="${s.address}"
+                                                  >123 Đường ABC, Quận 1, TP.HCM</span
+                                             >
+                                        </small>
+                                   </td>
+                                   <td class="text-center">
+                                        <span
+                                             class="badge fs-6 px-3 py-2"
+                                             th:classappend="${s.debt != null && s.debt > 0} ? 'bg-danger' : 'bg-success'"
+                                        >
+                                             <i class="bi bi-currency-dollar me-1"></i>
+                                             <span
+                                                  th:text="${#numbers.formatDecimal(s.debt != null ? s.debt : 0, 0, 'POINT', 0, 'COMMA')}"
+                                                  >0</span
+                                             >
+                                             ₫
+                                        </span>
+                                   </td>
+                                   <td class="text-center">
+                                        <a
+                                             th:href="@{'/warehouse/suppliers/' + ${s.supplierId} + '/edit'}"
+                                             class="btn btn-sm btn-outline-primary"
+                                             title="Sửa thông tin nhà cung cấp"
+                                        >
+                                             <i class="bi bi-pencil-square me-1"></i> Sửa
+                                        </a>
+                                   </td>
+                              </tr>
+                              <tr th:if="${#lists.isEmpty(suppliers)}">
+                                   <td class="text-center py-5" colspan="5">
+                                        <div class="text-muted">
+                                             <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                                             <p class="mb-0">Chưa có nhà cung cấp nào</p>
+                                        </div>
+                                   </td>
+                              </tr>
+                         </tbody>
+                    </table>
+               </div>
+          </div>
+     </div>
 </html>

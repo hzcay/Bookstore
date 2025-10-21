@@ -31,6 +31,12 @@ public class Inventory {
     @Column(name = "quantity")
     private Integer quantity;
     
+    @Column(name = "import_price")
+    private Double importPrice;
+    
+    @Column(name = "total_amount")
+    private Double totalAmount;
+
     @Column(name = "import_date")
     private LocalDateTime importDate;
     

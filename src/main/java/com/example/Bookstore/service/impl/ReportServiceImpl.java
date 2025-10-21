@@ -62,42 +62,42 @@ public class ReportServiceImpl implements ReportService {
         ReportDTO.InventoryReport report = new ReportDTO.InventoryReport();
         report.setReportType("inventory");
         
-        try {
-            // Query thực tế từ database
-            List<Book> allBooks = bookRepository.findAll();
-            
-            int totalBooks = allBooks.size();
-            int totalQuantity = allBooks.stream()
-                .filter(book -> book.getQuantity() != null)
-                .mapToInt(Book::getQuantity)
-                .sum();
-            double totalValue = allBooks.stream()
-                .filter(book -> book.getQuantity() != null && book.getImportPrice() != null)
-                .mapToDouble(b -> b.getQuantity() * b.getImportPrice())
-                .sum();
-            int lowStockCount = (int) allBooks.stream()
-                .filter(book -> book.getQuantity() != null && book.getQuantity() < 10)
-                .count();
-            
-            report.setTotalBooks(totalBooks);
-            report.setTotalQuantity(totalQuantity);
-            report.setTotalValue(totalValue);
-            report.setLowStockCount(lowStockCount);
-            
-            System.out.println("📦 Generating real inventory report:");
-            System.out.println("📚 Total books: " + totalBooks);
-            System.out.println("📦 Total quantity: " + totalQuantity);
-            System.out.println("💰 Total value: " + totalValue);
-            System.out.println("⚠️ Low stock count: " + lowStockCount);
-            
-        } catch (Exception e) {
-            System.err.println("❌ Error generating inventory report: " + e.getMessage());
-            e.printStackTrace();
-            report.setTotalBooks(0);
-            report.setTotalQuantity(0);
-            report.setTotalValue(0.0);
-            report.setLowStockCount(0);
-        }
+        // Tính tổng số loại sách (đang hoạt động)
+        Long totalBooks = bookRepository.countByStatus(1);
+        report.setTotalBooks(totalBooks != null ? totalBooks.intValue() : 0);
+        
+        // Tổng số lượng tồn kho
+        Long totalQty = bookRepository.sumAllQuantity();
+        report.setTotalQuantity(totalQty != null ? totalQty.intValue() : 0);
+        
+        // Giá trị kho = SUM(quantity * salePrice)
+        Double totalValue = bookRepository.sumInventoryValue();
+        report.setTotalValue(totalValue != null ? totalValue : 0.0);
+        
+        // Số sách sắp hết (quantity <= 10)
+        Integer lowStockCount = bookRepository.countLowStock(10);
+        report.setLowStockCount(lowStockCount != null ? lowStockCount : 0);
+        
+        // Phân bổ tồn kho theo thể loại
+        Map<String, Integer> stockByCategory = new HashMap<>();
+        bookRepository.groupByCategory().forEach(row -> 
+            stockByCategory.put(row.getCategoryName(), row.getTotalQty())
+        );
+        report.setStockByCategory(stockByCategory);
+        
+        // Phân bổ tồn kho theo tác giả
+        Map<String, Integer> stockByAuthor = new HashMap<>();
+        bookRepository.groupByAuthor().forEach(row -> 
+            stockByAuthor.put(row.getAuthorName(), row.getTotalQty())
+        );
+        report.setStockByAuthor(stockByAuthor);
+        
+        // Phân bổ tồn kho theo nhà xuất bản
+        Map<String, Integer> stockByPublisher = new HashMap<>();
+        bookRepository.groupByPublisher().forEach(row -> 
+            stockByPublisher.put(row.getPublisherName(), row.getTotalQty())
+        );
+        report.setStockByPublisher(stockByPublisher);
         
         return report;
     }

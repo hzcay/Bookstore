@@ -118,5 +118,36 @@ public class PromotionServiceImpl implements PromotionService {
         dto.setStatus(promotion.getStatus());
         return dto;
     }
+
+    @Override
+    public List<PromotionDTO> listActive(Double subtotal) {
+        var now = LocalDateTime.now();
+        return promotionRepository.findByStatusAndExpireDateAfterOrderByExpireDateAsc(1, now)
+                .stream()
+                .filter(p -> subtotal == null || subtotal >= nz(p.getMinValue()))
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Override
+    public Optional<PromotionDTO> validate(String code, Double subtotal) {
+        var now = LocalDateTime.now();
+        return promotionRepository.findByCodeIgnoreCaseAndStatusAndExpireDateAfter(code, 1, now)
+                .filter(p -> subtotal == null || subtotal >= nz(p.getMinValue()))
+                .map(this::toDTO);
+    }
+
+    private PromotionDTO toDTO(Promotion p) {
+        var dto = new PromotionDTO();
+        dto.setPromoId(p.getPromoId());
+        dto.setCode(p.getCode());
+        dto.setDiscount(nz(p.getDiscount()));
+        dto.setMinValue(nz(p.getMinValue()));
+        dto.setExpireDate(p.getExpireDate());
+        dto.setStatus(p.getStatus());
+        return dto;
+    }
+
+    private static double nz(Double v) { return v == null ? 0d : v; }
 }
 

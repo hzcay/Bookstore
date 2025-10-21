@@ -26,7 +26,8 @@ public class ProfileController {
     @GetMapping("/profile")
     public String profile(HttpSession session, Model model) {
         String customerId = (String) session.getAttribute(SESSION_UID);
-        if (customerId == null || customerId.isBlank()) return "redirect:/login";
+        if (customerId == null || customerId.isBlank())
+            return "redirect:/login";
 
         Customer me = customerRepository.findByCustomerIdAndStatus(customerId, 1)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
@@ -36,26 +37,30 @@ public class ProfileController {
         form.setEmail(me.getEmail());
         form.setPhone(me.getPhone());
         form.setAddress(me.getAddress());
-
-        model.addAttribute("uri", "/profile");
+        form.setAvatarUrl(null);
+        form.setEmailNotify(Boolean.TRUE);
+        form.setSmsNotify(Boolean.FALSE);
         model.addAttribute("form", form);
+        model.addAttribute("uri", "/profile");
         model.addAttribute("points", me.getPoints());
         return "profile";
     }
 
     @PostMapping("/profile")
     public String update(HttpSession session,
-                         @Valid @ModelAttribute("form") UpdateProfileRequest form,
-                         BindingResult br,
-                         Model model) {
+            @Valid @ModelAttribute("form") UpdateProfileRequest form,
+            BindingResult br,
+            Model model) {
         String customerId = (String) session.getAttribute(SESSION_UID);
-        if (customerId == null || customerId.isBlank()) return "redirect:/login";
+        if (customerId == null || customerId.isBlank())
+            return "redirect:/login";
 
         Customer me = customerRepository.findByCustomerIdAndStatus(customerId, 1)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
         if (!br.hasErrors()) {
             try {
+                // Service của bạn đã nhận customerId rồi — hợp lý
                 customerService.updateProfile(me.getCustomerId(), form);
                 model.addAttribute("success", "Đã lưu thay đổi.");
             } catch (IllegalArgumentException ex) {
@@ -67,5 +72,6 @@ public class ProfileController {
         model.addAttribute("points", me.getPoints());
         return "profile";
     }
+
 }
 

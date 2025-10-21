@@ -55,4 +55,18 @@ public interface ShipmentRepository extends JpaRepository<Shipment, String> {
     Optional<Double> sumCODByDate(@Param("shipperId") String shipperId,
                                   @Param("from") LocalDateTime from,
                                   @Param("to") LocalDateTime to);
+    
+    // Lấy tất cả shipments với details (JOIN FETCH)
+    @Query("SELECT s FROM Shipment s LEFT JOIN FETCH s.order o LEFT JOIN FETCH o.customer LEFT JOIN FETCH s.shipper")
+    List<Shipment> findAllWithDetails();
+    
+    // Lấy shipments theo status với details
+    @Query("SELECT s FROM Shipment s LEFT JOIN FETCH s.order o LEFT JOIN FETCH o.customer LEFT JOIN FETCH s.shipper WHERE s.status = :status")
+    List<Shipment> findByStatusWithDetails(@Param("status") Shipment.ShipmentStatus status);
+    
+    // Lấy shipments theo shipper với details
+    @Query("SELECT s FROM Shipment s LEFT JOIN FETCH s.order o LEFT JOIN FETCH o.customer LEFT JOIN FETCH s.shipper WHERE s.shipper.employeeId = :shipperId")
+    List<Shipment> findByShipperEmployeeIdWithDetails(@Param("shipperId") String shipperId);
+
+        List<Shipment> findByOrderOrderIdOrderByPickupTimeAsc(String orderId);
 }

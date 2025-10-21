@@ -36,16 +36,8 @@ public class InventoryServiceImpl implements InventoryService {
   @Override
   @Transactional(readOnly = true)
   public Page<Inventory> listReceipts(LocalDateTime from, LocalDateTime to, Pageable pageable) {
-    // Use conditional logic to avoid IS NULL issues with SQL Server
-    if (from == null && to == null) {
-      return inventoryRepo.findAll(pageable);
-    } else if (from == null) {
-      return inventoryRepo.findByImportDateBefore(to, pageable);
-    } else if (to == null) {
-      return inventoryRepo.findByImportDateAfter(from, pageable);
-    } else {
-      return inventoryRepo.findByImportDateBetween(from, to, pageable);
-    }
+    // Use native query to avoid IS NULL issues with PostgreSQL
+    return inventoryRepo.findByDateRangeNative(from, to, pageable);
   }
 
   @Override
@@ -67,9 +59,17 @@ public class InventoryServiceImpl implements InventoryService {
     inv.setBook(book);
     inv.setSupplier(supplier);
     inv.setQuantity(req.quantity());              // nhập: dương; xuất: âm (nếu có)
+    inv.setImportPrice(req.importPrice());
+    inv.setTotalAmount(req.quantity() * req.importPrice());
     inv.setImportDate(LocalDateTime.now());
     inv.setStatus(1);
     inventoryRepo.save(inv);
+
+    // Cập nhật nợ cho nhà cung cấp
+    double totalAmount = req.quantity() * req.importPrice();
+    double currentDebt = supplier.getDebt() != null ? supplier.getDebt() : 0.0;
+    supplier.setDebt(currentDebt + totalAmount);
+    supplierRepo.save(supplier);
 
     // Nếu bảng Book có cột quantity (theo báo cáo có), cập nhật tồn ngay:
     if (book.getQuantity() != null) {
@@ -117,8 +117,6 @@ public class InventoryServiceImpl implements InventoryService {
     long totalQuantity = safe(bookRepo.sumQuantityFiltered(keyword, categoryId));
     long lowStockCount = rows.stream().filter(x -> x.stock() <= 10).count();
 
-    // Giá trị tồn kho = SUM(stock * salePrice) trên TRANG HIỆN TẠI (nhanh).
-    // Nếu muốn tính toàn bộ dữ liệu, tạo query tổng riêng ở repo.
     long inventoryValue = page.getContent().stream()
         .mapToLong(a -> (a.getStock() == null ? 0L : a.getStock())
                      * (a.getPrice() == null ? 0L : a.getPrice().longValue()))
@@ -132,5 +130,15 @@ public class InventoryServiceImpl implements InventoryService {
     return (s == null || s.isBlank()) ? "—" : s;
   }
   private static long safe(Long v) { return v == null ? 0L : v; }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<Inventory> listReceiptsForExport(LocalDateTime from, LocalDateTime to) {
+    // Get all receipts without pagination for Excel export
+    return inventoryRepo.findByDateRangeNative(from, to, Pageable.unpaged()).getContent();
+  }
+
+
+
 }
 

@@ -49,39 +49,41 @@ public interface BookRepository extends JpaRepository<Book, String>, JpaSpecific
     }
     
     @Query(
-        value = """
-            SELECT 
-                b.bookID        AS bookId,
-                b.title         AS title,
-                a.name          AS authorName,
-                c.name          AS categoryName,
-                COALESCE(b.quantity,0) AS stock,
-                b.sale_price    AS price
-            FROM books b
-                LEFT JOIN authors    a ON a.authorID   = b.authorID
-                LEFT JOIN categories c ON c.categoryID = b.categoryID
-            WHERE (:kw IS NULL OR :kw = '' 
-                     OR LOWER(b.title)  LIKE LOWER(CONCAT('%', :kw, '%'))
-                     OR LOWER(b.bookID) LIKE LOWER(CONCAT('%', :kw, '%'))
-                  )
-                AND (:cat IS NULL OR :cat = '' OR b.categoryID = :cat)
-            ORDER BY b.title ASC
-            """,
-        countQuery = """
-            SELECT COUNT(*) 
-            FROM books b
-                LEFT JOIN categories c ON c.categoryID = b.categoryID
-            WHERE (:kw IS NULL OR :kw = '' 
-                     OR LOWER(b.title)  LIKE LOWER(CONCAT('%', :kw, '%'))
-                     OR LOWER(b.bookID) LIKE LOWER(CONCAT('%', :kw, '%'))
-                  )
-                AND (:cat IS NULL OR :cat = '' OR b.categoryID = :cat)
-            """,
-        nativeQuery = true
-    )
-    Page<StockAgg> pageStockAgg(@Param("kw") String keyword,
-                                @Param("cat") String categoryId,
-                                Pageable pageable);
+    value = """
+      SELECT 
+        b.bookID        AS bookId,
+        b.title         AS title,
+        a.name          AS authorName,
+        c.name          AS categoryName,
+        COALESCE(b.quantity,0) AS stock,
+        b.sale_price    AS price
+      FROM books b
+        LEFT JOIN authors    a ON a.authorID   = b.authorID
+        LEFT JOIN categories c ON c.categoryID = b.categoryID
+      WHERE b.status = 1
+        AND (:kw IS NULL OR :kw = '' 
+               OR LOWER(b.title)  LIKE LOWER(CONCAT('%', :kw, '%'))
+               OR LOWER(b.bookID) LIKE LOWER(CONCAT('%', :kw, '%'))
+            )
+        AND (:cat IS NULL OR :cat = '' OR b.categoryID = :cat)
+      ORDER BY b.title ASC
+      """,
+    countQuery = """
+      SELECT COUNT(*) 
+      FROM books b
+        LEFT JOIN categories c ON c.categoryID = b.categoryID
+      WHERE b.status = 1
+        AND (:kw IS NULL OR :kw = '' 
+               OR LOWER(b.title)  LIKE LOWER(CONCAT('%', :kw, '%'))
+               OR LOWER(b.bookID) LIKE LOWER(CONCAT('%', :kw, '%'))
+            )
+        AND (:cat IS NULL OR :cat = '' OR b.categoryID = :cat)
+      """,
+    nativeQuery = true
+  )
+  Page<StockAgg> pageStockAgg(@Param("kw") String keyword,
+                              @Param("cat") String categoryId,
+                              Pageable pageable);
     
     @Query(value = """
         SELECT COALESCE(SUM(b.quantity),0)
@@ -106,4 +108,48 @@ public interface BookRepository extends JpaRepository<Book, String>, JpaSpecific
             AND (:cat IS NULL OR :cat = '' OR b.categoryID = :cat)
         """, nativeQuery = true)
     long countFiltered(@Param("kw") String keyword, @Param("cat") String categoryId);
+
+    /* ========= Các hàm phục vụ /warehouse/stock ========= */
+
+    @Query("SELECT COUNT(b) FROM Book b WHERE b.status = :status")
+    Long countByStatus(@Param("status") Integer status);
+  
+    @Query("SELECT COALESCE(SUM(b.quantity), 0) FROM Book b WHERE b.status = 1")
+    Long sumAllQuantity();
+    
+    @Query("SELECT COALESCE(SUM(b.quantity * b.salePrice), 0.0) FROM Book b WHERE b.status = 1")
+    Double sumInventoryValue();
+    
+    @Query("SELECT COUNT(b) FROM Book b WHERE b.quantity <= :threshold AND b.status = 1")
+    Integer countLowStock(@Param("threshold") Integer threshold);
+    
+    @Query("SELECT c.name AS categoryName, COALESCE(SUM(b.quantity), 0) AS totalQty " +
+            "FROM Book b JOIN b.category c WHERE b.status = 1 " +
+            "GROUP BY c.categoryId, c.name")
+    List<CategoryStock> groupByCategory();
+    
+    @Query("SELECT a.name AS authorName, COALESCE(SUM(b.quantity), 0) AS totalQty " +
+            "FROM Book b JOIN b.author a WHERE b.status = 1 " +
+            "GROUP BY a.authorId, a.name")
+    List<AuthorStock> groupByAuthor();
+    
+    @Query("SELECT p.name AS publisherName, COALESCE(SUM(b.quantity), 0) AS totalQty " +
+            "FROM Book b JOIN b.publisher p WHERE b.status = 1 " +
+            "GROUP BY p.publisherId, p.name")
+    List<PublisherStock> groupByPublisher();
+    
+    interface CategoryStock {
+        String getCategoryName();
+        Integer getTotalQty();
+    }
+    
+    interface AuthorStock {
+        String getAuthorName();
+        Integer getTotalQty();
+    }
+    
+    interface PublisherStock {
+        String getPublisherName();
+        Integer getTotalQty();
+    }
 }

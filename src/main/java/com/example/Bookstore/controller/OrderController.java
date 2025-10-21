@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -123,6 +124,34 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
     
+    @GetMapping("/mine")
+    public ResponseEntity<List<OrderDTO>> getMyOrders(
+            @RequestParam(required = false) String customerId,
+            HttpSession session) {
+        // Lấy customerId từ session nếu không có trong request
+        String uid = (String) session.getAttribute(com.example.Bookstore.controller.AuthController.SESSION_UID);
+        System.out.println("DEBUG: /mine - customerId=" + customerId + ", uid=" + uid + ", sessionId=" + session.getId());
+        if (customerId == null && uid != null) {
+            customerId = uid;
+        }
+        
+        if (customerId == null) {
+            // Trả về empty list thay vì 400 để JavaScript có thể xử lý
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
+        
+        List<OrderDTO> orders = orderService.getOrdersByCustomer(customerId);
+        return ResponseEntity.ok(orders);
+    }
+    
+    @GetMapping("/my")
+    public ResponseEntity<List<OrderDTO>> getMyOrdersAlt(
+            @RequestParam(required = false) String customerId,
+            HttpSession session) {
+        // Alias cho /mine
+        return getMyOrders(customerId, session);
+    }
+    
     @GetMapping("/revenue")
     public ResponseEntity<Double> calculateRevenue(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
@@ -158,5 +187,29 @@ public class OrderController {
         
         var placed = orderService.guestCheckout(req, session);
         return ResponseEntity.ok(placed);
+    }
+    
+    @PostMapping("/track")
+    public ResponseEntity<com.example.Bookstore.dto.OrderTrackDTO> trackOrder(
+            @RequestBody TrackRequest request) {
+        try {
+            var track = orderService.track(request.getOrderId(), request.getEmail(), request.getPhone());
+            return ResponseEntity.ok(track);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    public static class TrackRequest {
+        private String orderId;
+        private String email;
+        private String phone;
+        
+        public String getOrderId() { return orderId; }
+        public void setOrderId(String orderId) { this.orderId = orderId; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
     }
 }

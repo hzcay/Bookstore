@@ -16,6 +16,8 @@ import com.example.Bookstore.repository.BookRepository;
 import com.example.Bookstore.repository.CartRepository;
 import com.example.Bookstore.repository.CustomerRepository;
 import com.example.Bookstore.service.CartService;
+import com.example.Bookstore.repository.CartItemRepository;
+import java.util.Set;
 
 import static com.example.Bookstore.controller.AuthController.SESSION_UID;
 
@@ -26,6 +28,7 @@ public class CartServiceImpl implements CartService {
 
     private final BookRepository bookRepo;
     private final CartRepository cartRepo;
+    private final CartItemRepository cartItemRepo;
     private final CustomerRepository customerRepo;
 
     private String uid(HttpSession s) {
@@ -138,6 +141,13 @@ public class CartServiceImpl implements CartService {
         c.getItems().remove(bookId);
         mirrorToDbIfLogged(s, c);
         return c;
+    }
+
+    @Override
+    public void removeItems(HttpSession session, Set<String> bookIds) {
+        if (bookIds == null || bookIds.isEmpty()) return;
+        CartDTO cart = getCart(session);
+        bookIds.forEach(id -> cart.getItems().remove(String.valueOf(id)));
     }
 
     @Override

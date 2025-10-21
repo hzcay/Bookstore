@@ -18,6 +18,10 @@ public interface OrderService {
     
     Page<OrderDTO> getAllOrders(Pageable pageable);
     
+
+    Page<OrderDTO> getAllOrders(String customerId, Order.OrderStatus status,
+            Integer paymentStatus, LocalDateTime dateFrom,
+            LocalDateTime dateTo, Pageable pageable);
     Page<OrderDTO> getOrdersByStatus(Order.OrderStatus status, Pageable pageable);
     
     Optional<OrderDTO> getOrderById(String orderId);
@@ -47,4 +51,5 @@ public interface OrderService {
     OrderTrackDTO track(String orderId, String email, String phone);
     
     OrderPlacedDTO guestCheckout(CheckoutRequest req, HttpSession session);
+
 }

@@ -66,67 +66,143 @@
     
     <!-- Section 1: PENDING Orders -->
     <div class="card mb-3">
-        <div class="card-header bg-warning">⏳ Đơn hàng chờ xác nhận (PENDING)</div>
+        <div class="card-header bg-warning">
+            ⏳ Đơn hàng chờ xác nhận (PENDING)
+            <span class="badge bg-light text-dark" id="pendingCount" th:text="${pendingOrders != null ? pendingOrders.size() : 0}">0</span>
+        </div>
         <div class="card-body">
+            <!-- Search and Filter Form -->
+            <div th:if="${pendingOrders != null && !pendingOrders.isEmpty()}" class="mb-3">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text" id="pendingSearchInput" class="form-control form-control-sm" 
+                               placeholder="🔍 Tìm theo mã đơn hoặc tên khách hàng...">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="pendingFromDate" class="form-control form-control-sm" 
+                               placeholder="Từ ngày">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="pendingToDate" class="form-control form-control-sm" 
+                               placeholder="Đến ngày">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-sm btn-primary w-100" onclick="filterPendingOrders()">
+                            <i class="bi bi-funnel"></i> Lọc
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div th:if="${pendingOrders == null || pendingOrders.isEmpty()}" class="text-muted">
                 Không có đơn hàng chờ xác nhận
             </div>
-            <table th:if="${pendingOrders != null && !pendingOrders.isEmpty()}" class="table">
-                <thead>
-                    <tr>
-                        <th>Mã đơn</th>
-                        <th>Khách hàng</th>
-                        <th>Tổng tiền</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="order : ${pendingOrders}">
-                        <td th:text="${order.orderId}">-</td>
-                        <td th:text="${order.customerName}">-</td>
-                        <td th:text="${order.total}">-</td>
-                        <td>
-                            <button class="btn btn-sm btn-success" 
-                                    th:attr="onclick='confirmOrder(\'' + ${order.orderId} + '\')'">
-                                ✅ Xác nhận
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div th:if="${pendingOrders != null && !pendingOrders.isEmpty()}">
+                <div id="pendingNoResults" class="alert alert-warning text-center" style="display: none;">
+                    <i class="bi bi-search"></i> Không tìm thấy đơn hàng phù hợp
+                </div>
+                <table class="table" id="pendingTable">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTableBody">
+                        <tr th:each="order : ${pendingOrders}" class="pending-row"
+                            th:attr="data-order-id=${order.orderId}, 
+                                     data-customer-name=${order.customerName}, 
+                                     data-create-at=${order.createAt}">
+                            <td th:text="${order.orderId}">-</td>
+                            <td th:text="${order.customerName}">-</td>
+                            <td th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 0, 'POINT')} + ' đ'">-</td>
+                            <td th:text="${order.createAt != null ? #temporals.format(order.createAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">-</td>
+                            <td>
+                                <button class="btn btn-sm btn-success" 
+                                        th:attr="onclick='confirmOrder(\'' + ${order.orderId} + '\')'">
+                                    ✅ Xác nhận
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <nav>
+                    <ul class="pagination pagination-sm justify-content-center" id="pendingPagination"></ul>
+                </nav>
+            </div>
         </div>
     </div>
     
     <!-- Section 2: PROCESSING Orders -->
     <div class="card mb-3">
-        <div class="card-header bg-info text-white">🔄 Đơn hàng đã xác nhận - Chờ shipper chọn (PROCESSING)</div>
+        <div class="card-header bg-info text-white">
+            🔄 Đơn hàng đã xác nhận - Chờ shipper chọn (PROCESSING)
+            <span class="badge bg-light text-dark" id="processingCount" th:text="${processingOrders != null ? processingOrders.size() : 0}">0</span>
+        </div>
         <div class="card-body">
+            <!-- Search and Filter Form -->
+            <div th:if="${processingOrders != null && !processingOrders.isEmpty()}" class="mb-3">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text" id="processingSearchInput" class="form-control form-control-sm" 
+                               placeholder="🔍 Tìm theo mã đơn hoặc tên khách hàng...">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="processingFromDate" class="form-control form-control-sm" 
+                               placeholder="Từ ngày">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="processingToDate" class="form-control form-control-sm" 
+                               placeholder="Đến ngày">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-sm btn-info w-100" onclick="filterProcessingOrders()">
+                            <i class="bi bi-funnel"></i> Lọc
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div th:if="${processingOrders == null || processingOrders.isEmpty()}" class="text-muted">
                 Không có đơn hàng chờ shipper chọn
             </div>
-            <table th:if="${processingOrders != null && !processingOrders.isEmpty()}" class="table">
-                <thead>
-                    <tr>
-                        <th>Mã đơn</th>
-                        <th>Khách hàng</th>
-                        <th>Địa chỉ giao</th>
-                        <th>Tổng tiền</th>
-                        <th>Ngày tạo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="order : ${processingOrders}">
-                        <td th:text="${order.orderId}">-</td>
-                        <td th:text="${order.customerName}">-</td>
-                        <td th:text="${order.shippingAddress}">-</td>
-                        <td th:text="${order.total}">-</td>
-                        <td th:text="${order.createAt}">-</td>
-                    </tr>
-                </tbody>
-            </table>
-            <p class="text-muted small mb-0">
-                <i class="bi bi-info-circle"></i> Đơn hàng này đang chờ shipper tự chọn để giao hàng
-            </p>
+            <div th:if="${processingOrders != null && !processingOrders.isEmpty()}">
+                <div id="processingNoResults" class="alert alert-warning text-center" style="display: none;">
+                    <i class="bi bi-search"></i> Không tìm thấy đơn hàng phù hợp
+                </div>
+                <table class="table" id="processingTable">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Địa chỉ giao</th>
+                            <th>Tổng tiền</th>
+                            <th>Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="processingTableBody">
+                        <tr th:each="order : ${processingOrders}" class="processing-row"
+                            th:attr="data-order-id=${order.orderId}, 
+                                     data-customer-name=${order.customerName}, 
+                                     data-create-at=${order.createAt}">
+                            <td th:text="${order.orderId}">-</td>
+                            <td th:text="${order.customerName}">-</td>
+                            <td th:text="${order.shippingAddress}">-</td>
+                            <td th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 0, 'POINT')} + ' đ'">-</td>
+                            <td th:text="${order.createAt != null ? #temporals.format(order.createAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <nav>
+                    <ul class="pagination pagination-sm justify-content-center" id="processingPagination"></ul>
+                </nav>
+                <p class="text-muted small mb-0 mt-2">
+                    <i class="bi bi-info-circle"></i> Đơn hàng này đang chờ shipper tự chọn để giao hàng
+                </p>
+            </div>
         </div>
     </div>
     
@@ -172,23 +248,21 @@
             <div th:if="${shipments == null || shipments.isEmpty()}" class="alert alert-info text-center">
                 <i class="bi bi-inbox"></i> Chưa có shipment nào
             </div>
-            <div th:if="${shipments == null || shipments.isEmpty()}" class="text-muted d-none">
-                Chưa có shipment nào
-            </div>
-            <table th:if="${shipments != null && !shipments.isEmpty()}" class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Mã shipment</th>
-                        <th>Mã đơn hàng</th>
-                        <th>Khách hàng</th>
-                        <th>Shipper</th>
-                        <th>Ngày tạo</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="shipment : ${shipments}">
+            <div th:if="${shipments != null && !shipments.isEmpty()}">
+                <table class="table table-hover" id="shipmentsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã shipment</th>
+                            <th>Mã đơn hàng</th>
+                            <th>Khách hàng</th>
+                            <th>Shipper</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shipmentsTableBody">
+                        <tr th:each="shipment : ${shipments}" class="shipment-row">
                         <td th:text="${shipment.shipmentId}">-</td>
                         <td><strong th:text="${shipment.orderId}">-</strong></td>
                         <td th:text="${shipment.orderCustomerName}">-</td>
@@ -228,6 +302,10 @@
                     </tr>
                 </tbody>
             </table>
+            <nav>
+                <ul class="pagination pagination-sm justify-content-center" id="shipmentsPagination"></ul>
+            </nav>
+        </div>
         </div>
     </div>
     
@@ -283,6 +361,244 @@
             });
         }
     }
+    
+    // ==================== FILTER PENDING ORDERS ====================
+    function filterPendingOrders() {
+        const searchTerm = document.getElementById('pendingSearchInput').value.toLowerCase().trim();
+        const fromDateInput = document.getElementById('pendingFromDate').value;
+        const toDateInput = document.getElementById('pendingToDate').value;
+        
+        const fromDate = fromDateInput ? new Date(fromDateInput + 'T00:00:00') : null;
+        const toDate = toDateInput ? new Date(toDateInput + 'T23:59:59') : null;
+        
+        const allRows = document.querySelectorAll('.pending-row');
+        let visibleCount = 0;
+        
+        allRows.forEach(row => {
+            const orderId = row.getAttribute('data-order-id').toLowerCase();
+            const customerName = row.getAttribute('data-customer-name').toLowerCase();
+            const createAtStr = row.getAttribute('data-create-at');
+            
+            // Kiểm tra search term
+            const matchesSearch = !searchTerm || 
+                                 orderId.includes(searchTerm) || 
+                                 customerName.includes(searchTerm);
+            
+            // Kiểm tra date range
+            let matchesDate = true;
+            if (createAtStr && (fromDate || toDate)) {
+                const createDate = new Date(createAtStr);
+                
+                if (fromDate && createDate < fromDate) {
+                    matchesDate = false;
+                }
+                if (toDate && createDate > toDate) {
+                    matchesDate = false;
+                }
+            }
+            
+            // Hiển thị hoặc ẩn row
+            if (matchesSearch && matchesDate) {
+                row.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                row.classList.add('d-none');
+            }
+        });
+        
+        // Cập nhật count badge
+        document.getElementById('pendingCount').textContent = visibleCount;
+        
+        // Hiển thị thông báo nếu không có kết quả
+        const noResultsDiv = document.getElementById('pendingNoResults');
+        const tableDiv = document.getElementById('pendingTable');
+        if (visibleCount === 0) {
+            noResultsDiv.style.display = 'block';
+            tableDiv.style.display = 'none';
+        } else {
+            noResultsDiv.style.display = 'none';
+            tableDiv.style.display = 'table';
+            // Setup lại pagination với rows visible
+            setupPagination('pending-row', 'pendingPagination', 1);
+        }
+    }
+    
+    // Reset filter khi clear input
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('pendingSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                if (this.value === '') {
+                    // Reset về hiển thị tất cả
+                    document.querySelectorAll('.pending-row').forEach(row => {
+                        row.classList.remove('d-none');
+                    });
+                    const totalCount = document.querySelectorAll('.pending-row').length;
+                    document.getElementById('pendingCount').textContent = totalCount;
+                    document.getElementById('pendingNoResults').style.display = 'none';
+                    document.getElementById('pendingTable').style.display = 'table';
+                    setupPagination('pending-row', 'pendingPagination', 1);
+                }
+            });
+        }
+    });
+    
+    // ==================== FILTER PROCESSING ORDERS ====================
+    function filterProcessingOrders() {
+        const searchTerm = document.getElementById('processingSearchInput').value.toLowerCase().trim();
+        const fromDateInput = document.getElementById('processingFromDate').value;
+        const toDateInput = document.getElementById('processingToDate').value;
+        
+        const fromDate = fromDateInput ? new Date(fromDateInput + 'T00:00:00') : null;
+        const toDate = toDateInput ? new Date(toDateInput + 'T23:59:59') : null;
+        
+        const allRows = document.querySelectorAll('.processing-row');
+        let visibleCount = 0;
+        
+        allRows.forEach(row => {
+            const orderId = row.getAttribute('data-order-id').toLowerCase();
+            const customerName = row.getAttribute('data-customer-name').toLowerCase();
+            const createAtStr = row.getAttribute('data-create-at');
+            
+            // Kiểm tra search term
+            const matchesSearch = !searchTerm || 
+                                 orderId.includes(searchTerm) || 
+                                 customerName.includes(searchTerm);
+            
+            // Kiểm tra date range
+            let matchesDate = true;
+            if (createAtStr && (fromDate || toDate)) {
+                const createDate = new Date(createAtStr);
+                
+                if (fromDate && createDate < fromDate) {
+                    matchesDate = false;
+                }
+                if (toDate && createDate > toDate) {
+                    matchesDate = false;
+                }
+            }
+            
+            // Hiển thị hoặc ẩn row
+            if (matchesSearch && matchesDate) {
+                row.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                row.classList.add('d-none');
+            }
+        });
+        
+        // Cập nhật count badge
+        document.getElementById('processingCount').textContent = visibleCount;
+        
+        // Hiển thị thông báo nếu không có kết quả
+        const noResultsDiv = document.getElementById('processingNoResults');
+        const tableDiv = document.getElementById('processingTable');
+        if (visibleCount === 0) {
+            noResultsDiv.style.display = 'block';
+            tableDiv.style.display = 'none';
+        } else {
+            noResultsDiv.style.display = 'none';
+            tableDiv.style.display = 'table';
+            // Setup lại pagination với rows visible
+            setupPagination('processing-row', 'processingPagination', 1);
+        }
+    }
+    
+    // Reset filter khi clear input cho PROCESSING
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('processingSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                if (this.value === '') {
+                    // Reset về hiển thị tất cả
+                    document.querySelectorAll('.processing-row').forEach(row => {
+                        row.classList.remove('d-none');
+                    });
+                    const totalCount = document.querySelectorAll('.processing-row').length;
+                    document.getElementById('processingCount').textContent = totalCount;
+                    document.getElementById('processingNoResults').style.display = 'none';
+                    document.getElementById('processingTable').style.display = 'table';
+                    setupPagination('processing-row', 'processingPagination', 1);
+                }
+            });
+        }
+    });
+    
+    // ==================== PAGINATION LOGIC ====================
+    const ITEMS_PER_PAGE = 5;
+    
+    function setupPagination(rowClass, paginationId, currentPage = 1) {
+        // Chỉ đếm rows KHÔNG bị ẩn bởi filter
+        const allRows = document.querySelectorAll('.' + rowClass);
+        const visibleRows = Array.from(allRows).filter(row => !row.classList.contains('d-none'));
+        const totalPages = Math.ceil(visibleRows.length / ITEMS_PER_PAGE);
+        
+        // Ẩn tất cả rows visible
+        visibleRows.forEach(row => row.style.display = 'none');
+        
+        // Hiển thị rows của trang hiện tại
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        for (let i = startIndex; i < endIndex && i < visibleRows.length; i++) {
+            visibleRows[i].style.display = '';
+        }
+        
+        // Tạo pagination buttons
+        const paginationContainer = document.getElementById(paginationId);
+        paginationContainer.innerHTML = '';
+        
+        if (totalPages <= 1) return; // Không cần pagination nếu chỉ có 1 trang
+        
+        // Previous button
+        const prevLi = document.createElement('li');
+        prevLi.className = 'page-item' + (currentPage === 1 ? ' disabled' : '');
+        prevLi.innerHTML = `<a class="page-link" href="#">«</a>`;
+        prevLi.onclick = (e) => {
+            e.preventDefault();
+            if (currentPage > 1) setupPagination(rowClass, paginationId, currentPage - 1);
+        };
+        paginationContainer.appendChild(prevLi);
+        
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            const li = document.createElement('li');
+            li.className = 'page-item' + (i === currentPage ? ' active' : '');
+            li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+            li.onclick = (e) => {
+                e.preventDefault();
+                setupPagination(rowClass, paginationId, i);
+            };
+            paginationContainer.appendChild(li);
+        }
+        
+        // Next button
+        const nextLi = document.createElement('li');
+        nextLi.className = 'page-item' + (currentPage === totalPages ? ' disabled' : '');
+        nextLi.innerHTML = `<a class="page-link" href="#">»</a>`;
+        nextLi.onclick = (e) => {
+            e.preventDefault();
+            if (currentPage < totalPages) setupPagination(rowClass, paginationId, currentPage + 1);
+        };
+        paginationContainer.appendChild(nextLi);
+    }
+    
+    // Khởi tạo pagination khi trang load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Pagination cho PENDING orders
+        if (document.querySelectorAll('.pending-row').length > 0) {
+            setupPagination('pending-row', 'pendingPagination', 1);
+        }
+        
+        // Pagination cho PROCESSING orders
+        if (document.querySelectorAll('.processing-row').length > 0) {
+            setupPagination('processing-row', 'processingPagination', 1);
+        }
+        
+        // Pagination cho Shipments
+        if (document.querySelectorAll('.shipment-row').length > 0) {
+            setupPagination('shipment-row', 'shipmentsPagination', 1);
+        }
+    });
 </script>
 
 <!-- Include common scripts -->

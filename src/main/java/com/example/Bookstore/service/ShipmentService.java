@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import com.example.Bookstore.entity.Shipment;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface ShipmentService {
@@ -53,5 +54,16 @@ public interface ShipmentService {
     double calculateCODBetween(String shipperId, LocalDate from, LocalDate to);
     long countDeliveredBetween(String shipperId, LocalDate from, LocalDate to);
     long countFailedBetween(String shipperId, LocalDate from, LocalDate to);
+    
+    /**
+     * Lấy tất cả shipments (cho nhân viên bán hàng)
+     */
+    List<ShipmentDTO> getAllShipments();
+    
+    /**
+     * Đồng bộ trạng thái Order với Shipment
+     * Tự động cập nhật Order status dựa trên Shipment status hiện tại
+     */
+    void syncOrderStatusWithShipments();
 }
 
